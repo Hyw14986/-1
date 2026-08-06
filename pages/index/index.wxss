@@ -74,12 +74,12 @@
   height: 72rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
-  color: #74b9ff;
+  color: #ffa94d;
   font-size: 34rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.12);
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.22);
   margin-bottom: 16rpx;
 }
 
@@ -96,7 +96,7 @@
   z-index: 12;
   max-width: 560rpx;
   font-size: 24rpx;
-  color: #74b9ff;
+  color: #ffa94d;
   background: rgba(255, 255, 255, 0.94);
   padding: 12rpx 28rpx;
   border-radius: 30rpx;
@@ -248,8 +248,8 @@
   flex: 1;
   text-align: center;
   font-size: 28rpx;
-  color: #74b9ff;
-  border: 2rpx solid #74b9ff;
+  color: #ffa94d;
+  border: 2rpx solid #ffa94d;
   border-radius: 40rpx;
   padding: 16rpx 0;
   margin-right: 20rpx;
@@ -261,10 +261,10 @@
 }
 
 .action-primary {
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
   color: #ffffff;
   border: none;
-  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.35);
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.4);
 }
 
 /* ---------- 悬浮式底部菜单 ---------- */
@@ -279,7 +279,8 @@
   align-items: center;
   height: 128rpx;
   background: #ffffff;
-  border-radius: 64rpx;
+  border: 2rpx solid rgba(255, 169, 77, 0.18);
+  border-radius: 72rpx;
   box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.28);
 }
 
@@ -301,7 +302,7 @@
 }
 
 .dock-active .dock-icon-wrap {
-  background: rgba(116, 185, 255, 0.18);
+  background: rgba(255, 169, 77, 0.2);
 }
 
 .dock-icon {
@@ -316,8 +317,11 @@
 }
 
 .dock-active .dock-label {
-  color: #74b9ff;
+  color: #ffa94d;
   font-weight: 700;
+  background: rgba(255, 169, 77, 0.16);
+  border-radius: 22rpx;
+  padding: 4rpx 20rpx;
 }
 
 /* ---------- 引导遮罩层 ---------- */
@@ -356,8 +360,8 @@
 
 .mask-btn-plain {
   background: #ffffff;
-  color: #74b9ff;
-  border: 2rpx solid #74b9ff;
+  color: #ffa94d;
+  border: 2rpx solid #ffa94d;
   margin-top: 20rpx;
   box-shadow: none;
 }
@@ -365,6 +369,6 @@
 .mask-link {
   margin-top: 28rpx;
   font-size: 26rpx;
-  color: #74b9ff;
+  color: #ffa94d;
   text-decoration: underline;
 }
