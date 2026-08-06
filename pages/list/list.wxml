@@ -28,10 +28,16 @@
       </view>
     </view>
 
-    <view class="empty" wx:if="{{!toilets.length}}">
+    <view class="empty" wx:if="{{!toilets.length && !loadError}}">
       <view class="empty-icon">🚽</view>
       <view>附近暂时没有公厕，点击下方按钮上报一个吧</view>
       <view class="empty-btn btn-primary" bindtap="goMap">返回首页</view>
+    </view>
+
+    <view class="empty" wx:if="{{loadError}}">
+      <view class="empty-icon">⚠️</view>
+      <view>{{loadError}}</view>
+      <view class="empty-btn btn-primary" bindtap="reload">重新加载</view>
     </view>
   </view>
 

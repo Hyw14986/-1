@@ -40,6 +40,14 @@
     </view>
   </view>
 
+  <!-- 数据库未初始化引导层 -->
+  <view class="locate-mask" wx:if="{{initError}}">
+    <view class="mask-title">云数据库尚未初始化</view>
+    <view class="mask-desc">首次使用需先部署并运行 initData 云函数，会自动创建集合并导入演示公厕。</view>
+    <view class="mask-btn btn-primary" bindtap="retryLoad">重新加载</view>
+    <view class="mask-link" bindtap="noop">详见 README「部署步骤」</view>
+  </view>
+
   <!-- 定位失败引导层 -->
   <view class="locate-mask" wx:if="{{loadingDone && !locationReady}}">
     <view class="mask-title">获取位置失败</view>

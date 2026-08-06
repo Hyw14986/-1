@@ -16,7 +16,8 @@ Page({
     hasLocation: false,
     locationReady: false,
     loadingDone: false,
-    selectedToilet: null
+    selectedToilet: null,
+    initError: ''
   },
 
   onShow() {
@@ -98,10 +99,35 @@ Page({
       }
     } catch (err) {
       console.error('加载公厕失败', err)
-      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
+      if (this.isCollectionMissing(err)) {
+        // 云数据库集合未创建：给出初始化引导
+        this.setData({ initError: '数据库未初始化' })
+        wx.showModal({
+          title: '云数据库尚未初始化',
+          content: '请先在 cloudfunctions/initData 上右键「上传并部署：云端安装依赖」，再右键「云端测试」运行一次，即可自动创建集合并导入演示公厕。',
+          showCancel: false,
+          confirmText: '知道了'
+        })
+      } else {
+        wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
+      }
     } finally {
       wx.hideLoading()
     }
+  },
+
+  /**
+   * 判断是否为云数据库集合不存在的错误
+   */
+  isCollectionMissing(err) {
+    const msg = (err && (err.errMsg || err.message || '')) || ''
+    return msg.indexOf('collection not exists') > -1 || msg.indexOf('-502005') > -1 || msg.indexOf('DATABASE_COLLECTION_NOT_EXIST') > -1
+  },
+
+  // 数据库初始化完成后重新加载
+  retryLoad() {
+    this.setData({ initError: '' })
+    this.loadToilets()
   },
 
   /**

@@ -8,7 +8,8 @@ const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 Page({
   data: {
     toilets: [],
-    loading: true
+    loading: true,
+    loadError: ''
   },
 
   onLoad() {
@@ -73,7 +74,12 @@ Page({
       this.setData({ toilets })
     } catch (err) {
       console.error('加载公厕列表失败', err)
-      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
+      const msg = (err && (err.errMsg || err.message || '')) || ''
+      if (msg.indexOf('collection not exists') > -1 || msg.indexOf('-502005') > -1 || msg.indexOf('DATABASE_COLLECTION_NOT_EXIST') > -1) {
+        this.setData({ loadError: '云数据库尚未初始化，请先部署并运行 initData 云函数' })
+      } else {
+        wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
+      }
     } finally {
       this.setData({ loading: false })
     }
@@ -83,6 +89,12 @@ Page({
   goDetail(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
+  },
+
+  // 重新加载列表
+  reload() {
+    this.setData({ loadError: '' })
+    this.loadToilets()
   },
 
   // 回到地图视图

@@ -155,8 +155,29 @@ const SEED_TOILETS = [
   { name: '布达拉宫广场公厕', address: '西藏自治区拉萨市城关区布达拉宫广场', latitude: 29.6540, longitude: 91.1180, openTime: '09:00-18:00', hasAccessible: false, hasBabyCare: false, hasToiletPaper: false, isFree: true, rating: 4.3, ratingCount: 10 }
 ]
 
+/**
+ * 确保基础集合存在（不存在则创建）
+ * 云函数端可用 db.createCollection 创建集合，避免客户端直接读取时报 collection not exists
+ * @returns {string[]} 本次新建的集合名列表
+ */
+async function ensureCollections() {
+  const created = []
+  for (const name of ['toilet', 'comment', 'user']) {
+    try {
+      await db.createCollection(name)
+      created.push(name)
+    } catch (err) {
+      // 集合已存在会抛错，属正常情况，忽略
+    }
+  }
+  return created
+}
+
 exports.main = async (event) => {
   const force = !!(event && event.force)
+
+  // 自动创建基础集合（已存在则跳过），再执行导入
+  const created = await ensureCollections()
 
   // 幂等判断：已存在种子数据则跳过
   const existRes = await db.collection('toilet').where({ source: 'seed' }).count()
@@ -186,6 +207,7 @@ exports.main = async (event) => {
   return {
     code: 0,
     msg: '演示数据导入成功',
-    inserted
+    inserted,
+    createdCollections: created
   }
 }
