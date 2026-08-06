@@ -1,6 +1,8 @@
 // pages/index/index.js - 首页：地图展示周边公厕（周边搜索 POI + 用户上报点位）
 const app = getApp()
 const db = wx.cloud.database()
+// 数据库查询指令（用于按来源过滤用户上报数据）
+const _ = db.command
 const util = require('../../utils/util.js')
 
 // ============================================================
@@ -12,7 +14,7 @@ const util = require('../../utils/util.js')
 const QQ_MAP_KEY = 'GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU'
 const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 const SEARCH_KEYWORD = '公共厕所'
-const SEARCH_RADIUS = 3000 // 周边搜索半径（米）
+const SEARCH_RADIUS = 5000 // 周边搜索半径（米）
 
 // 定位失败时的兜底中心点（广州珠江新城），仅用于保证地图可打开
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
@@ -104,10 +106,10 @@ Page({
     if (!silent) wx.showLoading({ title: '加载中', mask: true })
     try {
       const loc = app.globalData.userLocation
-      // 并行拉取两类数据源；定位失败时没有搜索中心，只展示用户上报点位
+      // 并行拉取两类数据源；即使 POI 返回为空，用户上报点位也会保留并继续展示
       const [pois, reports] = await Promise.all([
-        loc ? this.searchNearbyPois(loc.latitude, loc.longitude) : Promise.resolve([]),
-        this.loadUserReports()
+        loc ? this.searchNearToilet(loc.latitude, loc.longitude) : Promise.resolve([]),
+        this.fetchUserReportToilet()
       ])
       const toilets = pois.concat(reports)
       console.log('周边公厕数量：poi=', pois.length, 'user_report=', reports.length)
@@ -131,9 +133,9 @@ Page({
   },
 
   /**
-   * 腾讯位置服务：周边搜索 3000 米内「公共厕所」POI（GCJ-02 坐标系，适配 map 组件）
+   * 腾讯位置服务：周边搜索 5000 米内「公共厕所」POI（GCJ-02 坐标系，适配 map 组件）
    */
-  searchNearbyPois(latitude, longitude) {
+  searchNearToilet(latitude, longitude) {
     return new Promise((resolve) => {
       // Key 未配置时跳过周边搜索，避免无意义请求
       if (!QQ_MAP_KEY || QQ_MAP_KEY.indexOf('请替换') === 0) {
@@ -176,12 +178,34 @@ Page({
   },
 
   /**
-   * 读取云数据库 toilet_report 集合中的用户上报公厕（集合不存在时静默返回空）
+   * 读取用户上报公厕点位：同时读取 toilet 与 toilet_report 两个云集合并合并
+   * - toilet：历史上报集合，仅取用户上报数据（source=user 或无 source），排除 initData 导入的 seed 演示数据
+   * - toilet_report：新增上报集合
+   * 任一集合不存在时静默跳过，不影响其它数据源渲染
    */
-  async loadUserReports() {
+  async fetchUserReportToilet() {
+    const raw = []
+    try {
+      const list = await util.fetchAllRecords(
+        db.collection('toilet').where(_.or([{ source: 'user' }, { source: _.exists(false) }]))
+      )
+      raw.push(...list)
+    } catch (err) {
+      console.warn('读取 toilet 集合失败（集合不存在时忽略）', err)
+    }
     try {
       const list = await util.fetchAllRecords(db.collection('toilet_report'))
-      return list.map((item) => ({
+      raw.push(...list)
+    } catch (err) {
+      console.warn('读取 toilet_report 集合失败（集合不存在时忽略）', err)
+    }
+    // 统一映射为 user_report 点位，并按 _id 去重
+    const seen = new Set()
+    const reports = []
+    for (const item of raw) {
+      if (!item || seen.has(item._id)) continue
+      seen.add(item._id)
+      reports.push({
         type: 'user_report',
         _id: item._id,
         name: item.name || '未命名公厕',
@@ -195,12 +219,9 @@ Page({
         hasToiletPaper: !!item.hasToiletPaper,
         isFree: !!item.isFree,
         seatStatus: item.seatStatus
-      }))
-    } catch (err) {
-      // 集合未创建/无权限时忽略，不影响周边 POI 渲染
-      console.warn('读取用户上报公厕失败（集合不存在时忽略）', err)
-      return []
+      })
     }
+    return reports
   },
 
   /**
