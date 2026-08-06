@@ -1,4 +1,4 @@
-﻿// pages/detail/detail.js - 厕所详情页：设施信息、导航、评分评价
+// pages/detail/detail.js - 厕所详情页：设施信息、导航、评分评价
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')

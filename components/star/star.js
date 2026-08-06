@@ -1,4 +1,4 @@
-﻿// components/star/star.js
+// components/star/star.js
 // 星级评分组件：支持纯展示（disabled）与交互打分两种模式
 Component({
   properties: {

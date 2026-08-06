@@ -1,4 +1,4 @@
-﻿<!-- pages/detail/detail.wxml - 厕所详情页 -->
+<!-- pages/detail/detail.wxml - 厕所详情页 -->
 <view class="page" wx:if="{{toilet}}">
   <!-- 基本信息卡 -->
   <view class="card head-card">

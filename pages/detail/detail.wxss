@@ -1,4 +1,4 @@
-﻿/* pages/detail/detail.wxss - 厕所详情页样式 */
+/* pages/detail/detail.wxss - 厕所详情页样式 */
 .page {
   padding: 24rpx;
   padding-bottom: 60rpx;

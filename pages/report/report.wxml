@@ -1,4 +1,4 @@
-﻿<!-- pages/report/report.wxml - 上报公厕页 -->
+<!-- pages/report/report.wxml - 上报公厕页 -->
 <view class="page">
   <view class="card">
     <!-- 厕所名称 -->

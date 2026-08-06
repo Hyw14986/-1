@@ -1,4 +1,4 @@
-﻿/* components/star/star.wxss */
+/* components/star/star.wxss */
 .star-wrap {
   display: inline-flex;
   align-items: center;

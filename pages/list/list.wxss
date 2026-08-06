@@ -1,4 +1,4 @@
-﻿/* pages/list/list.wxss - 厕所列表页样式 */
+/* pages/list/list.wxss - 厕所列表页样式 */
 .page {
   padding: 20rpx 24rpx 40rpx;
 }

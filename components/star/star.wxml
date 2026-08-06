@@ -1,4 +1,4 @@
-﻿<!-- components/star/star.wxml -->
+<!-- components/star/star.wxml -->
 <view class="star-wrap" style="font-size: {{size}}rpx;">
   <text
     wx:for="{{[1,2,3,4,5]}}"

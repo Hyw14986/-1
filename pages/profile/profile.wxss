@@ -1,4 +1,4 @@
-﻿/* pages/profile/profile.wxss - 我的页面样式 */
+/* pages/profile/profile.wxss - 我的页面样式 */
 .page {
   padding: 24rpx 24rpx 60rpx;
 }

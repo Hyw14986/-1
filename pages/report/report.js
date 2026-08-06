@@ -1,4 +1,4 @@
-﻿// pages/report/report.js - 上报厕所页：提交新公厕点位到云数据库
+// pages/report/report.js - 上报厕所页：提交新公厕点位到云数据库
 const db = wx.cloud.database()
 
 Page({

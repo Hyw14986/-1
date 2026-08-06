@@ -1,4 +1,4 @@
-﻿// pages/index/index.js - 首页：地图展示周边公厕
+// pages/index/index.js - 首页：地图展示周边公厕
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')

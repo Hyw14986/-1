@@ -1,4 +1,4 @@
-﻿/* pages/report/report.wxss - 上报公厕页样式 */
+/* pages/report/report.wxss - 上报公厕页样式 */
 .page {
   padding: 24rpx 24rpx 60rpx;
 }

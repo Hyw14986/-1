@@ -1,4 +1,4 @@
-﻿<!-- pages/list/list.wxml - 厕所列表页 -->
+<!-- pages/list/list.wxml - 厕所列表页 -->
 <view class="page">
   <view class="toast-tip" wx:if="{{toilets.length}}">共 {{toilets.length}} 个公共厕所，按距离排序</view>
 

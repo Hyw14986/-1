@@ -1,4 +1,4 @@
-﻿<!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
+<!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
 <view class="page">
   <!-- 地图 -->
   <map

@@ -1,4 +1,4 @@
-﻿{
+{
   "compileType": "miniprogram",
   "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.17.1",

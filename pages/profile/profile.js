@@ -1,4 +1,4 @@
-﻿// pages/profile/profile.js - 我的页面：头像昵称授权、我的上报、我的评价
+// pages/profile/profile.js - 我的页面：头像昵称授权、我的上报、我的评价
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')

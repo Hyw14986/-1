@@ -1,4 +1,4 @@
-﻿// pages/list/list.js - 厕所列表页：按距离由近到远展示全部公厕
+// pages/list/list.js - 厕所列表页：按距离由近到远展示全部公厕
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')
