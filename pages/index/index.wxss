@@ -82,6 +82,34 @@
   transform: scale(0.95);
 }
 
+/* 加载结果提示 */
+.data-tip {
+  position: absolute;
+  left: 50%;
+  bottom: 260rpx;
+  transform: translateX(-50%);
+  z-index: 12;
+  max-width: 560rpx;
+  font-size: 24rpx;
+  color: #333333;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 12rpx 28rpx;
+  border-radius: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.data-tip-warn {
+  color: #E65100;
+  background: rgba(255, 243, 224, 0.95);
+}
+
+.mask-btn-plain {
+  background: #FFFFFF;
+  color: #29B6F6;
+  border: 2rpx solid #29B6F6;
+  margin-top: 20rpx;
+}
+
 /* 底部公厕简要卡片 */
 .toilet-card {
   position: absolute;

@@ -17,7 +17,9 @@ Page({
     locationReady: false,
     loadingDone: false,
     selectedToilet: null,
-    initError: ''
+    initError: '',
+    loadDone: false,
+    locateMaskHidden: false
   },
 
   onShow() {
@@ -91,6 +93,7 @@ Page({
         height: 36,
         anchor: { x: 0.5, y: 0.93 }
       }))
+      console.log('地图公厕加载数量：', toilets.length)
       this.setData({ toilets, markers })
       // 若已有选中的厕所，重新关联
       if (this.data.selectedToilet) {
@@ -113,6 +116,7 @@ Page({
       }
     } finally {
       wx.hideLoading()
+      this.setData({ loadDone: true })
     }
   },
 
@@ -122,6 +126,11 @@ Page({
   isCollectionMissing(err) {
     const msg = (err && (err.errMsg || err.message || '')) || ''
     return msg.indexOf('collection not exists') > -1 || msg.indexOf('-502005') > -1 || msg.indexOf('DATABASE_COLLECTION_NOT_EXIST') > -1
+  },
+
+  // 跳过定位引导，直接浏览地图
+  skipLocateMask() {
+    this.setData({ locateMaskHidden: true })
   },
 
   // 数据库初始化完成后重新加载

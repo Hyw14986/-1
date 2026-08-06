@@ -26,6 +26,10 @@
     <text class="fab-plus">＋</text>
   </view>
 
+  <!-- 加载结果提示：有数据显示数量，无数据显示引导 -->
+  <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{toilets.length}} 个公厕</view>
+  <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
+
   <!-- 底部：厕所简要卡片 -->
   <view class="toilet-card card" wx:if="{{selectedToilet}}" catchtap="noop">
     <view class="card-head">
@@ -54,10 +58,11 @@
   </view>
 
   <!-- 定位失败引导层 -->
-  <view class="locate-mask" wx:if="{{loadingDone && !locationReady}}">
+  <view class="locate-mask" wx:if="{{loadingDone && !locationReady && !locateMaskHidden}}">
     <view class="mask-title">获取位置失败</view>
     <view class="mask-desc">开启定位后，才能展示你附近的公共厕所</view>
     <view class="mask-btn btn-primary" bindtap="retryLocation">重新定位</view>
+    <view class="mask-btn mask-btn-plain" bindtap="skipLocateMask">先浏览地图</view>
     <view class="mask-link" bindtap="openSetting">去设置开启定位权限</view>
   </view>
 </view>
