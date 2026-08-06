@@ -9,13 +9,13 @@
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "去哪儿拉",
-    "navigationBarBackgroundColor": "#eaf4ff",
-    "backgroundColor": "#f7faff"
+    "navigationBarBackgroundColor": "#fff6e8",
+    "backgroundColor": "#fff9ef"
   },
   "tabBar": {
-    "color": "#7f8c8d",
-    "selectedColor": "#74b9ff",
-    "backgroundColor": "#FFFFFF",
+    "color": "#b3a893",
+    "selectedColor": "#ffa94d",
+    "backgroundColor": "#fffdf6",
     "borderStyle": "white",
     "list": [
       {

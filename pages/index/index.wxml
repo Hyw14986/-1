@@ -1,40 +1,62 @@
-<!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
+<!-- pages/index/index.wxml - 首页：品牌区 + 地图卡片 + 快捷操作 + 悬浮底部菜单 -->
 <view class="page">
-  <!-- 地图（大圆角容器，overflow 裁剪边角）
-       公厕标记使用可爱马桶卡通图标：images/marker/toilet.png（选中态 images/marker/toilet-active.png）
-       JS 中仍引用 /images/marker.png 与 /images/marker-active.png，两处内容保持一致 -->
-  <view class="map-wrap">
-    <map
-      class="map"
-      latitude="{{latitude}}"
-      longitude="{{longitude}}"
-      scale="{{scale}}"
-      markers="{{markers}}"
-      show-location="{{hasLocation}}"
-      bindmarkertap="onMarkerTap"
-      bindtap="onMapTap"
-    ></map>
+  <!-- 顶部品牌区：Logo + 欢迎语 -->
+  <view class="header">
+    <image class="logo" src="/images/logo-toilet.png" mode="aspectFit" />
+    <view class="welcome">
+      <view class="welcome-title">急需方便？</view>
+      <view class="welcome-sub">附近公厕，一键直达</view>
+    </view>
   </view>
 
-  <!-- 顶部：列表视图切换按钮 -->
-  <view class="switch-btn" bindtap="goList">
-    <text class="switch-icon">☰</text>
-    <text>列表视图</text>
+  <!-- 核心功能区：地图卡片 -->
+  <view class="map-card">
+    <!-- 地图工具按钮（卡片右上角）：列表视图 / 回到定位 -->
+    <view class="map-tools">
+      <view class="tool-btn" bindtap="goList" hover-class="hover">☰</view>
+      <view class="tool-btn" bindtap="locateMe" hover-class="hover">⌖</view>
+    </view>
+
+    <!-- 地图（大圆角容器，overflow 裁剪边角）
+         公厕标记使用可爱马桶卡通图标：images/marker/toilet.png（选中态 images/marker/toilet-active.png）
+         JS 中仍引用 /images/marker.png 与 /images/marker-active.png，两处内容保持一致 -->
+    <view class="map-wrap">
+      <map
+        class="map"
+        latitude="{{latitude}}"
+        longitude="{{longitude}}"
+        scale="{{scale}}"
+        markers="{{markers}}"
+        show-location="{{hasLocation}}"
+        bindmarkertap="onMarkerTap"
+        bindtap="onMapTap"
+      ></map>
+    </view>
+
+    <!-- 加载结果提示 -->
+    <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{toilets.length}} 个公厕</view>
+    <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
+
+    <!-- 一键导航大按钮 -->
+    <view class="nav-now-btn" hover-class="hover" bindtap="navNow">🧭 一键导航</view>
   </view>
 
-  <!-- 右下角：回到定位 -->
-  <view class="locate-btn" bindtap="locateMe" hover-class="hover">⌖</view>
-
-  <!-- 右下角：上报新公厕 -->
-  <view class="fab-add" hover-class="fab-hover" bindtap="goReport">
-    <text class="fab-plus">＋</text>
+  <!-- 快捷操作区：上报 / 评价记录 -->
+  <view class="quick-actions">
+    <view class="quick-item" bindtap="goReport" hover-class="hover">
+      <view class="quick-circle quick-green">✚</view>
+      <view class="quick-label">我要上报</view>
+    </view>
+    <view class="quick-item" bindtap="goList" hover-class="hover">
+      <view class="quick-circle quick-orange">★</view>
+      <view class="quick-label">评价/记录</view>
+    </view>
   </view>
 
-  <!-- 加载结果提示：有数据显示数量，无数据显示引导 -->
-  <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{toilets.length}} 个公厕</view>
-  <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
+  <!-- IP 形象：正在洗手的小水滴 -->
+  <image class="mascot" src="/images/mascot-drop.png" mode="aspectFit" />
 
-  <!-- 底部：厕所简要卡片 -->
+  <!-- 底部：厕所简要卡片（点击地图标记弹出） -->
   <view class="toilet-card card cute-card" wx:if="{{selectedToilet}}" catchtap="noop">
     <view class="card-head">
       <view class="card-name">{{selectedToilet.name}}</view>
@@ -50,6 +72,28 @@
     <view class="card-actions">
       <view class="action-btn" bindtap="goDetail">查看详情</view>
       <view class="action-btn action-primary" bindtap="navToToilet">导航</view>
+    </view>
+  </view>
+
+  <!-- 悬浮式底部菜单：找厕所 / 上报 / 我的 -->
+  <view class="tab-dock">
+    <view class="dock-item dock-active" bindtap="dockHome">
+      <view class="dock-icon-wrap">
+        <image class="dock-icon" src="/images/tab-home-active.png" />
+      </view>
+      <view class="dock-label">找厕所</view>
+    </view>
+    <view class="dock-item" bindtap="goReport">
+      <view class="dock-icon-wrap">
+        <image class="dock-icon" src="/images/tab-report.png" />
+      </view>
+      <view class="dock-label">上报</view>
+    </view>
+    <view class="dock-item" bindtap="goProfile">
+      <view class="dock-icon-wrap">
+        <image class="dock-icon" src="/images/tab-profile.png" />
+      </view>
+      <view class="dock-label">我的</view>
     </view>
   </view>
 

@@ -8,7 +8,7 @@
  */
 
 page {
-  background-color: #f7faff;
+  background-color: #fff9ef;
   color: #2c3e50;
   font-size: 28rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -19,7 +19,7 @@ page {
   background-color: #ffffff;
   border-radius: 24rpx;
   padding: 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(116, 185, 255, 0.14);
+  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.16);
 }
 
 /* ---------- 可爱卡片：白色、大圆角、柔和浅蓝阴影、四周留白 ---------- */
@@ -27,7 +27,7 @@ page {
   background-color: #ffffff;
   border-radius: 24rpx;
   padding: 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(116, 185, 255, 0.12);
+  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.14);
   margin: 24rpx 24rpx 0;
 }
 
@@ -151,7 +151,7 @@ textarea {
   border-radius: 24rpx;
   padding: 26rpx 28rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(116, 185, 255, 0.14);
+  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.14);
 }
 
 .list-card:active {

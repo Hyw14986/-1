@@ -1,107 +1,98 @@
-/* pages/index/index.wxss - 首页地图页样式（可爱马卡龙风） */
+/* pages/index/index.wxss - 首页样式（温馨可爱扁平插画风） */
 .page {
   position: relative;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  background: #f7faff;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx 240rpx;
+  background: #fff9ef;
 }
 
-/* 地图大圆角容器：柔和浅蓝阴影，溢出裁剪 */
+/* ---------- 顶部品牌区 ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 8rpx 24rpx;
+}
+
+.logo {
+  width: 96rpx;
+  height: 96rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.welcome-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  letter-spacing: 2rpx;
+}
+
+.welcome-sub {
+  font-size: 24rpx;
+  color: #7f8c8d;
+  margin-top: 8rpx;
+}
+
+/* ---------- 核心功能区：地图卡片 ---------- */
+.map-card {
+  position: relative;
+  height: 660rpx;
+  border-radius: 36rpx;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 14rpx 40rpx rgba(255, 169, 77, 0.22);
+}
+
 .map-wrap {
   position: absolute;
-  top: 20rpx;
-  left: 20rpx;
-  right: 20rpx;
-  bottom: 20rpx;
-  border-radius: 24rpx;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 36rpx;
   overflow: hidden;
-  box-shadow: 0 10rpx 36rpx rgba(116, 185, 255, 0.3);
 }
 
 .map {
   width: 100%;
   height: 100%;
-  border-radius: 24rpx;
 }
 
-/* 列表视图切换按钮 */
-.switch-btn {
+/* 地图工具按钮（右上角） */
+.map-tools {
   position: absolute;
-  top: 52rpx;
-  left: 44rpx;
-  z-index: 10;
+  top: 20rpx;
+  right: 20rpx;
+  z-index: 12;
   display: flex;
-  align-items: center;
-  background: #FFFFFF;
-  color: #74b9ff;
-  font-size: 26rpx;
-  padding: 14rpx 28rpx;
-  border-radius: 40rpx;
-  box-shadow: 0 6rpx 18rpx rgba(116, 185, 255, 0.28);
+  flex-direction: column;
 }
 
-.switch-icon {
-  margin-right: 8rpx;
-  font-size: 30rpx;
-}
-
-/* 回到定位按钮 */
-.locate-btn {
-  position: absolute;
-  right: 48rpx;
-  bottom: 340rpx;
-  z-index: 10;
-  width: 84rpx;
-  height: 84rpx;
+.tool-btn {
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.95);
   color: #74b9ff;
-  font-size: 44rpx;
+  font-size: 34rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 18rpx rgba(116, 185, 255, 0.3);
+  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.12);
+  margin-bottom: 16rpx;
 }
 
-.locate-btn.hover {
-  opacity: 0.7;
-}
-
-/* 右下角悬浮加号：随时上报新公厕 */
-.fab-add {
-  position: absolute;
-  right: 44rpx;
-  bottom: 224rpx;
-  z-index: 15;
-  width: 108rpx;
-  height: 108rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10rpx 26rpx rgba(116, 185, 255, 0.5);
-}
-
-.fab-plus {
-  font-size: 60rpx;
-  line-height: 1;
-  margin-top: -4rpx;
-}
-
-.fab-hover {
-  opacity: 0.85;
-  transform: scale(0.95);
+.tool-btn.hover {
+  opacity: 0.75;
 }
 
 /* 加载结果提示 */
 .data-tip {
   position: absolute;
   left: 50%;
-  bottom: 340rpx;
   transform: translateX(-50%);
+  top: 24rpx;
   z-index: 12;
   max-width: 560rpx;
   font-size: 24rpx;
@@ -109,7 +100,7 @@
   background: rgba(255, 255, 255, 0.94);
   padding: 12rpx 28rpx;
   border-radius: 30rpx;
-  box-shadow: 0 4rpx 14rpx rgba(116, 185, 255, 0.2);
+  box-shadow: 0 4rpx 14rpx rgba(255, 169, 77, 0.2);
 }
 
 .data-tip-warn {
@@ -117,16 +108,95 @@
   background: rgba(255, 243, 224, 0.95);
 }
 
-/* 底部公厕简要卡片：大圆角 + 柔和浅蓝阴影 */
+/* 一键导航大按钮 */
+.nav-now-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 24rpx;
+  z-index: 12;
+  padding: 22rpx 64rpx;
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 700;
+  border-radius: 50rpx;
+  box-shadow: 0 10rpx 24rpx rgba(255, 169, 77, 0.5);
+  white-space: nowrap;
+}
+
+.nav-now-btn.hover {
+  transform: translateX(-50%) scale(0.96);
+  opacity: 0.9;
+}
+
+/* ---------- 快捷操作区 ---------- */
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 36rpx;
+  padding: 0 48rpx;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quick-item.hover {
+  opacity: 0.85;
+  transform: scale(0.97);
+}
+
+.quick-circle {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 68rpx;
+  font-weight: 700;
+  box-shadow: 0 10rpx 24rpx rgba(44, 62, 80, 0.14);
+}
+
+.quick-green {
+  background: linear-gradient(135deg, #8fd9a8, #6ecf96);
+}
+
+.quick-orange {
+  background: linear-gradient(135deg, #ffc06b, #ffa94d);
+}
+
+.quick-label {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* ---------- IP 形象：洗手小水滴 ---------- */
+.mascot {
+  position: absolute;
+  right: 0;
+  bottom: 280rpx;
+  width: 120rpx;
+  height: 120rpx;
+  z-index: 8;
+}
+
+/* ---------- 底部厕所简要卡片 ---------- */
 .toilet-card {
   position: absolute;
   left: 24rpx;
   right: 24rpx;
-  bottom: 40rpx;
-  z-index: 20;
+  bottom: 580rpx;
+  z-index: 25;
   margin: 0;
   border-radius: 32rpx;
-  box-shadow: 0 12rpx 36rpx rgba(116, 185, 255, 0.32);
+  box-shadow: 0 12rpx 36rpx rgba(255, 169, 77, 0.25);
   padding: 28rpx;
   background: #ffffff;
 }
@@ -192,20 +262,73 @@
 
 .action-primary {
   background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  color: #FFFFFF;
+  color: #ffffff;
   border: none;
   box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.35);
 }
 
-/* 引导遮罩层 */
+/* ---------- 悬浮式底部菜单 ---------- */
+.tab-dock {
+  position: fixed;
+  left: 60rpx;
+  right: 60rpx;
+  bottom: 32rpx;
+  z-index: 40;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 128rpx;
+  background: #ffffff;
+  border-radius: 64rpx;
+  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.28);
+}
+
+.dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 170rpx;
+}
+
+.dock-icon-wrap {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dock-active .dock-icon-wrap {
+  background: rgba(116, 185, 255, 0.18);
+}
+
+.dock-icon {
+  width: 52rpx;
+  height: 52rpx;
+}
+
+.dock-label {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #9aa5b1;
+}
+
+.dock-active .dock-label {
+  color: #74b9ff;
+  font-weight: 700;
+}
+
+/* ---------- 引导遮罩层 ---------- */
 .locate-mask {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 30;
-  background: rgba(247, 250, 255, 0.94);
+  z-index: 50;
+  background: rgba(255, 249, 239, 0.95);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -232,7 +355,7 @@
 }
 
 .mask-btn-plain {
-  background: #FFFFFF;
+  background: #ffffff;
   color: #74b9ff;
   border: 2rpx solid #74b9ff;
   margin-top: 20rpx;

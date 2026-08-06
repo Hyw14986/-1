@@ -25,6 +25,10 @@ Page({
   onShow() {
     // 每次回到首页都刷新数据（比如刚上报过新公厕）
     this.initPage()
+    // 首页使用自定义悬浮式底部菜单，隐藏系统 tabBar（切到其他 tab 时系统 tabBar 会自动恢复）
+    if (wx.hideTabBar) {
+      wx.hideTabBar({ animation: false })
+    }
   },
 
   /**
@@ -204,10 +208,8 @@ Page({
     wx.navigateTo({ url: '/pages/detail/detail?id=' + toilet._id })
   },
 
-  // 调用微信地图导航
-  navToToilet() {
-    const toilet = this.data.selectedToilet
-    if (!toilet) return
+  // 调用微信地图导航（公共方法）
+  openLocationFor(toilet) {
     wx.openLocation({
       latitude: toilet.latitude,
       longitude: toilet.longitude,
@@ -227,6 +229,42 @@ Page({
         }
       }
     })
+  },
+
+  // 调用微信地图导航（底部卡片“导航”按钮）
+  navToToilet() {
+    const toilet = this.data.selectedToilet
+    if (!toilet) return
+    this.openLocationFor(toilet)
+  },
+
+  // 一键导航：优先导航已选公厕，未选时自动取最近的公厕
+  navNow() {
+    let target = this.data.selectedToilet
+    const loc = app.globalData.userLocation
+    if (!target && this.data.toilets.length && loc) {
+      target = this.data.toilets
+        .map((t) => ({
+          ...t,
+          _dist: util.getDistance(loc.latitude, loc.longitude, t.latitude, t.longitude)
+        }))
+        .sort((a, b) => a._dist - b._dist)[0]
+    }
+    if (!target) {
+      wx.showToast({ title: '暂无可导航的公厕', icon: 'none' })
+      return
+    }
+    this.openLocationFor(target)
+  },
+
+  // 悬浮底部菜单：找厕所（回到我的定位）
+  dockHome() {
+    this.locateMe()
+  },
+
+  // 悬浮底部菜单：我的
+  goProfile() {
+    wx.switchTab({ url: '/pages/profile/profile' })
   },
 
   // 回到我的定位
