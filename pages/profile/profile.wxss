@@ -1,13 +1,16 @@
-/* pages/profile/profile.wxss - 我的页面样式 */
+/* pages/profile/profile.wxss - 我的页面样式（可爱马卡龙风） */
 .page {
   padding: 24rpx 24rpx 60rpx;
 }
 
-/* 用户信息卡 */
+/* 用户头部：渐变背景 + 大圆角卡片 */
 .user-card {
   display: flex;
   align-items: center;
-  padding: 32rpx 28rpx;
+  padding: 40rpx 32rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  box-shadow: 0 12rpx 32rpx rgba(116, 185, 255, 0.4);
 }
 
 .avatar-btn {
@@ -30,13 +33,15 @@
   width: 120rpx;
   height: 120rpx;
   border-radius: 50%;
-  background: #EAF2F7;
+  background: #ffffff;
+  border: 6rpx solid #ffffff;
+  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.15);
 }
 
 .avatar-tip {
   font-size: 20rpx;
-  color: #9AA5B1;
-  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 10rpx;
 }
 
 .user-info {
@@ -52,14 +57,21 @@
   height: 72rpx;
   font-size: 32rpx;
   font-weight: 600;
-  color: #333333;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 16rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
 }
 
 .save-btn {
   width: 200rpx;
   padding: 12rpx 0;
   font-size: 26rpx;
-  margin-top: 12rpx;
+  margin-top: 16rpx;
+  background: #ffffff;
+  color: #74b9ff;
+  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.12);
 }
 
 /* 区块卡片 */
@@ -70,14 +82,14 @@
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #333333;
+  color: #2c3e50;
   margin-bottom: 8rpx;
 }
 
 /* 上报/评价条目 */
 .report-item {
   padding: 20rpx 0;
-  border-bottom: 2rpx solid #F5F7FA;
+  border-bottom: 2rpx solid #eef4fc;
 }
 
 .report-item:last-child {
@@ -93,7 +105,7 @@
 .report-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #333333;
+  color: #2c3e50;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,28 +116,28 @@
 .report-status {
   flex-shrink: 0;
   font-size: 22rpx;
-  color: #29B6F6;
-  background: rgba(41, 182, 246, 0.1);
-  border-radius: 8rpx;
-  padding: 4rpx 12rpx;
+  color: #74b9ff;
+  background: rgba(116, 185, 255, 0.14);
+  border-radius: 24rpx;
+  padding: 4rpx 14rpx;
 }
 
 .report-meta {
   font-size: 22rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
   margin-top: 8rpx;
 }
 
 .report-content {
   font-size: 26rpx;
-  color: #555555;
+  color: #5b6b79;
   margin-top: 10rpx;
 }
 
 /* 开发工具 */
 .dev-tip {
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
   margin-bottom: 20rpx;
 }
 
@@ -133,4 +145,5 @@
   width: 100%;
   padding: 14rpx 0;
   font-size: 28rpx;
+  border-radius: 50rpx;
 }

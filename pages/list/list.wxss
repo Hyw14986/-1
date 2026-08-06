@@ -1,11 +1,11 @@
-/* pages/list/list.wxss - 厕所列表页样式 */
+/* pages/list/list.wxss - 厕所列表页样式（可爱马卡龙风） */
 .page {
   padding: 20rpx 24rpx 200rpx;
 }
 
 .toast-tip {
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
   padding: 8rpx 8rpx 20rpx;
 }
 
@@ -36,7 +36,7 @@
 .toilet-name {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333333;
+  color: #2c3e50;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -45,11 +45,11 @@
 
 .distance {
   flex-shrink: 0;
-  font-size: 26rpx;
-  color: #29B6F6;
-  background: rgba(41, 182, 246, 0.1);
-  border-radius: 8rpx;
-  padding: 6rpx 14rpx;
+  font-size: 24rpx;
+  color: #74b9ff;
+  background: rgba(116, 185, 255, 0.14);
+  border-radius: 24rpx;
+  padding: 6rpx 16rpx;
   margin-left: 20rpx;
 }
 
@@ -61,13 +61,13 @@
 
 .rating-num {
   font-size: 24rpx;
-  color: #FFB400;
+  color: #ffb400;
   margin-left: 8rpx;
 }
 
 .rating-count {
   font-size: 22rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
   margin-left: 12rpx;
 }
 
@@ -80,7 +80,7 @@
   align-items: center;
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #666666;
+  color: #7f8c8d;
 }
 
 .addr-icon {
@@ -101,12 +101,12 @@
   width: 108rpx;
   height: 108rpx;
   border-radius: 50%;
-  background: #29B6F6;
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(41, 182, 246, 0.45);
+  box-shadow: 0 10rpx 26rpx rgba(116, 185, 255, 0.5);
 }
 
 .fab-plus {

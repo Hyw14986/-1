@@ -1,6 +1,6 @@
 <!-- pages/report/report.wxml - 上报公厕页 -->
 <view class="page">
-  <view class="card">
+  <view class="card cute-card">
     <!-- 厕所名称 -->
     <view class="field">
       <view class="field-label">厕所名称 <text class="required">*</text></view>

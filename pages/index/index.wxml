@@ -1,16 +1,19 @@
 <!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
 <view class="page">
-  <!-- 地图 -->
-  <map
-    class="map"
-    latitude="{{latitude}}"
-    longitude="{{longitude}}"
-    scale="{{scale}}"
-    markers="{{markers}}"
-    show-location="{{hasLocation}}"
-    bindmarkertap="onMarkerTap"
-    bindtap="onMapTap"
-  ></map>
+  <!-- 地图（大圆角容器，overflow 裁剪边角）
+       公厕标记小图标存放路径：images/marker.png（选中态 images/marker-active.png） -->
+  <view class="map-wrap">
+    <map
+      class="map"
+      latitude="{{latitude}}"
+      longitude="{{longitude}}"
+      scale="{{scale}}"
+      markers="{{markers}}"
+      show-location="{{hasLocation}}"
+      bindmarkertap="onMarkerTap"
+      bindtap="onMapTap"
+    ></map>
+  </view>
 
   <!-- 顶部：列表视图切换按钮 -->
   <view class="switch-btn" bindtap="goList">

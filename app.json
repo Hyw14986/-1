@@ -13,26 +13,26 @@
     "backgroundColor": "#F5F7FA"
   },
   "tabBar": {
-    "color": "#9AA5B1",
-    "selectedColor": "#29B6F6",
+    "color": "#7f8c8d",
+    "selectedColor": "#74b9ff",
     "backgroundColor": "#FFFFFF",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
+        "text": "🏠 首页",
         "iconPath": "images/tab-home.png",
         "selectedIconPath": "images/tab-home-active.png"
       },
       {
         "pagePath": "pages/report/report",
-        "text": "上报",
+        "text": "➕ 上报",
         "iconPath": "images/tab-report.png",
         "selectedIconPath": "images/tab-report-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的",
+        "text": "👤 我的",
         "iconPath": "images/tab-profile.png",
         "selectedIconPath": "images/tab-profile-active.png"
       }

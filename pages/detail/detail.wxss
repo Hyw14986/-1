@@ -1,14 +1,19 @@
-/* pages/detail/detail.wxss - 厕所详情页样式 */
+/* pages/detail/detail.wxss - 厕所详情页样式（可爱马卡龙风） */
 .page {
   padding: 24rpx;
   padding-bottom: 60rpx;
 }
 
 /* 基本信息卡 */
+.head-card {
+  border-radius: 28rpx;
+  box-shadow: 0 10rpx 30rpx rgba(116, 185, 255, 0.16);
+}
+
 .name {
   font-size: 38rpx;
   font-weight: 700;
-  color: #333333;
+  color: #2c3e50;
 }
 
 .rating-row {
@@ -19,23 +24,23 @@
 
 .score {
   font-size: 30rpx;
-  color: #FFB400;
+  color: #ffb400;
   font-weight: 600;
   margin-left: 12rpx;
 }
 
 .count {
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
   margin-left: 16rpx;
 }
 
 .dist {
   font-size: 24rpx;
-  color: #29B6F6;
-  background: rgba(41, 182, 246, 0.1);
-  border-radius: 8rpx;
-  padding: 4rpx 12rpx;
+  color: #74b9ff;
+  background: rgba(116, 185, 255, 0.14);
+  border-radius: 24rpx;
+  padding: 4rpx 14rpx;
   margin-left: 20rpx;
 }
 
@@ -45,7 +50,7 @@
 
 .info-grid {
   margin-top: 24rpx;
-  border-top: 2rpx solid #F0F3F6;
+  border-top: 2rpx solid #eef4fc;
   padding-top: 8rpx;
 }
 
@@ -53,7 +58,7 @@
   display: flex;
   align-items: flex-start;
   padding: 16rpx 0;
-  border-bottom: 2rpx solid #F5F7FA;
+  border-bottom: 2rpx solid #f3f8ff;
 }
 
 .info-item:last-child {
@@ -64,17 +69,18 @@
   width: 150rpx;
   flex-shrink: 0;
   font-size: 26rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
 }
 
 .info-value {
   flex: 1;
   font-size: 26rpx;
-  color: #333333;
+  color: #2c3e50;
 }
 
 .nav-btn {
   margin-top: 28rpx;
+  border-radius: 50rpx;
 }
 
 /* 照片 */
@@ -85,7 +91,7 @@
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #333333;
+  color: #2c3e50;
   margin-bottom: 20rpx;
 }
 
@@ -97,8 +103,9 @@
 .photo {
   width: 200rpx;
   height: 200rpx;
-  border-radius: 12rpx;
+  border-radius: 20rpx;
   margin: 0 16rpx 16rpx 0;
+  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.18);
 }
 
 /* 评价列表 */
@@ -111,7 +118,7 @@
 .comment-item {
   display: flex;
   padding: 20rpx 0;
-  border-bottom: 2rpx solid #F5F7FA;
+  border-bottom: 2rpx solid #eef4fc;
 }
 
 .comment-item:last-child {
@@ -122,7 +129,9 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  background: #EAF2F7;
+  background: #eaf2fb;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 4rpx 10rpx rgba(116, 185, 255, 0.25);
   flex-shrink: 0;
 }
 
@@ -139,19 +148,19 @@
 
 .nickname {
   font-size: 26rpx;
-  color: #333333;
+  color: #2c3e50;
   font-weight: 600;
 }
 
 .time {
   font-size: 22rpx;
-  color: #B9C4CE;
+  color: #aab6c3;
 }
 
 .comment-content {
   margin-top: 10rpx;
   font-size: 26rpx;
-  color: #555555;
+  color: #5b6b79;
   line-height: 1.6;
 }
 
@@ -164,28 +173,30 @@
 
 .form-label {
   font-size: 28rpx;
-  color: #333333;
+  color: #2c3e50;
   margin-right: 24rpx;
 }
 
 .form-score {
   font-size: 26rpx;
-  color: #FFB400;
+  color: #ffb400;
   margin-left: 20rpx;
 }
 
 .form-textarea {
   width: 100%;
   height: 180rpx;
-  background: #F7FAFC;
+  background: #f0f7ff;
   border-radius: 16rpx;
   padding: 20rpx;
   box-sizing: border-box;
   font-size: 26rpx;
+  color: #2c3e50;
 }
 
 .submit-btn {
   margin-top: 24rpx;
+  border-radius: 50rpx;
 }
 
 /* 已评价 */
@@ -196,5 +207,5 @@
 .done-tip {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #9AA5B1;
+  color: #7f8c8d;
 }
