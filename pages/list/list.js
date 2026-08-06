@@ -1,6 +1,8 @@
 // pages/list/list.js - 厕所列表页：按距离由近到远展示全部公厕
 const app = getApp()
 const db = wx.cloud.database()
+// 数据库查询指令（用于兼容手动导入时缺少 status 字段的数据）
+const _ = db.command
 const util = require('../../utils/util.js')
 
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
@@ -60,7 +62,9 @@ Page({
     try {
       // 分页拉取全部公厕：列表展示所有点位（小程序端单次查询上限 20 条）
       const loc = app.globalData.userLocation
-      const toilets = (await util.fetchAllRecords(db.collection('toilet').where({ status: 1 })))
+      const toilets = (await util.fetchAllRecords(
+        db.collection('toilet').where(_.or([{ status: 1 }, { status: _.exists(false) }]))
+      ))
         .map((item) => {
           const meters = util.getDistance(loc.latitude, loc.longitude, item.latitude, item.longitude)
           return {

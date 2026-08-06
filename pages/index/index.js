@@ -1,6 +1,8 @@
 // pages/index/index.js - 首页：地图展示周边公厕
 const app = getApp()
 const db = wx.cloud.database()
+// 数据库查询指令（用于兼容手动导入时缺少 status 字段的数据）
+const _ = db.command
 const util = require('../../utils/util.js')
 
 // 演示数据所在城市中心（广州珠江新城），定位失败时的兜底中心点
@@ -86,7 +88,10 @@ Page({
     wx.showLoading({ title: '加载中', mask: true })
     try {
       // 分页拉取全部可见公厕：保证地图上所有点位都打上公厕图标（小程序端单次查询上限 20 条）
-      const toilets = await util.fetchAllRecords(db.collection('toilet').where({ status: 1 }))
+      // 兼容 status=1 的种子/上报数据，也兼容手动导入时没有 status 字段的数据（status=0 仍视为隐藏不展示）
+      const toilets = await util.fetchAllRecords(
+        db.collection('toilet').where(_.or([{ status: 1 }, { status: _.exists(false) }]))
+      )
       const markers = toilets.map((item, index) => ({
         id: index,
         toiletId: item._id,
