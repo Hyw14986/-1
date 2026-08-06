@@ -183,6 +183,11 @@ Page({
     wx.navigateTo({ url: '/pages/list/list' })
   },
 
+  // 右下角加号：跳转上报页（tabBar 页使用 switchTab）
+  goReport() {
+    wx.switchTab({ url: '/pages/report/report' })
+  },
+
   // 查看厕所详情
   goDetail() {
     const toilet = this.data.selectedToilet

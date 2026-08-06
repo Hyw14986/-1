@@ -38,5 +38,6 @@
     "tabSize": 2
   },
   "appid": "wx059b081bb01787a0",
-  "simulatorPluginLibVersion": {}
+  "simulatorPluginLibVersion": {},
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
 }

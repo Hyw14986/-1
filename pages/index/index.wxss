@@ -36,7 +36,7 @@
 .locate-btn {
   position: absolute;
   right: 24rpx;
-  bottom: 300rpx;
+  bottom: 340rpx;
   z-index: 10;
   width: 84rpx;
   height: 84rpx;
@@ -52,6 +52,34 @@
 
 .locate-btn.hover {
   opacity: 0.7;
+}
+
+/* 右下角悬浮加号：随时上报新公厕 */
+.fab-add {
+  position: absolute;
+  right: 24rpx;
+  bottom: 220rpx;
+  z-index: 15;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  background: #29B6F6;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(41, 182, 246, 0.45);
+}
+
+.fab-plus {
+  font-size: 60rpx;
+  line-height: 1;
+  margin-top: -4rpx;
+}
+
+.fab-hover {
+  opacity: 0.85;
+  transform: scale(0.95);
 }
 
 /* 底部公厕简要卡片 */

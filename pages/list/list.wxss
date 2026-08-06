@@ -1,12 +1,30 @@
 /* pages/list/list.wxss - 厕所列表页样式 */
 .page {
-  padding: 20rpx 24rpx 40rpx;
+  padding: 20rpx 24rpx 200rpx;
 }
 
 .toast-tip {
   font-size: 24rpx;
   color: #9AA5B1;
   padding: 8rpx 8rpx 20rpx;
+}
+
+/* 卡片主体：左侧图标 + 右侧信息 */
+.card-main {
+  display: flex;
+  align-items: flex-start;
+}
+
+.toilet-ico {
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .card-top {
@@ -72,4 +90,32 @@
 .empty-btn {
   width: 320rpx;
   margin: 40rpx auto 0;
+}
+
+/* 悬浮加号按钮 */
+.fab-add {
+  position: fixed;
+  right: 32rpx;
+  bottom: 64rpx;
+  z-index: 100;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  background: #29B6F6;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(41, 182, 246, 0.45);
+}
+
+.fab-plus {
+  font-size: 60rpx;
+  line-height: 1;
+  margin-top: -4rpx;
+}
+
+.fab-hover {
+  opacity: 0.85;
+  transform: scale(0.95);
 }

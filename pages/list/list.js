@@ -97,6 +97,11 @@ Page({
     this.loadToilets()
   },
 
+  // 悬浮加号：跳转上报页（tabBar 页使用 switchTab）
+  goReport() {
+    wx.switchTab({ url: '/pages/report/report' })
+  },
+
   // 回到地图视图
   goMap() {
     wx.switchTab({ url: '/pages/index/index' })

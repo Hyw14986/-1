@@ -10,6 +10,9 @@
       data-id="{{item._id}}"
       bindtap="goDetail"
     >
+      <view class="card-main">
+        <image class="toilet-ico" src="/images/marker.png" mode="aspectFit" />
+        <view class="card-body">
       <view class="card-top">
         <view class="toilet-name">{{item.name}}</view>
         <view class="distance">{{item.distanceText}}</view>
@@ -25,6 +28,8 @@
       <view class="card-address" wx:if="{{item.address}}">
         <text class="addr-icon">📍</text>
         <text>{{item.address}}</text>
+      </view>
+        </view>
       </view>
     </view>
 
@@ -43,5 +48,10 @@
 
   <view class="empty" wx:if="{{loading}}">
     <view>加载中...</view>
+  </view>
+
+  <!-- 悬浮加号：随时上报新公厕 -->
+  <view class="fab-add" hover-class="fab-hover" bindtap="goReport">
+    <text class="fab-plus">＋</text>
   </view>
 </view>

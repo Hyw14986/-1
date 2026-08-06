@@ -21,6 +21,11 @@
   <!-- 右下角：回到定位 -->
   <view class="locate-btn" bindtap="locateMe" hover-class="hover">⌖</view>
 
+  <!-- 右下角：上报新公厕 -->
+  <view class="fab-add" hover-class="fab-hover" bindtap="goReport">
+    <text class="fab-plus">＋</text>
+  </view>
+
   <!-- 底部：厕所简要卡片 -->
   <view class="toilet-card card" wx:if="{{selectedToilet}}" catchtap="noop">
     <view class="card-head">
