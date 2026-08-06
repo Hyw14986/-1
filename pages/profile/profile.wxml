@@ -31,7 +31,7 @@
     <view class="section-title">我的上报（{{myToilets.length}}）</view>
     <view class="empty" wx:if="{{!loading && !myToilets.length}}">
       <view class="empty-icon">📮</view>
-      <view>还没有上报过公厕呢，点右下角加号上报一个吧~</view>
+      <view>这里还空空的～快上报第一座公厕，点亮它吧！</view>
     </view>
     <view
       class="report-item"
@@ -53,7 +53,7 @@
     <view class="section-title">我的评价（{{myComments.length}}）</view>
     <view class="empty" wx:if="{{!loading && !myComments.length}}">
       <view class="empty-icon">💬</view>
-      <view>还没有发表过评价，去给公厕打个分吧~</view>
+      <view>还没留下足迹～去给路过的好公厕点个赞吧！</view>
     </view>
     <view
       class="report-item"

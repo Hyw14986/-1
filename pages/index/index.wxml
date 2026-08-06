@@ -9,6 +9,14 @@
     </view>
   </view>
 
+  <!-- 精准筛选栏：母婴室 / 无障碍 + 蹲位余量提示 -->
+  <view class="filter-bar">
+    <view class="filter-chip {{!filters.accessible && !filters.babyCare ? 'active' : ''}}" bindtap="clearFilter">全部</view>
+    <view class="filter-chip {{filters.babyCare ? 'active' : ''}}" data-key="babyCare" bindtap="toggleFilter">🍼 母婴室</view>
+    <view class="filter-chip {{filters.accessible ? 'active' : ''}}" data-key="accessible" bindtap="toggleFilter">♿ 无障碍</view>
+    <view class="seat-chip">{{seatTip}}</view>
+  </view>
+
   <!-- 核心功能区：地图卡片 -->
   <view class="map-card">
     <!-- 地图工具按钮（卡片右上角）：列表视图 / 回到定位 -->
@@ -34,7 +42,7 @@
     </view>
 
     <!-- 加载结果提示 -->
-    <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{toilets.length}} 个公厕</view>
+    <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{markers.length}} 个公厕</view>
     <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
 
     <!-- 一键导航大按钮 -->
@@ -50,6 +58,10 @@
     <view class="quick-item" bindtap="goList" hover-class="hover">
       <view class="quick-circle quick-orange">★</view>
       <view class="quick-label">评价/记录</view>
+    </view>
+    <view class="quick-item" bindtap="buyPaper" hover-class="hover">
+      <view class="quick-circle quick-mint">🧻</view>
+      <view class="quick-label">买纸</view>
     </view>
   </view>
 

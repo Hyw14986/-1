@@ -15,7 +15,9 @@ Page({
     myComment: null,
     loading: true,
     submitting: false,
-    defaultAvatar: '/images/default-avatar.png'
+    defaultAvatar: '/images/default-avatar.png',
+    feeText: '免费',
+    seatText: '蹲位充足'
   },
 
   onLoad(options) {
@@ -51,6 +53,8 @@ Page({
         toilet,
         tags: util.getFacilityTags(toilet),
         distanceText,
+        feeText: this.getFeeText(toilet),
+        seatText: toilet.seatStatus === 'busy' ? '蹲位较紧张' : '蹲位充足',
         loading: false
       })
     } catch (err) {
@@ -60,6 +64,17 @@ Page({
     } finally {
       wx.hideLoading()
     }
+  },
+
+  /**
+   * 收费情况文案：优先 feeType，兼容旧数据的 isFree 字段
+   */
+  getFeeText(toilet) {
+    if (!toilet) return '免费'
+    if (toilet.feeType === 'paid') return '收费'
+    if (toilet.feeType === 'other') return toilet.feeDesc || '其他'
+    if (toilet.feeType === 'free') return '免费'
+    return toilet.isFree === false ? '收费' : '免费'
   },
 
   /**

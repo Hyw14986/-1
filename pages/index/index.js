@@ -21,7 +21,11 @@ Page({
     selectedToilet: null,
     initError: '',
     loadDone: false,
-    locateMaskHidden: false
+    locateMaskHidden: false,
+    // 精准筛选：母婴室 / 无障碍（可多选）
+    filters: { accessible: false, babyCare: false },
+    // 蹲位余量提示文案
+    seatTip: '蹲位充足'
   },
 
   onShow() {
@@ -92,18 +96,12 @@ Page({
       const toilets = await util.fetchAllRecords(
         db.collection('toilet').where(_.or([{ status: 1 }, { status: _.exists(false) }]))
       )
-      const markers = toilets.map((item, index) => ({
-        id: index,
-        toiletId: item._id,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        iconPath: '/images/marker.png',
-        width: 36,
-        height: 36,
-        anchor: { x: 0.5, y: 0.93 }
-      }))
       console.log('地图公厕加载数量：', toilets.length)
-      this.setData({ toilets, markers })
+      this.setData({ toilets })
+      // 按当前筛选条件生成地图标记点
+      this.refreshMarkers()
+      // 计算蹲位余量提示
+      this.setSeatTip(toilets)
       // 若已有选中的厕所，重新关联
       if (this.data.selectedToilet) {
         const found = toilets.find((t) => t._id === this.data.selectedToilet._id)
@@ -135,6 +133,118 @@ Page({
   isCollectionMissing(err) {
     const msg = (err && (err.errMsg || err.message || '')) || ''
     return msg.indexOf('collection not exists') > -1 || msg.indexOf('-502005') > -1 || msg.indexOf('DATABASE_COLLECTION_NOT_EXIST') > -1
+  },
+
+  /**
+   * 生成地图标记点（按当前筛选条件过滤）
+   */
+  buildMarkers(list) {
+    const { accessible, babyCare } = this.data.filters
+    const filtered = list.filter((t) => {
+      if (accessible && !t.hasAccessible) return false
+      if (babyCare && !t.hasBabyCare) return false
+      return true
+    })
+    return filtered.map((item, index) => ({
+      id: index,
+      toiletId: item._id,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      iconPath: '/images/marker.png',
+      width: 36,
+      height: 36,
+      anchor: { x: 0.5, y: 0.93 }
+    }))
+  },
+
+  /**
+   * 按当前筛选条件刷新地图标记点
+   */
+  refreshMarkers() {
+    const markers = this.buildMarkers(this.data.toilets)
+    this.setData({ markers })
+  },
+
+  /**
+   * 切换筛选条件（母婴室 / 无障碍，可多选）
+   */
+  toggleFilter(e) {
+    const key = e.currentTarget.dataset.key
+    const filters = { ...this.data.filters, [key]: !this.data.filters[key] }
+    this.setData({ filters })
+    this.refreshMarkers()
+    // 若选中的厕所被筛掉，收起底部卡片
+    if (this.data.selectedToilet) {
+      const stillVisible = this.data.toilets.some(
+        (t) =>
+          t._id === this.data.selectedToilet._id &&
+          (!filters.accessible || t.hasAccessible) &&
+          (!filters.babyCare || t.hasBabyCare)
+      )
+      if (!stillVisible) this.setData({ selectedToilet: null })
+    }
+  },
+
+  // 清除筛选，显示全部公厕
+  clearFilter() {
+    this.setData({ filters: { accessible: false, babyCare: false } })
+    this.refreshMarkers()
+  },
+
+  /**
+   * 蹲位余量提示：按附近公厕中「蹲位紧张」占比给出简单提示
+   */
+  setSeatTip(toilets) {
+    if (!toilets.length) {
+      this.setData({ seatTip: '暂无蹲位数据' })
+      return
+    }
+    const busy = toilets.filter((t) => t.seatStatus === 'busy').length
+    this.setData({ seatTip: busy / toilets.length >= 0.4 ? '蹲位较紧张' : '蹲位充足' })
+  },
+
+  /**
+   * 附近便利店买纸：优先已选公厕关联的便利店，否则取最近公厕的
+   */
+  buyPaper() {
+    let target = this.data.selectedToilet
+    const loc = app.globalData.userLocation
+    if (!target && this.data.toilets.length && loc) {
+      target = this.data.toilets
+        .map((t) => ({
+          ...t,
+          _dist: util.getDistance(loc.latitude, loc.longitude, t.latitude, t.longitude)
+        }))
+        .sort((a, b) => a._dist - b._dist)[0]
+    }
+    const store = target && target.nearStore
+    if (!store) {
+      wx.showModal({
+        title: '附近便利店',
+        content: '暂未收录这附近的便利店信息，可在微信「搜一搜」或外卖 App 搜索「便利店」应急购买纸巾～',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+      return
+    }
+    wx.showModal({
+      title: '附近便利店',
+      content: (store.name || '附近便利店') + (store.distanceText ? ' · 距你约' + store.distanceText : '') + '，需要导航过去买纸吗？',
+      confirmText: '去导航',
+      cancelText: '再想想',
+      success: (res) => {
+        if (res.confirm) {
+          wx.openLocation({
+            latitude: store.latitude,
+            longitude: store.longitude,
+            name: store.name,
+            address: store.address || '',
+            scale: 17,
+            fail: () => wx.showToast({ title: '打开地图失败', icon: 'none' })
+          })
+        }
+      }
+    })
   },
 
   // 跳过定位引导，直接浏览地图

@@ -61,6 +61,12 @@ Page({
             content: '已导入 ' + r.inserted + ' 个演示公厕，返回首页即可在地图上查看。',
             showCancel: false
           })
+        } else if (r.code === 3) {
+          wx.showModal({
+            title: '数据已更新',
+            content: '已为 ' + r.patched + ' 个公厕补齐蹲位状态与附近便利店信息，重新编译即可体验新功能。',
+            showCancel: false
+          })
         } else if (r.code === 2) {
           wx.showModal({
             title: '已存在演示数据',

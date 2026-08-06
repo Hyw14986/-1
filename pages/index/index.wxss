@@ -34,11 +34,55 @@
   margin-top: 8rpx;
 }
 
+/* ---------- 精准筛选栏 + 蹲位提示 ---------- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 8rpx 20rpx;
+  overflow: hidden;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 12rpx 26rpx;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #7f8c8d;
+  background: rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(255, 169, 77, 0.22);
+  margin-right: 16rpx;
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+}
+
+.filter-chip.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.35);
+}
+
+.filter-chip.hover {
+  opacity: 0.85;
+}
+
+.seat-chip {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.14);
+  border-radius: 24rpx;
+  padding: 8rpx 18rpx;
+  white-space: nowrap;
+}
+
 /* ---------- 核心功能区：地图卡片 ---------- */
 .map-card {
   position: relative;
   height: 660rpx;
-  border-radius: 36rpx;
+  border-radius: 44rpx;
   overflow: hidden;
   background: #ffffff;
   box-shadow: 0 14rpx 40rpx rgba(255, 169, 77, 0.22);
@@ -72,8 +116,11 @@
 .tool-btn {
   width: 72rpx;
   height: 72rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.55);
+  border: 2rpx solid rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24rpx);
+  -webkit-backdrop-filter: blur(24rpx);
   color: #ffa94d;
   font-size: 34rpx;
   display: flex;
@@ -170,6 +217,10 @@
   background: linear-gradient(135deg, #ffc06b, #ffa94d);
 }
 
+.quick-mint {
+  background: linear-gradient(135deg, #a8e6cf, #6ecf96);
+}
+
 .quick-label {
   margin-top: 14rpx;
   font-size: 26rpx;
@@ -249,11 +300,13 @@
   text-align: center;
   font-size: 28rpx;
   color: #ffa94d;
-  border: 2rpx solid #ffa94d;
+  border: 2rpx solid rgba(255, 169, 77, 0.45);
   border-radius: 40rpx;
   padding: 16rpx 0;
   margin-right: 20rpx;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
 }
 
 .action-btn:last-child {
@@ -278,8 +331,10 @@
   justify-content: space-around;
   align-items: center;
   height: 128rpx;
-  background: #ffffff;
-  border: 2rpx solid rgba(255, 169, 77, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  border: 2rpx solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(30rpx);
+  -webkit-backdrop-filter: blur(30rpx);
   border-radius: 72rpx;
   box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.28);
 }

@@ -67,12 +67,39 @@
           data-key="hasToiletPaper"
           bindtap="toggleTag"
         >🧻 有纸巾</view>
-        <view
-          class="tag-option {{tags.isFree ? 'active' : ''}}"
-          data-key="isFree"
-          bindtap="toggleTag"
-        >💰 免费</view>
+
       </view>
+    </view>
+
+    <!-- 收费情况单选 -->
+    <view class="field">
+      <view class="field-label">收费情况</view>
+      <view class="tag-picker">
+        <view
+          class="tag-option fee-option {{feeType === 'free' ? 'active' : ''}}"
+          data-fee="free"
+          bindtap="selectFee"
+        >💰 免费</view>
+        <view
+          class="tag-option fee-option {{feeType === 'paid' ? 'active' : ''}}"
+          data-fee="paid"
+          bindtap="selectFee"
+        >💴 收费</view>
+        <view
+          class="tag-option fee-option {{feeType === 'other' ? 'active' : ''}}"
+          data-fee="other"
+          bindtap="selectFee"
+        >🤔 其他</view>
+      </view>
+      <input
+        class="field-input fee-input"
+        wx:if="{{feeType === 'other'}}"
+        placeholder="例如：扫码付费、捐款箱等"
+        placeholder-class="ph"
+        value="{{feeDesc}}"
+        bindinput="onFeeDescInput"
+        maxlength="30"
+      />
     </view>
 
     <!-- 现场照片 -->

@@ -23,7 +23,11 @@
       </view>
       <view class="info-item">
         <text class="info-label">收费情况</text>
-        <text class="info-value">{{toilet.isFree ? '免费' : '收费'}}</text>
+        <text class="info-value">{{feeText}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">蹲位情况</text>
+        <text class="info-value">{{seatText}}</text>
       </view>
       <view class="info-item">
         <text class="info-label">无障碍</text>

@@ -87,6 +87,11 @@
   flex-wrap: wrap;
 }
 
+/* 收费情况自定义输入 */
+.fee-input {
+  margin-top: 16rpx;
+}
+
 .tag-option {
   font-size: 26rpx;
   color: #7f8c8d;

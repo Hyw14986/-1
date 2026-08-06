@@ -16,6 +16,32 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
+const _ = db.command
+
+// 演示用便利店品牌池（附近买纸功能）
+const STORE_NAMES = ['美宜佳便利店', '天福便利店', '喜市多便利店', '7-11便利店', '罗森便利店', '全家便利店']
+
+/**
+ * 为演示公厕补充「蹲位状态」与「附近便利店」信息（地标级精度）
+ * @param {object} toilet 公厕数据（用于生成便利店坐标）
+ * @param {number} index 序号
+ */
+function buildSeedPatch(toilet, index) {
+  // 蹲位状态：约 1/3 为紧张，其余充足
+  const seatStatus = index % 3 === 2 ? 'busy' : 'free'
+  const storeName = STORE_NAMES[index % STORE_NAMES.length]
+  return {
+    seatStatus,
+    nearStore: {
+      name: storeName,
+      address: toilet.address || '',
+      // 便利店坐标：在原公厕坐标基础上偏移 200~500 米
+      latitude: (toilet.latitude || 0) + 0.0015 + (index % 4) * 0.0008,
+      longitude: (toilet.longitude || 0) + 0.002,
+      distanceText: (200 + (index % 4) * 100) + 'm'
+    }
+  }
+}
 
 // 演示数据：覆盖全国主要城市的公共厕所（湖北/广东为真实地址，坐标为地标级精度）
 const SEED_TOILETS = [
@@ -182,6 +208,26 @@ exports.main = async (event) => {
   // 幂等判断：已存在种子数据则跳过
   const existRes = await db.collection('toilet').where({ source: 'seed' }).count()
   if (existRes.total > 0 && !force) {
+    // 已存在演示数据：增量补齐新字段（蹲位状态 / 附近便利店），无需强制重导
+    const missingRes = await db
+      .collection('toilet')
+      .where({ source: 'seed', seatStatus: _.exists(false) })
+      .limit(100)
+      .get()
+    if (missingRes.data.length) {
+      let patched = 0
+      for (const doc of missingRes.data) {
+        await db.collection('toilet').doc(doc._id).update({
+          data: buildSeedPatch(doc, patched)
+        })
+        patched += 1
+      }
+      return {
+        code: 3,
+        msg: '已补齐演示数据新字段（蹲位状态/附近便利店）',
+        patched
+      }
+    }
     return {
       code: 2,
       msg: '已存在演示数据，跳过导入（如需强制重新导入请传 force=true）',
@@ -189,12 +235,14 @@ exports.main = async (event) => {
     }
   }
 
-  // 批量写入
+  // 批量写入（含蹲位状态与附近便利店信息）
   let inserted = 0
-  for (const toilet of SEED_TOILETS) {
+  for (let i = 0; i < SEED_TOILETS.length; i++) {
+    const toilet = SEED_TOILETS[i]
     await db.collection('toilet').add({
       data: {
         ...toilet,
+        ...buildSeedPatch(toilet, i),
         photos: [],
         status: 1,
         source: 'seed',

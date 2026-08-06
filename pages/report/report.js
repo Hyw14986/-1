@@ -16,6 +16,9 @@ Page({
       hasToiletPaper: false,
       isFree: false
     },
+    // 收费情况：free 免费 / paid 收费 / other 其他（自定义）
+    feeType: 'free',
+    feeDesc: '',
     // 本地待上传照片
     photos: [],
     submitting: false
@@ -75,6 +78,18 @@ Page({
   toggleTag(e) {
     const key = e.currentTarget.dataset.key
     this.setData({ ['tags.' + key]: !this.data.tags[key] })
+  },
+
+  /**
+   * 选择收费情况（免费 / 收费 / 其他）
+   */
+  selectFee(e) {
+    this.setData({ feeType: e.currentTarget.dataset.fee })
+  },
+
+  // 收费情况为「其他」时的自定义文案
+  onFeeDescInput(e) {
+    this.setData({ feeDesc: e.detail.value })
   },
 
   /**
@@ -140,7 +155,9 @@ Page({
           hasAccessible: tags.hasAccessible,
           hasBabyCare: tags.hasBabyCare,
           hasToiletPaper: tags.hasToiletPaper,
-          isFree: tags.isFree,
+          isFree: this.data.feeType === 'free',
+          feeType: this.data.feeType,
+          feeDesc: this.data.feeType === 'other' ? this.data.feeDesc.trim() : '',
           photos: photoFileIDs,
           rating: 0,
           ratingCount: 0,
