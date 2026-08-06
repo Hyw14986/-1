@@ -1,4 +1,4 @@
-/* pages/report/report.wxss - 上报公厕页样式（可爱马卡龙风） */
+/* pages/report/report.wxss - 上报公厕页样式（温馨可爱扁平插画风，与首页同款） */
 .page {
   padding: 0 0 40rpx;
 }
@@ -11,7 +11,7 @@
   padding: 12rpx 30rpx;
   background: #ffffff;
   border-radius: 40rpx;
-  color: #74b9ff;
+  color: #ffa94d;
   font-size: 26rpx;
   font-weight: 600;
   box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
@@ -26,10 +26,10 @@
   opacity: 0.8;
 }
 
-/* 表单整体卡片：可爱大圆角 + 柔和浅蓝阴影 */
+/* 表单整体卡片：可爱大圆角 + 柔和暖橙阴影 */
 .card {
-  border-radius: 28rpx;
-  box-shadow: 0 10rpx 30rpx rgba(116, 185, 255, 0.16);
+  border-radius: 32rpx;
+  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.18);
 }
 
 .field {
@@ -56,7 +56,7 @@
 .field-input {
   width: 100%;
   height: 84rpx;
-  background: #f0f7ff;
+  background: #fff4e0;
   border-radius: 16rpx;
   padding: 0 24rpx;
   box-sizing: border-box;
@@ -73,8 +73,8 @@
 
 .locate-result {
   font-size: 24rpx;
-  color: #74b9ff;
-  background: rgba(116, 185, 255, 0.12);
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.12);
   border-radius: 20rpx;
   padding: 14rpx 20rpx;
   margin-bottom: 16rpx;
@@ -90,18 +90,18 @@
 .tag-option {
   font-size: 26rpx;
   color: #7f8c8d;
-  background: #f4f6f9;
-  border: 2rpx solid #e8ecf1;
+  background: #fdf3e3;
+  border: 2rpx solid #f2e0c4;
   border-radius: 40rpx;
   padding: 14rpx 32rpx;
   margin: 0 16rpx 16rpx 0;
 }
 
 .tag-option.active {
-  color: #74b9ff;
+  color: #e8833a;
   font-weight: 600;
-  background: rgba(116, 185, 255, 0.16);
-  border-color: #74b9ff;
+  background: rgba(255, 169, 77, 0.18);
+  border-color: #ffa94d;
 }
 
 /* 照片选择 */
@@ -121,7 +121,7 @@
   width: 100%;
   height: 100%;
   border-radius: 20rpx;
-  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.18);
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
 }
 
 .photo-del {
@@ -142,10 +142,10 @@
 .photo-add {
   width: 180rpx;
   height: 180rpx;
-  border: 2rpx dashed #b9cde8;
+  border: 2rpx dashed #ffcf9e;
   border-radius: 24rpx;
-  color: #b9cde8;
-  background: #f7fbff;
+  color: #ffa94d;
+  background: #fff7e8;
   font-size: 60rpx;
   display: flex;
   align-items: center;

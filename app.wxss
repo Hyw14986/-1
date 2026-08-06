@@ -1,9 +1,9 @@
 /**
- * app.wxss - 全局样式（可爱马卡龙风）
- * 主色调：浅天蓝 #74b9ff（按钮、选中tab、强调元素）
- * 辅助色：浅粉 #ffb8d1、薄荷绿 #a8e6cf
- * 页面背景：#f7faff；正文 #2c3e50；次要文字 #7f8c8d
- * 卡片圆角 20-24rpx、按钮药丸圆角 50rpx、输入框圆角 16rpx、柔和浅蓝阴影
+ * app.wxss - 全局样式（温馨可爱扁平插画风，与首页同款）
+ * 主色调：暖橙 #ffa94d（按钮、选中tab、强调元素）
+ * 辅助色：薄荷绿 #8fd9a8、浅粉 #ffb8d1
+ * 页面背景：#fff9ef 暖米白；正文 #2c3e50；次要文字 #7f8c8d
+ * 卡片大圆角 24-32rpx、按钮药丸圆角 50rpx、输入框圆角 16rpx、柔和暖橙阴影
  * 全部使用 rpx 移动端适配
  */
 
@@ -17,23 +17,23 @@ page {
 /* ---------- 通用卡片 ---------- */
 .card {
   background-color: #ffffff;
-  border-radius: 24rpx;
+  border-radius: 28rpx;
   padding: 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.16);
+  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
 }
 
-/* ---------- 可爱卡片：白色、大圆角、柔和浅蓝阴影、四周留白 ---------- */
+/* ---------- 可爱卡片：白色、大圆角、柔和暖橙阴影、四周留白 ---------- */
 .cute-card {
   background-color: #ffffff;
-  border-radius: 24rpx;
+  border-radius: 28rpx;
   padding: 28rpx;
-  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.14);
+  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
   margin: 24rpx 24rpx 0;
 }
 
-/* ---------- 药丸主按钮 ---------- */
+/* ---------- 药丸主按钮（暖橙渐变，与首页一键导航同款） ---------- */
 .btn-primary {
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
@@ -41,7 +41,7 @@ page {
   padding: 20rpx 0;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.35);
+  box-shadow: 0 8rpx 20rpx rgba(255, 169, 77, 0.4);
 }
 
 .btn-primary::after {
@@ -53,9 +53,9 @@ page {
   box-shadow: none;
 }
 
-/* ---------- 可爱药丸按钮 ---------- */
+/* ---------- 可爱药丸按钮（暖橙渐变） ---------- */
 .cute-btn {
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
@@ -63,18 +63,18 @@ page {
   padding: 20rpx 48rpx;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.35);
+  box-shadow: 0 8rpx 20rpx rgba(255, 169, 77, 0.4);
 }
 
 .cute-btn::after {
   border: none;
 }
 
-/* ---------- 药丸描边按钮 ---------- */
+/* ---------- 药丸描边按钮（暖橙描边） ---------- */
 .btn-outline {
   background: #ffffff;
-  color: #74b9ff;
-  border: 2rpx solid #74b9ff;
+  color: #ffa94d;
+  border: 2rpx solid #ffa94d;
   font-size: 28rpx;
   border-radius: 50rpx;
   padding: 16rpx 0;
@@ -86,25 +86,25 @@ page {
   border: none;
 }
 
-/* ---------- 输入框统一可爱风格 ---------- */
+/* ---------- 输入框统一可爱风格（暖米底色） ---------- */
 input,
 textarea {
-  background: #f0f7ff;
+  background: #fff4e0;
   border-radius: 16rpx;
 }
 
 /* 占位符文字（配合 placeholder-class="ph" 使用，降低透明度） */
 .ph {
-  color: #a9c4e8;
-  opacity: 0.75;
+  color: #d0b48a;
+  opacity: 0.8;
 }
 
-/* ---------- 设施标签 ---------- */
+/* ---------- 设施标签（暖橙） ---------- */
 .tag {
   display: inline-block;
   font-size: 22rpx;
-  color: #74b9ff;
-  background: rgba(116, 185, 255, 0.14);
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.16);
   border-radius: 24rpx;
   padding: 8rpx 18rpx;
   margin-right: 12rpx;
@@ -115,7 +115,7 @@ textarea {
   display: inline-block;
   font-size: 22rpx;
   color: #ffffff;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
   border-radius: 24rpx;
   padding: 8rpx 18rpx;
   margin-right: 12rpx;
@@ -129,7 +129,7 @@ textarea {
 }
 
 .star-text.empty {
-  color: #e6ebf2;
+  color: #f0e3cd;
 }
 
 /* ---------- 空状态 ---------- */
@@ -148,10 +148,10 @@ textarea {
 /* ---------- 列表卡片通用 ---------- */
 .list-card {
   background: #ffffff;
-  border-radius: 24rpx;
+  border-radius: 28rpx;
   padding: 26rpx 28rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(255, 169, 77, 0.14);
+  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
 }
 
 .list-card:active {

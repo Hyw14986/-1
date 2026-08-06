@@ -1,12 +1,45 @@
-/* pages/list/list.wxss - 厕所列表页样式（可爱马卡龙风） */
+/* pages/list/list.wxss - 厕所列表页样式（温馨可爱扁平插画风，与首页同款） */
 .page {
-  padding: 20rpx 24rpx 200rpx;
+  padding: 24rpx 24rpx 200rpx;
+  background: #fff9ef;
 }
 
-.toast-tip {
+/* ---------- 顶部标题区（与首页品牌区同款） ---------- */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 8rpx 20rpx;
+}
+
+.logo {
+  width: 88rpx;
+  height: 88rpx;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.welcome-title {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  letter-spacing: 2rpx;
+}
+
+.welcome-sub {
   font-size: 24rpx;
   color: #7f8c8d;
-  padding: 8rpx 8rpx 20rpx;
+  margin-top: 6rpx;
+}
+
+/* 统计提示：暖橙小胶囊 */
+.toast-tip {
+  display: inline-block;
+  font-size: 24rpx;
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.14);
+  border-radius: 24rpx;
+  padding: 10rpx 22rpx;
+  margin: 0 8rpx 24rpx;
 }
 
 /* 卡片主体：左侧图标 + 右侧信息 */
@@ -46,8 +79,8 @@
 .distance {
   flex-shrink: 0;
   font-size: 24rpx;
-  color: #74b9ff;
-  background: rgba(116, 185, 255, 0.14);
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.16);
   border-radius: 24rpx;
   padding: 6rpx 16rpx;
   margin-left: 20rpx;
@@ -92,7 +125,7 @@
   margin: 40rpx auto 0;
 }
 
-/* 悬浮加号按钮 */
+/* 悬浮加号按钮（暖橙渐变，呼应首页一键导航） */
 .fab-add {
   position: fixed;
   right: 32rpx;
@@ -101,12 +134,12 @@
   width: 108rpx;
   height: 108rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10rpx 26rpx rgba(116, 185, 255, 0.5);
+  box-shadow: 0 10rpx 26rpx rgba(255, 169, 77, 0.5);
 }
 
 .fab-plus {
@@ -130,9 +163,9 @@
   flex: 1;
   text-align: center;
   font-size: 26rpx;
-  color: #74b9ff;
+  color: #ffa94d;
   background: #ffffff;
-  border: 2rpx solid #74b9ff;
+  border: 2rpx solid #ffa94d;
   border-radius: 40rpx;
   padding: 12rpx 0;
   margin-right: 20rpx;
@@ -143,8 +176,8 @@
 }
 
 .action-primary {
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  color: #ffffff;
   border: none;
-  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.35);
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.4);
 }

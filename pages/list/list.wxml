@@ -1,6 +1,14 @@
 <!-- pages/list/list.wxml - 厕所列表页 -->
 <view class="page">
-  <view class="toast-tip" wx:if="{{toilets.length}}">共 {{toilets.length}} 个公共厕所，按距离排序</view>
+  <!-- 顶部标题区：与首页品牌区同款 -->
+  <view class="header">
+    <image class="logo" src="/images/logo-toilet.png" mode="aspectFit" />
+    <view class="welcome">
+      <view class="welcome-title">附近公厕</view>
+      <view class="welcome-sub">按距离由近到远，帮你找最近的好去处</view>
+    </view>
+  </view>
+  <view class="toast-tip" wx:if="{{toilets.length}}">共 {{toilets.length}} 个公共厕所</view>
 
   <view class="list" wx:if="{{!loading}}">
     <view

@@ -1,4 +1,4 @@
-/* pages/profile/profile.wxss - 我的页面样式（可爱马卡龙风） */
+/* pages/profile/profile.wxss - 我的页面样式（温馨可爱扁平插画风，与首页同款） */
 .page {
   padding: 0 0 60rpx;
 }
@@ -10,7 +10,7 @@
   padding: 12rpx 30rpx;
   background: #ffffff;
   border-radius: 40rpx;
-  color: #74b9ff;
+  color: #ffa94d;
   font-size: 26rpx;
   font-weight: 600;
   box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
@@ -32,8 +32,8 @@
   margin: 24rpx 24rpx 0;
   padding: 48rpx 36rpx;
   border-radius: 28rpx;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  box-shadow: 0 12rpx 32rpx rgba(116, 185, 255, 0.4);
+  background: linear-gradient(135deg, #ffc06b, #ffa94d);
+  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.4);
 }
 
 .avatar-btn {
@@ -81,7 +81,7 @@
   font-size: 32rpx;
   font-weight: 600;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.32);
   border-radius: 16rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
@@ -95,8 +95,8 @@
   font-size: 26rpx;
   border-radius: 50rpx;
   background: #ffffff;
-  color: #74b9ff;
-  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.12);
+  color: #ffa94d;
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.25);
 }
 
 /* 区块卡片：使用 cute-card（大圆角 + 柔和阴影 + 四周留白） */
@@ -125,7 +125,7 @@
 /* 上报/评价条目 */
 .report-item {
   padding: 20rpx 0;
-  border-bottom: 2rpx solid #eef4fc;
+  border-bottom: 2rpx solid #f7ead6;
 }
 
 .report-item:last-child {
@@ -152,8 +152,8 @@
 .report-status {
   flex-shrink: 0;
   font-size: 22rpx;
-  color: #74b9ff;
-  background: rgba(116, 185, 255, 0.14);
+  color: #e8833a;
+  background: rgba(255, 169, 77, 0.16);
   border-radius: 24rpx;
   padding: 4rpx 14rpx;
 }
