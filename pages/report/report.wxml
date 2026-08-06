@@ -1,5 +1,11 @@
 <!-- pages/report/report.wxml - 上报公厕页 -->
 <view class="page">
+  <!-- 返回主页 -->
+  <view class="back-home" bindtap="goHome" hover-class="hover">
+    <text class="back-home-icon">🏠</text>
+    <text>返回主页</text>
+  </view>
+
   <view class="card cute-card">
     <!-- 厕所名称 -->
     <view class="field">

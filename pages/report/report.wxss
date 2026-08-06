@@ -3,6 +3,29 @@
   padding: 0 0 40rpx;
 }
 
+/* 返回主页按钮 */
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  margin: 16rpx 24rpx 0;
+  padding: 12rpx 30rpx;
+  background: #ffffff;
+  border-radius: 40rpx;
+  color: #74b9ff;
+  font-size: 26rpx;
+  font-weight: 600;
+  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
+}
+
+.back-home-icon {
+  margin-right: 8rpx;
+  font-size: 28rpx;
+}
+
+.back-home.hover {
+  opacity: 0.8;
+}
+
 /* 表单整体卡片：可爱大圆角 + 柔和浅蓝阴影 */
 .card {
   border-radius: 28rpx;

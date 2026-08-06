@@ -21,6 +21,11 @@ Page({
     submitting: false
   },
 
+  // 返回主页（tabBar 页使用 switchTab）
+  goHome() {
+    wx.switchTab({ url: '/pages/index/index' })
+  },
+
   onNameInput(e) {
     this.setData({ name: e.detail.value })
   },
