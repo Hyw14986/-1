@@ -1,11 +1,20 @@
-// pages/index/index.js - 首页：地图展示周边公厕
+// pages/index/index.js - 首页：地图展示周边公厕（周边搜索 POI + 用户上报点位）
 const app = getApp()
 const db = wx.cloud.database()
-// 数据库查询指令（用于兼容手动导入时缺少 status 字段的数据）
-const _ = db.command
 const util = require('../../utils/util.js')
 
-// 演示数据所在城市中心（广州珠江新城），定位失败时的兜底中心点
+// ============================================================
+// 腾讯位置服务 WebService API 配置
+// 1. 前往 https://lbs.qq.com 注册开发者并创建应用，申请 Key（需开通 WebServiceAPI）
+// 2. 把下面的 QQ_MAP_KEY 替换成你自己的 Key
+// 3. 在小程序后台【开发管理 → 服务器域名 → request 合法域名】添加：https://apis.map.qq.com
+// ============================================================
+const QQ_MAP_KEY = 'GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU'
+const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
+const SEARCH_KEYWORD = '公共厕所'
+const SEARCH_RADIUS = 3000 // 周边搜索半径（米）
+
+// 定位失败时的兜底中心点（广州珠江新城），仅用于保证地图可打开
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 
 Page({
@@ -19,10 +28,9 @@ Page({
     locationReady: false,
     loadingDone: false,
     selectedToilet: null,
-    initError: '',
     loadDone: false,
     locateMaskHidden: false,
-    // 精准筛选：母婴室 / 无障碍（可多选）
+    // 精准筛选：母婴室 / 无障碍（可多选，仅对带设施字段的用户上报点位生效）
     filters: { accessible: false, babyCare: false },
     // 蹲位余量提示文案
     seatTip: '蹲位充足'
@@ -38,11 +46,11 @@ Page({
   },
 
   /**
-   * 页面初始化：先定位，再拉取公厕点位
+   * 页面初始化：先定位，再加载周边公厕
    */
   async initPage() {
     await this.ensureLocation()
-    this.loadToilets()
+    this.loadMarkers()
   },
 
   /**
@@ -72,7 +80,8 @@ Page({
           resolve(true)
         },
         fail: () => {
-          // 未授权或失败：使用演示数据城市作为中心点，并展示引导
+          // 定位失败：友好提示，回退到默认中心点，仅展示用户上报点位
+          wx.showToast({ title: '定位失败，请检查定位权限后重试', icon: 'none' })
           this.setData({
             latitude: DEFAULT_CENTER.latitude,
             longitude: DEFAULT_CENTER.longitude,
@@ -86,75 +95,138 @@ Page({
   },
 
   /**
-   * 拉取全部可见公厕并生成地图标记点
+   * 加载并合并两类公厕点位，生成地图标记：
+   * ① 腾讯位置服务周边搜索 POI（type: 'poi'）
+   * ② 云数据库 toilet_report 用户上报点位（type: 'user_report'）
+   * @param {boolean} silent 拖动地图等静默刷新时不显示 loading
    */
-  async loadToilets() {
-    wx.showLoading({ title: '加载中', mask: true })
+  async loadMarkers(silent) {
+    if (!silent) wx.showLoading({ title: '加载中', mask: true })
     try {
-      // 分页拉取全部可见公厕：保证地图上所有点位都打上公厕图标（小程序端单次查询上限 20 条）
-      // 兼容 status=1 的种子/上报数据，也兼容手动导入时没有 status 字段的数据（status=0 仍视为隐藏不展示）
-      const toilets = await util.fetchAllRecords(
-        db.collection('toilet').where(_.or([{ status: 1 }, { status: _.exists(false) }]))
-      )
-      console.log('地图公厕加载数量：', toilets.length)
+      const loc = app.globalData.userLocation
+      // 并行拉取两类数据源；定位失败时没有搜索中心，只展示用户上报点位
+      const [pois, reports] = await Promise.all([
+        loc ? this.searchNearbyPois(loc.latitude, loc.longitude) : Promise.resolve([]),
+        this.loadUserReports()
+      ])
+      const toilets = pois.concat(reports)
+      console.log('周边公厕数量：poi=', pois.length, 'user_report=', reports.length)
       this.setData({ toilets })
       // 按当前筛选条件生成地图标记点
       this.refreshMarkers()
       // 计算蹲位余量提示
       this.setSeatTip(toilets)
-      // 若已有选中的厕所，重新关联
+      // 若已有选中的公厕，重新关联（按 类型+坐标 匹配，POI 无 _id）
       if (this.data.selectedToilet) {
-        const found = toilets.find((t) => t._id === this.data.selectedToilet._id)
+        const selected = this.data.selectedToilet
+        const found = toilets.find(
+          (t) => t.type === selected.type && t.latitude === selected.latitude && t.longitude === selected.longitude
+        )
         if (found) this.selectToilet(found)
       }
-    } catch (err) {
-      console.error('加载公厕失败', err)
-      if (this.isCollectionMissing(err)) {
-        // 云数据库集合未创建：给出初始化引导
-        this.setData({ initError: '数据库未初始化' })
-        wx.showModal({
-          title: '云数据库尚未初始化',
-          content: '请先在 cloudfunctions/initData 上右键「上传并部署：云端安装依赖」，再右键「云端测试」运行一次，即可自动创建集合并导入演示公厕。',
-          showCancel: false,
-          confirmText: '知道了'
-        })
-      } else {
-        wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
-      }
     } finally {
-      wx.hideLoading()
+      if (!silent) wx.hideLoading()
       this.setData({ loadDone: true })
     }
   },
 
   /**
-   * 判断是否为云数据库集合不存在的错误
+   * 腾讯位置服务：周边搜索 3000 米内「公共厕所」POI（GCJ-02 坐标系，适配 map 组件）
    */
-  isCollectionMissing(err) {
-    const msg = (err && (err.errMsg || err.message || '')) || ''
-    return msg.indexOf('collection not exists') > -1 || msg.indexOf('-502005') > -1 || msg.indexOf('DATABASE_COLLECTION_NOT_EXIST') > -1
+  searchNearbyPois(latitude, longitude) {
+    return new Promise((resolve) => {
+      // Key 未配置时跳过周边搜索，避免无意义请求
+      if (!QQ_MAP_KEY || QQ_MAP_KEY.indexOf('请替换') === 0) {
+        console.warn('未配置腾讯位置服务 QQ_MAP_KEY，已跳过周边搜索')
+        resolve([])
+        return
+      }
+      wx.request({
+        url: QQ_SEARCH_URL,
+        data: {
+          keyword: SEARCH_KEYWORD,
+          location: latitude + ',' + longitude,
+          radius: SEARCH_RADIUS,
+          page_size: 20,
+          key: QQ_MAP_KEY
+        },
+        success: (res) => {
+          const body = res.data || {}
+          if (body.status === 0 && Array.isArray(body.data)) {
+            resolve(
+              body.data.map((item) => ({
+                type: 'poi',
+                name: item.title || '公共厕所',
+                address: item.address || item.title || '',
+                latitude: item.location.lat,
+                longitude: item.location.lng
+              }))
+            )
+          } else {
+            console.warn('腾讯周边搜索无结果', body)
+            resolve([])
+          }
+        },
+        fail: (err) => {
+          console.warn('腾讯周边搜索请求失败', err)
+          resolve([])
+        }
+      })
+    })
   },
 
   /**
-   * 生成地图标记点（按当前筛选条件过滤）
+   * 读取云数据库 toilet_report 集合中的用户上报公厕（集合不存在时静默返回空）
+   */
+  async loadUserReports() {
+    try {
+      const list = await util.fetchAllRecords(db.collection('toilet_report'))
+      return list.map((item) => ({
+        type: 'user_report',
+        _id: item._id,
+        name: item.name || '未命名公厕',
+        address: item.address || '',
+        latitude: item.latitude,
+        longitude: item.longitude,
+        rating: item.rating,
+        ratingCount: item.ratingCount,
+        hasAccessible: !!item.hasAccessible,
+        hasBabyCare: !!item.hasBabyCare,
+        hasToiletPaper: !!item.hasToiletPaper,
+        isFree: !!item.isFree,
+        seatStatus: item.seatStatus
+      }))
+    } catch (err) {
+      // 集合未创建/无权限时忽略，不影响周边 POI 渲染
+      console.warn('读取用户上报公厕失败（集合不存在时忽略）', err)
+      return []
+    }
+  },
+
+  /**
+   * 生成地图标记点（保留原始下标便于回查；按筛选条件过滤）
    */
   buildMarkers(list) {
     const { accessible, babyCare } = this.data.filters
-    const filtered = list.filter((t) => {
-      if (accessible && !t.hasAccessible) return false
-      if (babyCare && !t.hasBabyCare) return false
-      return true
-    })
-    return filtered.map((item, index) => ({
-      id: index,
-      toiletId: item._id,
-      latitude: item.latitude,
-      longitude: item.longitude,
-      iconPath: '/images/marker.png',
-      width: 36,
-      height: 36,
-      anchor: { x: 0.5, y: 0.93 }
-    }))
+    return list
+      .map((item, index) => ({
+        id: index,
+        toiletIndex: index,
+        type: item.type,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        // 来源标记：poi 用常规图标，user_report 用高亮图标，便于区分
+        iconPath: item.type === 'user_report' ? '/images/marker-active.png' : '/images/marker.png',
+        width: item.type === 'user_report' ? 40 : 36,
+        height: item.type === 'user_report' ? 40 : 36,
+        anchor: { x: 0.5, y: 0.93 }
+      }))
+      .filter((marker, index) => {
+        const item = list[index]
+        if (accessible && !item.hasAccessible) return false
+        if (babyCare && !item.hasBabyCare) return false
+        return true
+      })
   },
 
   /**
@@ -173,13 +245,11 @@ Page({
     const filters = { ...this.data.filters, [key]: !this.data.filters[key] }
     this.setData({ filters })
     this.refreshMarkers()
-    // 若选中的厕所被筛掉，收起底部卡片
+    // 若选中的公厕被筛掉，收起底部卡片
     if (this.data.selectedToilet) {
+      const selected = this.data.selectedToilet
       const stillVisible = this.data.toilets.some(
-        (t) =>
-          t._id === this.data.selectedToilet._id &&
-          (!filters.accessible || t.hasAccessible) &&
-          (!filters.babyCare || t.hasBabyCare)
+        (t) => t.type === selected.type && t.latitude === selected.latitude && t.longitude === selected.longitude
       )
       if (!stillVisible) this.setData({ selectedToilet: null })
     }
@@ -192,7 +262,7 @@ Page({
   },
 
   /**
-   * 蹲位余量提示：按附近公厕中「蹲位紧张」占比给出简单提示
+   * 蹲位余量提示：按点位中「蹲位紧张」占比给出简单提示（无数据时默认充足）
    */
   setSeatTip(toilets) {
     if (!toilets.length) {
@@ -204,47 +274,14 @@ Page({
   },
 
   /**
-   * 附近便利店买纸：优先已选公厕关联的便利店，否则取最近公厕的
+   * 拖动地图结束：以地图中心点作为新的搜索中心，静默刷新周边公厕
    */
-  buyPaper() {
-    let target = this.data.selectedToilet
-    const loc = app.globalData.userLocation
-    if (!target && this.data.toilets.length && loc) {
-      target = this.data.toilets
-        .map((t) => ({
-          ...t,
-          _dist: util.getDistance(loc.latitude, loc.longitude, t.latitude, t.longitude)
-        }))
-        .sort((a, b) => a._dist - b._dist)[0]
-    }
-    const store = target && target.nearStore
-    if (!store) {
-      wx.showModal({
-        title: '附近便利店',
-        content: '暂未收录这附近的便利店信息，可在微信「搜一搜」或外卖 App 搜索「便利店」应急购买纸巾～',
-        showCancel: false,
-        confirmText: '知道了'
-      })
-      return
-    }
-    wx.showModal({
-      title: '附近便利店',
-      content: (store.name || '附近便利店') + (store.distanceText ? ' · 距你约' + store.distanceText : '') + '，需要导航过去买纸吗？',
-      confirmText: '去导航',
-      cancelText: '再想想',
-      success: (res) => {
-        if (res.confirm) {
-          wx.openLocation({
-            latitude: store.latitude,
-            longitude: store.longitude,
-            name: store.name,
-            address: store.address || '',
-            scale: 17,
-            fail: () => wx.showToast({ title: '打开地图失败', icon: 'none' })
-          })
-        }
-      }
-    })
+  onMapRegionChange(e) {
+    if (e.type !== 'end') return
+    const center = e.detail && e.detail.centerLocation
+    if (!center || !center.latitude) return
+    this.setData({ latitude: center.latitude, longitude: center.longitude })
+    this.loadMarkers(true)
   },
 
   // 跳过定位引导，直接浏览地图
@@ -252,32 +289,36 @@ Page({
     this.setData({ locateMaskHidden: true })
   },
 
-  // 数据库初始化完成后重新加载
+  // 手动重试加载周边公厕
   retryLoad() {
-    this.setData({ initError: '' })
-    this.loadToilets()
+    this.loadMarkers()
   },
 
   /**
-   * 点击地图标记：弹出厕所简要卡片
+   * 点击地图标记：弹出公厕简要卡片（名称、地址、距离）
    */
   onMarkerTap(e) {
     const marker = this.data.markers.find((m) => m.id === e.detail.markerId)
     if (!marker) return
-    const toilet = this.data.toilets.find((t) => t._id === marker.toiletId)
+    const toilet = this.data.toilets[marker.toiletIndex]
     if (!toilet) return
     this.selectToilet(toilet)
     // 高亮选中的标记点
-    const markers = this.data.markers.map((m) =>
-      m.toiletId === toilet._id
-        ? { ...m, iconPath: '/images/marker-active.png', width: 42, height: 42 }
-        : { ...m, iconPath: '/images/marker.png', width: 36, height: 36 }
-    )
+    const markers = this.data.markers.map((m) => {
+      const isActive = m.id === marker.id
+      const base = m.type === 'user_report' ? '/images/marker-active.png' : '/images/marker.png'
+      return {
+        ...m,
+        iconPath: isActive ? '/images/marker-active.png' : base,
+        width: isActive ? 42 : m.type === 'user_report' ? 40 : 36,
+        height: isActive ? 42 : m.type === 'user_report' ? 40 : 36
+      }
+    })
     this.setData({ markers })
   },
 
   /**
-   * 组装选中公厕的卡片数据（距离、设施标签）
+   * 组装选中公厕的卡片数据（设施标签、距离）
    */
   selectToilet(toilet) {
     const selectedToilet = {
@@ -311,15 +352,19 @@ Page({
     wx.navigateTo({ url: '/pages/list/list' })
   },
 
-  // 右下角加号：跳转上报页（tabBar 页使用 switchTab）
+  // 跳转上报页（tabBar 页使用 switchTab）
   goReport() {
     wx.switchTab({ url: '/pages/report/report' })
   },
 
-  // 查看厕所详情
+  // 查看厕所详情：仅用户上报点位有数据库记录，POI 点位提示不支持
   goDetail() {
     const toilet = this.data.selectedToilet
     if (!toilet) return
+    if (!toilet._id) {
+      wx.showToast({ title: '该点位暂不支持查看详情', icon: 'none' })
+      return
+    }
     wx.navigateTo({ url: '/pages/detail/detail?id=' + toilet._id })
   },
 
@@ -346,7 +391,7 @@ Page({
     })
   },
 
-  // 调用微信地图导航（底部卡片“导航”按钮）
+  // 导航到选中的公厕
   navToToilet() {
     const toilet = this.data.selectedToilet
     if (!toilet) return
@@ -410,6 +455,50 @@ Page({
         if (res.authSetting['scope.userLocation']) {
           app.globalData.userLocation = null
           this.ensureLocation()
+        }
+      }
+    })
+  },
+
+  /**
+   * 附近便利店买纸：优先已选公厕关联的便利店，否则取最近的公厕
+   */
+  buyPaper() {
+    let target = this.data.selectedToilet
+    const loc = app.globalData.userLocation
+    if (!target && this.data.toilets.length && loc) {
+      target = this.data.toilets
+        .map((t) => ({
+          ...t,
+          _dist: util.getDistance(loc.latitude, loc.longitude, t.latitude, t.longitude)
+        }))
+        .sort((a, b) => a._dist - b._dist)[0]
+    }
+    const store = target && target.nearStore
+    if (!store) {
+      wx.showModal({
+        title: '附近便利店',
+        content: '暂未收录这附近的便利店信息，可在微信「搜一搜」或外卖 App 搜索「便利店」应急购买纸巾～',
+        showCancel: false,
+        confirmText: '知道了'
+      })
+      return
+    }
+    wx.showModal({
+      title: '附近便利店',
+      content: (store.name || '附近便利店') + (store.distanceText ? ' · 距你约' + store.distanceText : '') + '，需要导航过去买纸吗？',
+      confirmText: '去导航',
+      cancelText: '再想想',
+      success: (res) => {
+        if (res.confirm) {
+          wx.openLocation({
+            latitude: store.latitude,
+            longitude: store.longitude,
+            name: store.name,
+            address: store.address || '',
+            scale: 17,
+            fail: () => wx.showToast({ title: '打开地图失败', icon: 'none' })
+          })
         }
       }
     })

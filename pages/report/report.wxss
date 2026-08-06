@@ -1,20 +1,20 @@
-/* pages/report/report.wxss - 上报公厕页样式（温馨可爱扁平插画风，与首页同款） */
+/* pages/report/report.wxss - 上报公厕页样式（治愈马卡龙风） */
 .page {
-  padding: 0 0 40rpx;
+  padding: 0 0 48rpx;
 }
 
 /* 返回主页按钮 */
 .back-home {
   display: inline-flex;
   align-items: center;
-  margin: 16rpx 24rpx 0;
-  padding: 12rpx 30rpx;
+  margin: 20rpx 28rpx 0;
+  padding: 12rpx 32rpx;
   background: #ffffff;
-  border-radius: 40rpx;
-  color: #ffa94d;
+  border-radius: 44rpx;
+  color: #5b9be8;
   font-size: 26rpx;
   font-weight: 600;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.18);
 }
 
 .back-home-icon {
@@ -26,14 +26,14 @@
   opacity: 0.8;
 }
 
-/* 表单整体卡片：可爱大圆角 + 柔和暖橙阴影 */
+/* 表单整体卡片：大圆角 + 柔和蓝调阴影 */
 .card {
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.18);
+  border-radius: 36rpx;
+  box-shadow: 0 16rpx 40rpx rgba(127, 181, 245, 0.18);
 }
 
 .field {
-  margin-bottom: 32rpx;
+  margin-bottom: 36rpx;
 }
 
 .field:last-child {
@@ -42,41 +42,45 @@
 
 .field-label {
   font-size: 28rpx;
-  color: #2c3e50;
+  color: #3e4a5f;
   font-weight: 600;
   margin-bottom: 16rpx;
 }
 
 .required {
-  color: #ff8fb1;
+  color: #f591b8;
   font-weight: 700;
   font-size: 32rpx;
 }
 
 .field-input {
   width: 100%;
-  height: 84rpx;
-  background: #fff4e0;
-  border-radius: 16rpx;
-  padding: 0 24rpx;
+  height: 88rpx;
+  background: #eff6ff;
+  border-radius: 24rpx;
+  padding: 0 26rpx;
   box-sizing: border-box;
   font-size: 28rpx;
-  color: #2c3e50;
+  color: #3e4a5f;
 }
 
 .locate-btn {
-  height: 84rpx;
-  line-height: 84rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   padding: 0;
   margin-bottom: 16rpx;
 }
 
+.locate-btn.hover {
+  opacity: 0.85;
+}
+
 .locate-result {
   font-size: 24rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.12);
-  border-radius: 20rpx;
-  padding: 14rpx 20rpx;
+  color: #5b9be8;
+  background: rgba(127, 181, 245, 0.12);
+  border-radius: 24rpx;
+  padding: 14rpx 22rpx;
   margin-bottom: 16rpx;
   word-break: break-all;
 }
@@ -94,19 +98,23 @@
 
 .tag-option {
   font-size: 26rpx;
-  color: #7f8c8d;
-  background: #fdf3e3;
-  border: 2rpx solid #f2e0c4;
-  border-radius: 40rpx;
+  color: #7f8ba0;
+  background: #f3f7fd;
+  border: 2rpx solid #e3ebf5;
+  border-radius: 44rpx;
   padding: 14rpx 32rpx;
   margin: 0 16rpx 16rpx 0;
 }
 
+.tag-option.hover {
+  opacity: 0.85;
+}
+
 .tag-option.active {
-  color: #e8833a;
+  color: #5b9be8;
   font-weight: 600;
-  background: rgba(255, 169, 77, 0.18);
-  border-color: #ffa94d;
+  background: rgba(127, 181, 245, 0.18);
+  border-color: #7fb5f5;
 }
 
 /* 照片选择 */
@@ -125,8 +133,8 @@
 .photo-img {
   width: 100%;
   height: 100%;
-  border-radius: 20rpx;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.2);
 }
 
 .photo-del {
@@ -136,7 +144,7 @@
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: rgba(44, 62, 80, 0.65);
+  background: rgba(63, 78, 102, 0.6);
   color: #FFFFFF;
   font-size: 28rpx;
   display: flex;
@@ -144,28 +152,41 @@
   justify-content: center;
 }
 
+.photo-del.hover {
+  opacity: 0.8;
+}
+
 .photo-add {
   width: 180rpx;
   height: 180rpx;
-  border: 2rpx dashed #ffcf9e;
-  border-radius: 24rpx;
-  color: #ffa94d;
-  background: #fff7e8;
+  border: 2rpx dashed #9fc6f5;
+  border-radius: 28rpx;
+  color: #7fb5f5;
+  background: #f2f8ff;
   font-size: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.photo-add.hover {
+  opacity: 0.8;
+}
+
 /* 提交按钮（药丸圆角） */
 .submit-btn {
-  margin: 40rpx 0 24rpx;
+  margin: 44rpx 0 24rpx;
   border-radius: 50rpx;
+}
+
+.submit-btn.hover {
+  opacity: 0.9;
+  transform: scale(0.98);
 }
 
 .tips {
   text-align: center;
   font-size: 22rpx;
-  color: #7f8c8d;
-  margin: 0 24rpx 32rpx;
+  color: #9aa5b8;
+  margin: 0 28rpx 32rpx;
 }

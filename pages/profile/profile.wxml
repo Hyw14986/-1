@@ -22,7 +22,7 @@
         bindinput="onNicknameInput"
         maxlength="20"
       />
-      <view class="save-btn cute-btn" bindtap="saveProfile">保存资料</view>
+      <view class="save-btn cute-btn" hover-class="hover" bindtap="saveProfile">保存资料</view>
     </view>
   </view>
 
@@ -38,7 +38,7 @@
       wx:for="{{myToilets}}"
       wx:key="_id"
       data-id="{{item._id}}"
-      bindtap="goDetail"
+      bindtap="goDetail" hover-class="hover"
     >
       <view class="report-head">
         <view class="report-name">{{item.name}}</view>
@@ -60,7 +60,7 @@
       wx:for="{{myComments}}"
       wx:key="_id"
       data-id="{{item.toiletId}}"
-      bindtap="goDetail"
+      bindtap="goDetail" hover-class="hover"
     >
       <view class="report-head">
         <view class="report-name">{{item.toiletName}}</view>
@@ -75,6 +75,6 @@
   <view class="card section-card">
     <view class="section-title">开发工具</view>
     <view class="dev-tip">首次使用请先部署云函数 initData，再点击下方按钮一键导入 111 个演示公厕（会自动创建集合并导入数据，无需云端测试）。</view>
-    <view class="dev-btn btn-primary" bindtap="initDemoData">一键导入演示数据</view>
+    <view class="dev-btn btn-primary" hover-class="hover" bindtap="initDemoData">一键导入演示数据</view>
   </view>
 </view>

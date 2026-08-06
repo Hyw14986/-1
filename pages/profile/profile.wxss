@@ -1,19 +1,20 @@
-/* pages/profile/profile.wxss - 我的页面样式（温馨可爱扁平插画风，与首页同款） */
+/* pages/profile/profile.wxss - 我的页面样式（治愈马卡龙风） */
 .page {
   padding: 0 0 60rpx;
 }
-/* 返回主页按钮：白色药丸 + 暖色柔和阴影 */
+
+/* 返回主页按钮：白色药丸 + 柔和蓝调阴影 */
 .back-home {
   display: inline-flex;
   align-items: center;
-  margin: 24rpx 24rpx 0;
-  padding: 12rpx 30rpx;
+  margin: 28rpx 28rpx 0;
+  padding: 12rpx 32rpx;
   background: #ffffff;
-  border-radius: 40rpx;
-  color: #ffa94d;
+  border-radius: 44rpx;
+  color: #5b9be8;
   font-size: 26rpx;
   font-weight: 600;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.18);
 }
 
 .back-home-icon {
@@ -25,15 +26,15 @@
   opacity: 0.8;
 }
 
-/* 用户头部：浅蓝到薄荷绿柔和渐变 + 大圆角 + 柔和阴影 */
+/* 用户头部：柔蓝到薄荷绿渐变 + 大圆角 + 柔和阴影 */
 .user-card {
   display: flex;
   align-items: center;
-  margin: 24rpx 24rpx 0;
-  padding: 48rpx 36rpx;
-  border-radius: 36rpx;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
-  box-shadow: 0 12rpx 32rpx rgba(116, 185, 255, 0.35);
+  margin: 28rpx 28rpx 0;
+  padding: 52rpx 40rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
+  box-shadow: 0 16rpx 40rpx rgba(127, 181, 245, 0.3);
 }
 
 .avatar-btn {
@@ -53,23 +54,23 @@
 }
 
 .avatar {
-  width: 120rpx;
-  height: 120rpx;
+  width: 124rpx;
+  height: 124rpx;
   border-radius: 50%;
   background: #ffffff;
-  border: 4rpx solid #ffffff;
-  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.18);
+  border: 6rpx solid #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(63, 78, 102, 0.16);
 }
 
 .avatar-tip {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.92);
   margin-top: 12rpx;
 }
 
 .user-info {
   flex: 1;
-  margin-left: 36rpx;
+  margin-left: 40rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -77,26 +78,30 @@
 
 .nickname-input {
   width: 100%;
-  height: 76rpx;
+  height: 80rpx;
   font-size: 32rpx;
   font-weight: 600;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.32);
-  border-radius: 16rpx;
-  padding: 0 20rpx;
+  border-radius: 24rpx;
+  padding: 0 22rpx;
   box-sizing: border-box;
-  margin-bottom: 20rpx;
+  margin-bottom: 22rpx;
 }
 
-/* 保存资料：药丸圆角 cute-btn 样式 */
+/* 保存资料：药丸圆角 */
 .save-btn {
-  width: 240rpx;
+  width: 260rpx;
   padding: 14rpx 0;
   font-size: 26rpx;
   border-radius: 50rpx;
   background: #ffffff;
-  color: #74b9ff;
-  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.28);
+  color: #5b9be8;
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.28);
+}
+
+.save-btn.hover {
+  opacity: 0.85;
 }
 
 /* 区块卡片：使用 cute-card（大圆角 + 柔和阴影 + 四周留白） */
@@ -107,7 +112,7 @@
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #2c3e50;
+  color: #3e4a5f;
   padding-top: 8rpx;
   margin-bottom: 8rpx;
 }
@@ -125,7 +130,11 @@
 /* 上报/评价条目 */
 .report-item {
   padding: 20rpx 0;
-  border-bottom: 2rpx solid #f7ead6;
+  border-bottom: 2rpx solid #eef4fc;
+}
+
+.report-item.hover {
+  opacity: 0.75;
 }
 
 .report-item:last-child {
@@ -141,7 +150,7 @@
 .report-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #2c3e50;
+  color: #3e4a5f;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,28 +161,28 @@
 .report-status {
   flex-shrink: 0;
   font-size: 22rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.16);
-  border-radius: 24rpx;
+  color: #5b9be8;
+  background: rgba(127, 181, 245, 0.16);
+  border-radius: 26rpx;
   padding: 4rpx 14rpx;
 }
 
 .report-meta {
   font-size: 22rpx;
-  color: #7f8c8d;
+  color: #9aa5b8;
   margin-top: 8rpx;
 }
 
 .report-content {
   font-size: 26rpx;
-  color: #5b6b79;
+  color: #6b7a93;
   margin-top: 10rpx;
 }
 
 /* 开发工具 */
 .dev-tip {
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #9aa5b8;
   margin-bottom: 20rpx;
 }
 
@@ -182,4 +191,8 @@
   padding: 14rpx 0;
   font-size: 28rpx;
   border-radius: 50rpx;
+}
+
+.dev-btn.hover {
+  opacity: 0.9;
 }

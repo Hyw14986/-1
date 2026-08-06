@@ -1,10 +1,10 @@
-/* pages/index/index.wxss - 首页样式（温馨可爱扁平插画风） */
+/* pages/index/index.wxss - 首页样式（治愈马卡龙风） */
 .page {
   position: relative;
   min-height: 100vh;
   box-sizing: border-box;
   padding: 24rpx 24rpx 240rpx;
-  background: #fff9ef;
+  background: #fff8f3;
 }
 
 /* ---------- 顶部品牌区 ---------- */
@@ -19,18 +19,23 @@
   height: 96rpx;
   margin-right: 24rpx;
   flex-shrink: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 10rpx;
+  box-sizing: border-box;
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.2);
 }
 
 .welcome-title {
   font-size: 40rpx;
   font-weight: 700;
-  color: #2c3e50;
+  color: #3e4a5f;
   letter-spacing: 2rpx;
 }
 
 .welcome-sub {
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #9aa5b8;
   margin-top: 8rpx;
 }
 
@@ -47,9 +52,9 @@
   padding: 12rpx 26rpx;
   border-radius: 40rpx;
   font-size: 24rpx;
-  color: #7f8c8d;
-  background: rgba(255, 255, 255, 0.6);
-  border: 2rpx solid rgba(255, 169, 77, 0.22);
+  color: #7f8ba0;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2rpx solid rgba(127, 181, 245, 0.3);
   margin-right: 16rpx;
   backdrop-filter: blur(20rpx);
   -webkit-backdrop-filter: blur(20rpx);
@@ -57,10 +62,10 @@
 
 .filter-chip.active {
   color: #ffffff;
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
   border-color: transparent;
   font-weight: 600;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.35);
+  box-shadow: 0 6rpx 16rpx rgba(127, 181, 245, 0.35);
 }
 
 .filter-chip.hover {
@@ -71,9 +76,9 @@
   margin-left: auto;
   flex-shrink: 0;
   font-size: 22rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.14);
-  border-radius: 24rpx;
+  color: #5cbf9a;
+  background: rgba(168, 230, 207, 0.35);
+  border-radius: 26rpx;
   padding: 8rpx 18rpx;
   white-space: nowrap;
 }
@@ -82,10 +87,10 @@
 .map-card {
   position: relative;
   height: 660rpx;
-  border-radius: 44rpx;
+  border-radius: 24rpx;
   overflow: hidden;
   background: #ffffff;
-  box-shadow: 0 14rpx 40rpx rgba(255, 169, 77, 0.22);
+  box-shadow: 0 16rpx 44rpx rgba(127, 181, 245, 0.22);
 }
 
 .map-wrap {
@@ -94,7 +99,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  border-radius: 36rpx;
+  border-radius: 24rpx;
   overflow: hidden;
 }
 
@@ -117,21 +122,22 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 36rpx;
-  background: rgba(255, 255, 255, 0.55);
-  border: 2rpx solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.6);
+  border: 2rpx solid rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24rpx);
   -webkit-backdrop-filter: blur(24rpx);
-  color: #ffa94d;
+  color: #5b9be8;
   font-size: 34rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.22);
+  box-shadow: 0 6rpx 16rpx rgba(127, 181, 245, 0.22);
   margin-bottom: 16rpx;
 }
 
 .tool-btn.hover {
   opacity: 0.75;
+  transform: scale(0.94);
 }
 
 /* 加载结果提示 */
@@ -143,16 +149,16 @@
   z-index: 12;
   max-width: 560rpx;
   font-size: 24rpx;
-  color: #ffa94d;
+  color: #5b9be8;
   background: rgba(255, 255, 255, 0.94);
   padding: 12rpx 28rpx;
   border-radius: 30rpx;
-  box-shadow: 0 4rpx 14rpx rgba(255, 169, 77, 0.2);
+  box-shadow: 0 4rpx 14rpx rgba(127, 181, 245, 0.2);
 }
 
 .data-tip-warn {
-  color: #e8833a;
-  background: rgba(255, 243, 224, 0.95);
+  color: #f591b8;
+  background: rgba(255, 243, 248, 0.96);
 }
 
 /* 一键导航大按钮 */
@@ -163,12 +169,12 @@
   bottom: 24rpx;
   z-index: 12;
   padding: 22rpx 64rpx;
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
   color: #ffffff;
   font-size: 32rpx;
   font-weight: 700;
   border-radius: 50rpx;
-  box-shadow: 0 10rpx 24rpx rgba(255, 169, 77, 0.5);
+  box-shadow: 0 12rpx 28rpx rgba(127, 181, 245, 0.45);
   white-space: nowrap;
 }
 
@@ -181,8 +187,8 @@
 .quick-actions {
   display: flex;
   justify-content: space-around;
-  margin-top: 36rpx;
-  padding: 0 48rpx;
+  margin-top: 40rpx;
+  padding: 0 40rpx;
 }
 
 .quick-item {
@@ -193,7 +199,7 @@
 
 .quick-item.hover {
   opacity: 0.85;
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 .quick-circle {
@@ -206,26 +212,26 @@
   color: #ffffff;
   font-size: 68rpx;
   font-weight: 700;
-  box-shadow: 0 10rpx 24rpx rgba(44, 62, 80, 0.14);
+  box-shadow: 0 12rpx 28rpx rgba(127, 181, 245, 0.3);
 }
 
 .quick-green {
-  background: linear-gradient(135deg, #8fd9a8, #6ecf96);
+  background: linear-gradient(135deg, #a8e6cf, #7ed3ac);
 }
 
 .quick-orange {
-  background: linear-gradient(135deg, #ffc06b, #ffa94d);
+  background: linear-gradient(135deg, #ffc9dc, #ffb8d1);
 }
 
 .quick-mint {
-  background: linear-gradient(135deg, #a8e6cf, #6ecf96);
+  background: linear-gradient(135deg, #8fc4ff, #6f9fe8);
 }
 
 .quick-label {
   margin-top: 14rpx;
   font-size: 26rpx;
   font-weight: 600;
-  color: #2c3e50;
+  color: #3e4a5f;
 }
 
 /* ---------- IP 形象：洗手小水滴 ---------- */
@@ -246,9 +252,9 @@
   bottom: 580rpx;
   z-index: 25;
   margin: 0;
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 36rpx rgba(255, 169, 77, 0.25);
-  padding: 28rpx;
+  border-radius: 36rpx;
+  box-shadow: 0 16rpx 40rpx rgba(127, 181, 245, 0.24);
+  padding: 32rpx;
   background: #ffffff;
 }
 
@@ -261,7 +267,7 @@
 .card-name {
   font-size: 32rpx;
   font-weight: 600;
-  color: #2c3e50;
+  color: #3e4a5f;
   max-width: 320rpx;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -276,18 +282,27 @@
 
 .rating-num {
   font-size: 24rpx;
-  color: #ffb400;
+  color: #ffc94d;
   margin-left: 8rpx;
 }
 
 .card-dist {
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #9aa5b8;
   margin-left: 16rpx;
 }
 
 .card-tags {
   margin-top: 16rpx;
+}
+
+.card-address {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #9aa5b8;
+  word-break: break-all;
 }
 
 .card-actions {
@@ -299,12 +314,12 @@
   flex: 1;
   text-align: center;
   font-size: 28rpx;
-  color: #ffa94d;
-  border: 2rpx solid rgba(255, 169, 77, 0.45);
-  border-radius: 40rpx;
+  color: #5b9be8;
+  border: 2rpx solid rgba(127, 181, 245, 0.5);
+  border-radius: 44rpx;
   padding: 16rpx 0;
   margin-right: 20rpx;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20rpx);
   -webkit-backdrop-filter: blur(20rpx);
 }
@@ -313,11 +328,15 @@
   margin-right: 0;
 }
 
+.action-btn.hover {
+  opacity: 0.85;
+}
+
 .action-primary {
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
   color: #ffffff;
   border: none;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.4);
+  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.4);
 }
 
 /* ---------- 悬浮式底部菜单 ---------- */
@@ -331,12 +350,12 @@
   justify-content: space-around;
   align-items: center;
   height: 128rpx;
-  background: rgba(255, 255, 255, 0.72);
-  border: 2rpx solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.78);
+  border: 2rpx solid rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(30rpx);
   -webkit-backdrop-filter: blur(30rpx);
   border-radius: 72rpx;
-  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.28);
+  box-shadow: 0 16rpx 40rpx rgba(127, 181, 245, 0.26);
 }
 
 .dock-item {
@@ -345,6 +364,10 @@
   align-items: center;
   justify-content: center;
   width: 170rpx;
+}
+
+.dock-item.hover {
+  opacity: 0.8;
 }
 
 .dock-icon-wrap {
@@ -357,7 +380,7 @@
 }
 
 .dock-active .dock-icon-wrap {
-  background: rgba(255, 169, 77, 0.2);
+  background: rgba(127, 181, 245, 0.2);
 }
 
 .dock-icon {
@@ -368,14 +391,14 @@
 .dock-label {
   margin-top: 4rpx;
   font-size: 22rpx;
-  color: #9aa5b1;
+  color: #9aa5b8;
 }
 
 .dock-active .dock-label {
-  color: #ffa94d;
+  color: #5b9be8;
   font-weight: 700;
-  background: rgba(255, 169, 77, 0.16);
-  border-radius: 22rpx;
+  background: rgba(127, 181, 245, 0.16);
+  border-radius: 24rpx;
   padding: 4rpx 20rpx;
 }
 
@@ -387,7 +410,7 @@
   top: 0;
   bottom: 0;
   z-index: 50;
-  background: rgba(255, 249, 239, 0.95);
+  background: rgba(255, 248, 243, 0.96);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -397,13 +420,13 @@
 .mask-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #2c3e50;
+  color: #3e4a5f;
   margin-bottom: 16rpx;
 }
 
 .mask-desc {
   font-size: 26rpx;
-  color: #7f8c8d;
+  color: #9aa5b8;
   margin-bottom: 48rpx;
   padding: 0 60rpx;
   text-align: center;
@@ -413,10 +436,15 @@
   width: 360rpx;
 }
 
+.mask-btn.hover {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
 .mask-btn-plain {
   background: #ffffff;
-  color: #ffa94d;
-  border: 2rpx solid #ffa94d;
+  color: #5b9be8;
+  border: 2rpx solid #7fb5f5;
   margin-top: 20rpx;
   box-shadow: none;
 }
@@ -424,6 +452,6 @@
 .mask-link {
   margin-top: 28rpx;
   font-size: 26rpx;
-  color: #ffa94d;
+  color: #5b9be8;
   text-decoration: underline;
 }

@@ -23,7 +23,7 @@
     <!-- 位置选择 -->
     <view class="field">
       <view class="field-label">位置 <text class="required">*</text></view>
-      <view class="locate-btn btn-outline" bindtap="chooseLocation">📍 在地图上选择位置</view>
+      <view class="locate-btn btn-outline" hover-class="hover" bindtap="chooseLocation">📍 在地图上选择位置</view>
       <view class="locate-result" wx:if="{{location}}">已选择：{{location.address}}</view>
       <input
         class="field-input"
@@ -55,17 +55,17 @@
         <view
           class="tag-option {{tags.hasAccessible ? 'active' : ''}}"
           data-key="hasAccessible"
-          bindtap="toggleTag"
+          bindtap="toggleTag" hover-class="hover"
         >♿ 无障碍</view>
         <view
           class="tag-option {{tags.hasBabyCare ? 'active' : ''}}"
           data-key="hasBabyCare"
-          bindtap="toggleTag"
+          bindtap="toggleTag" hover-class="hover"
         >🍼 母婴室</view>
         <view
           class="tag-option {{tags.hasToiletPaper ? 'active' : ''}}"
           data-key="hasToiletPaper"
-          bindtap="toggleTag"
+          bindtap="toggleTag" hover-class="hover"
         >🧻 有纸巾</view>
 
       </view>
@@ -78,17 +78,17 @@
         <view
           class="tag-option fee-option {{feeType === 'free' ? 'active' : ''}}"
           data-fee="free"
-          bindtap="selectFee"
+          bindtap="selectFee" hover-class="hover"
         >💰 免费</view>
         <view
           class="tag-option fee-option {{feeType === 'paid' ? 'active' : ''}}"
           data-fee="paid"
-          bindtap="selectFee"
+          bindtap="selectFee" hover-class="hover"
         >💴 收费</view>
         <view
           class="tag-option fee-option {{feeType === 'other' ? 'active' : ''}}"
           data-fee="other"
-          bindtap="selectFee"
+          bindtap="selectFee" hover-class="hover"
         >🤔 其他</view>
       </view>
       <input
@@ -108,14 +108,14 @@
       <view class="photo-picker">
         <view class="photo-item" wx:for="{{photos}}" wx:key="*this">
           <image src="{{item}}" mode="aspectFill" class="photo-img" />
-          <view class="photo-del" data-index="{{index}}" bindtap="removePhoto">×</view>
+          <view class="photo-del" hover-class="hover" data-index="{{index}}" bindtap="removePhoto">×</view>
         </view>
-        <view class="photo-add" wx:if="{{photos.length < 3}}" bindtap="choosePhotos">＋</view>
+        <view class="photo-add" hover-class="hover" wx:if="{{photos.length < 3}}" bindtap="choosePhotos">＋</view>
       </view>
     </view>
 
     <!-- 提交 -->
-    <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" bindtap="submit">
+    <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" hover-class="hover" bindtap="submit">
       {{submitting ? '提交中...' : '提交上报'}}
     </view>
   </view>

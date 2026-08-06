@@ -38,12 +38,13 @@
         show-location="{{hasLocation}}"
         bindmarkertap="onMarkerTap"
         bindtap="onMapTap"
+        bindregionchange="onMapRegionChange"
       ></map>
     </view>
 
     <!-- 加载结果提示 -->
     <view class="data-tip" wx:if="{{loadDone && toilets.length}}">已标注 {{markers.length}} 个公厕</view>
-    <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
+    <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未搜索到周边公厕，拖动地图换个位置试试</view>
 
     <!-- 一键导航大按钮 -->
     <view class="nav-now-btn" hover-class="hover" bindtap="navNow">🧭 一键导航</view>
@@ -81,27 +82,28 @@
     <view class="card-tags" wx:if="{{selectedToilet.tags.length}}">
       <text class="tag" wx:for="{{selectedToilet.tags}}" wx:key="*this">{{item}}</text>
     </view>
+    <view class="card-address" wx:if="{{selectedToilet.address}}">📍 {{selectedToilet.address}}</view>
     <view class="card-actions">
-      <view class="action-btn" bindtap="goDetail">查看详情</view>
-      <view class="action-btn action-primary" bindtap="navToToilet">导航</view>
+      <view class="action-btn" wx:if="{{selectedToilet._id}}" hover-class="hover" bindtap="goDetail">查看详情</view>
+      <view class="action-btn action-primary" hover-class="hover" bindtap="navToToilet">导航</view>
     </view>
   </view>
 
   <!-- 悬浮式底部菜单：找厕所 / 上报 / 我的 -->
   <view class="tab-dock">
-    <view class="dock-item dock-active" bindtap="dockHome">
+    <view class="dock-item dock-active" hover-class="hover" bindtap="dockHome">
       <view class="dock-icon-wrap">
         <image class="dock-icon" src="/images/tab-home-active.png" />
       </view>
       <view class="dock-label">找厕所</view>
     </view>
-    <view class="dock-item" bindtap="goReport">
+    <view class="dock-item" hover-class="hover" bindtap="goReport">
       <view class="dock-icon-wrap">
         <image class="dock-icon" src="/images/tab-report.png" />
       </view>
       <view class="dock-label">上报</view>
     </view>
-    <view class="dock-item" bindtap="goProfile">
+    <view class="dock-item" hover-class="hover" bindtap="goProfile">
       <view class="dock-icon-wrap">
         <image class="dock-icon" src="/images/tab-profile.png" />
       </view>
@@ -109,20 +111,13 @@
     </view>
   </view>
 
-  <!-- 数据库未初始化引导层 -->
-  <view class="locate-mask" wx:if="{{initError}}">
-    <view class="mask-title">云数据库尚未初始化</view>
-    <view class="mask-desc">首次使用需先部署并运行 initData 云函数，会自动创建集合并导入演示公厕。</view>
-    <view class="mask-btn btn-primary" bindtap="retryLoad">重新加载</view>
-    <view class="mask-link" bindtap="noop">详见 README「部署步骤」</view>
-  </view>
 
   <!-- 定位失败引导层 -->
   <view class="locate-mask" wx:if="{{loadingDone && !locationReady && !locateMaskHidden}}">
     <view class="mask-title">获取位置失败</view>
     <view class="mask-desc">开启定位后，才能展示你附近的公共厕所</view>
-    <view class="mask-btn btn-primary" bindtap="retryLocation">重新定位</view>
-    <view class="mask-btn mask-btn-plain" bindtap="skipLocateMask">先浏览地图</view>
+    <view class="mask-btn btn-primary" hover-class="hover" bindtap="retryLocation">重新定位</view>
+    <view class="mask-btn mask-btn-plain" hover-class="hover" bindtap="skipLocateMask">先浏览地图</view>
     <view class="mask-link" bindtap="openSetting">去设置开启定位权限</view>
   </view>
 </view>

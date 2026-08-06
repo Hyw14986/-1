@@ -1,15 +1,15 @@
 /**
- * app.wxss - 全局样式（温馨可爱扁平插画风，与首页同款）
- * 主色调：暖橙 #ffa94d（按钮、选中tab、强调元素）
- * 辅助色：薄荷绿 #8fd9a8、浅粉 #ffb8d1
- * 页面背景：#fff9ef 暖米白；正文 #2c3e50；次要文字 #7f8c8d
- * 卡片大圆角 24-32rpx、按钮药丸圆角 50rpx、输入框圆角 16rpx、柔和暖橙阴影
+ * app.wxss - 全局样式（治愈马卡龙风）
+ * 主色调：柔蓝 #7fb5f5（按钮、选中tab、强调元素）
+ * 辅助色：薄荷绿 #a8e6cf、浅粉 #ffb8d1
+ * 页面背景：#fff8f3 暖奶油白；正文 #3e4a5f；次要文字 #9aa5b8
+ * 卡片大圆角 32rpx、按钮药丸圆角 50rpx、输入框圆角 24rpx、柔和蓝调阴影
  * 全部使用 rpx 移动端适配
  */
 
 page {
-  background-color: #fff9ef;
-  color: #2c3e50;
+  background-color: #fff8f3;
+  color: #3e4a5f;
   font-size: 28rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
@@ -17,23 +17,23 @@ page {
 /* ---------- 通用卡片 ---------- */
 .card {
   background-color: #ffffff;
-  border-radius: 28rpx;
-  padding: 28rpx;
-  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
 }
 
-/* ---------- 可爱卡片：白色、大圆角、柔和暖橙阴影、四周留白 ---------- */
+/* ---------- 可爱卡片：白色、大圆角、柔和蓝调阴影、四周留白 ---------- */
 .cute-card {
   background-color: #ffffff;
-  border-radius: 28rpx;
-  padding: 28rpx;
-  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
-  margin: 24rpx 24rpx 0;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
+  margin: 28rpx 28rpx 0;
 }
 
-/* ---------- 药丸主按钮（暖橙渐变，与首页一键导航同款） ---------- */
+/* ---------- 药丸主按钮（柔蓝渐变，治愈系主操作） ---------- */
 .btn-primary {
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
@@ -41,7 +41,7 @@ page {
   padding: 20rpx 0;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 8rpx 20rpx rgba(255, 169, 77, 0.4);
+  box-shadow: 0 10rpx 24rpx rgba(127, 181, 245, 0.35);
 }
 
 .btn-primary::after {
@@ -53,9 +53,9 @@ page {
   box-shadow: none;
 }
 
-/* ---------- 可爱药丸按钮（暖橙渐变） ---------- */
+/* ---------- 可爱药丸按钮（柔蓝渐变） ---------- */
 .cute-btn {
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
@@ -63,18 +63,18 @@ page {
   padding: 20rpx 48rpx;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 8rpx 20rpx rgba(255, 169, 77, 0.4);
+  box-shadow: 0 10rpx 24rpx rgba(127, 181, 245, 0.35);
 }
 
 .cute-btn::after {
   border: none;
 }
 
-/* ---------- 药丸描边按钮（暖橙描边） ---------- */
+/* ---------- 药丸描边按钮（柔蓝描边） ---------- */
 .btn-outline {
   background: #ffffff;
-  color: #ffa94d;
-  border: 2rpx solid #ffa94d;
+  color: #5b9be8;
+  border: 2rpx solid #7fb5f5;
   font-size: 28rpx;
   border-radius: 50rpx;
   padding: 16rpx 0;
@@ -86,26 +86,26 @@ page {
   border: none;
 }
 
-/* ---------- 输入框统一可爱风格（暖米底色） ---------- */
+/* ---------- 输入框统一可爱风格（浅蓝底） ---------- */
 input,
 textarea {
-  background: #fff4e0;
-  border-radius: 16rpx;
+  background: #eff6ff;
+  border-radius: 24rpx;
 }
 
 /* 占位符文字（配合 placeholder-class="ph" 使用，降低透明度） */
 .ph {
-  color: #d0b48a;
+  color: #a5bdd9;
   opacity: 0.8;
 }
 
-/* ---------- 设施标签（暖橙） ---------- */
+/* ---------- 设施标签（柔蓝） ---------- */
 .tag {
   display: inline-block;
   font-size: 22rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.16);
-  border-radius: 24rpx;
+  color: #5b9be8;
+  background: rgba(127, 181, 245, 0.16);
+  border-radius: 26rpx;
   padding: 8rpx 18rpx;
   margin-right: 12rpx;
   margin-bottom: 8rpx;
@@ -115,28 +115,28 @@ textarea {
   display: inline-block;
   font-size: 22rpx;
   color: #ffffff;
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
-  border-radius: 24rpx;
+  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
+  border-radius: 26rpx;
   padding: 8rpx 18rpx;
   margin-right: 12rpx;
 }
 
 /* ---------- 星级文字 ---------- */
 .star-text {
-  color: #ffb400;
+  color: #ffc94d;
   font-size: 26rpx;
   letter-spacing: 2rpx;
 }
 
 .star-text.empty {
-  color: #f0e3cd;
+  color: #eef0f4;
 }
 
 /* ---------- 空状态 ---------- */
 .empty {
   padding: 120rpx 0;
   text-align: center;
-  color: #7f8c8d;
+  color: #9aa5b8;
   font-size: 28rpx;
 }
 
@@ -148,10 +148,10 @@ textarea {
 /* ---------- 列表卡片通用 ---------- */
 .list-card {
   background: #ffffff;
-  border-radius: 28rpx;
-  padding: 26rpx 28rpx;
+  border-radius: 32rpx;
+  padding: 28rpx 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 10rpx 28rpx rgba(255, 169, 77, 0.16);
+  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
 }
 
 .list-card:active {
