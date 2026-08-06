@@ -45,8 +45,7 @@
   },
   "requiredPrivateInfos": [
     "getLocation",
-    "chooseLocation",
-    "openLocation"
+    "chooseLocation"
   ],
   "style": "v2",
   "componentFramework": "glass-easel",
