@@ -11,20 +11,21 @@
         class="nickname-input"
         type="nickname"
         placeholder="点击填写昵称"
+        placeholder-class="ph"
         value="{{nicknameInput}}"
         bindinput="onNicknameInput"
         maxlength="20"
       />
-      <view class="save-btn btn-primary" bindtap="saveProfile">保存资料</view>
+      <view class="save-btn cute-btn" bindtap="saveProfile">保存资料</view>
     </view>
   </view>
 
   <!-- 我的上报 -->
-  <view class="card section-card">
+  <view class="card cute-card section-card">
     <view class="section-title">我的上报（{{myToilets.length}}）</view>
     <view class="empty" wx:if="{{!loading && !myToilets.length}}">
       <view class="empty-icon">📮</view>
-      <view>还没有上报过公厕</view>
+      <view>还没有上报过公厕呢，点右下角加号上报一个吧~</view>
     </view>
     <view
       class="report-item"
@@ -42,11 +43,11 @@
   </view>
 
   <!-- 我的评价 -->
-  <view class="card section-card">
+  <view class="card cute-card section-card">
     <view class="section-title">我的评价（{{myComments.length}}）</view>
     <view class="empty" wx:if="{{!loading && !myComments.length}}">
       <view class="empty-icon">💬</view>
-      <view>还没有发表过评价</view>
+      <view>还没有发表过评价，去给公厕打个分吧~</view>
     </view>
     <view
       class="report-item"

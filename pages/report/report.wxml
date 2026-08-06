@@ -7,6 +7,7 @@
       <input
         class="field-input"
         placeholder="例如：天河公园东门公厕"
+        placeholder-class="ph"
         value="{{name}}"
         bindinput="onNameInput"
         maxlength="30"
@@ -21,6 +22,7 @@
       <input
         class="field-input"
         placeholder="补充详细地址（选填）"
+        placeholder-class="ph"
         value="{{address}}"
         bindinput="onAddressInput"
         maxlength="60"
@@ -33,6 +35,7 @@
       <input
         class="field-input"
         placeholder="例如：06:00-22:00，留空默认全天开放"
+        placeholder-class="ph"
         value="{{openTime}}"
         bindinput="onOpenTimeInput"
         maxlength="30"

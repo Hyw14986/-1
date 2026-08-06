@@ -14,13 +14,21 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
-/* ---------- 通用可爱卡片 ---------- */
-.card,
-.cute-card {
+/* ---------- 通用卡片 ---------- */
+.card {
   background-color: #ffffff;
   border-radius: 24rpx;
   padding: 28rpx;
   box-shadow: 0 8rpx 24rpx rgba(116, 185, 255, 0.14);
+}
+
+/* ---------- 可爱卡片：白色、大圆角、柔和浅蓝阴影、四周留白 ---------- */
+.cute-card {
+  background-color: #ffffff;
+  border-radius: 24rpx;
+  padding: 28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(116, 185, 255, 0.12);
+  margin: 24rpx 24rpx 0;
 }
 
 /* ---------- 药丸主按钮 ---------- */
@@ -45,6 +53,23 @@ page {
   box-shadow: none;
 }
 
+/* ---------- 可爱药丸按钮 ---------- */
+.cute-btn {
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  border-radius: 50rpx;
+  padding: 20rpx 48rpx;
+  text-align: center;
+  line-height: 1.4;
+  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.35);
+}
+
+.cute-btn::after {
+  border: none;
+}
+
 /* ---------- 药丸描边按钮 ---------- */
 .btn-outline {
   background: #ffffff;
@@ -66,6 +91,12 @@ input,
 textarea {
   background: #f0f7ff;
   border-radius: 16rpx;
+}
+
+/* 占位符文字（配合 placeholder-class="ph" 使用，降低透明度） */
+.ph {
+  color: #a9c4e8;
+  opacity: 0.75;
 }
 
 /* ---------- 设施标签 ---------- */

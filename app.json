@@ -7,10 +7,10 @@
     "pages/profile/profile"
   ],
   "window": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "black",
     "navigationBarTitleText": "去哪儿拉",
-    "navigationBarBackgroundColor": "#4FC3F7",
-    "backgroundColor": "#F5F7FA"
+    "navigationBarBackgroundColor": "#eaf4ff",
+    "backgroundColor": "#f7faff"
   },
   "tabBar": {
     "color": "#7f8c8d",

@@ -1,6 +1,6 @@
 /* pages/report/report.wxss - 上报公厕页样式（可爱马卡龙风） */
 .page {
-  padding: 24rpx 24rpx 60rpx;
+  padding: 0 0 40rpx;
 }
 
 /* 表单整体卡片：可爱大圆角 + 柔和浅蓝阴影 */
@@ -26,6 +26,8 @@
 
 .required {
   color: #ff8fb1;
+  font-weight: 700;
+  font-size: 32rpx;
 }
 
 .field-input {
@@ -65,16 +67,17 @@
 .tag-option {
   font-size: 26rpx;
   color: #7f8c8d;
-  background: #f0f7ff;
-  border: 2rpx solid #dce9fb;
-  border-radius: 36rpx;
-  padding: 14rpx 30rpx;
+  background: #f4f6f9;
+  border: 2rpx solid #e8ecf1;
+  border-radius: 40rpx;
+  padding: 14rpx 32rpx;
   margin: 0 16rpx 16rpx 0;
 }
 
 .tag-option.active {
   color: #74b9ff;
-  background: rgba(116, 185, 255, 0.14);
+  font-weight: 600;
+  background: rgba(116, 185, 255, 0.16);
   border-color: #74b9ff;
 }
 
@@ -117,7 +120,7 @@
   width: 180rpx;
   height: 180rpx;
   border: 2rpx dashed #b9cde8;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   color: #b9cde8;
   background: #f7fbff;
   font-size: 60rpx;
@@ -128,7 +131,7 @@
 
 /* 提交按钮（药丸圆角） */
 .submit-btn {
-  margin-top: 8rpx;
+  margin: 40rpx 0 24rpx;
   border-radius: 50rpx;
 }
 
@@ -136,5 +139,5 @@
   text-align: center;
   font-size: 22rpx;
   color: #7f8c8d;
-  margin-top: 24rpx;
+  margin: 0 24rpx 32rpx;
 }

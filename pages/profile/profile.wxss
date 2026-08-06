@@ -1,14 +1,15 @@
 /* pages/profile/profile.wxss - 我的页面样式（可爱马卡龙风） */
 .page {
-  padding: 24rpx 24rpx 60rpx;
+  padding: 0 0 60rpx;
 }
 
-/* 用户头部：渐变背景 + 大圆角卡片 */
+/* 用户头部：渐变背景 + 28rpx 圆角 + 柔和阴影 */
 .user-card {
   display: flex;
   align-items: center;
-  padding: 40rpx 32rpx;
-  border-radius: 32rpx;
+  margin: 24rpx 24rpx 0;
+  padding: 48rpx 36rpx;
+  border-radius: 28rpx;
   background: linear-gradient(135deg, #74b9ff, #a8e6cf);
   box-shadow: 0 12rpx 32rpx rgba(116, 185, 255, 0.4);
 }
@@ -34,19 +35,19 @@
   height: 120rpx;
   border-radius: 50%;
   background: #ffffff;
-  border: 6rpx solid #ffffff;
-  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.15);
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.18);
 }
 
 .avatar-tip {
   font-size: 20rpx;
   color: rgba(255, 255, 255, 0.9);
-  margin-top: 10rpx;
+  margin-top: 12rpx;
 }
 
 .user-info {
   flex: 1;
-  margin-left: 32rpx;
+  margin-left: 36rpx;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -54,7 +55,7 @@
 
 .nickname-input {
   width: 100%;
-  height: 72rpx;
+  height: 76rpx;
   font-size: 32rpx;
   font-weight: 600;
   color: #ffffff;
@@ -62,28 +63,41 @@
   border-radius: 16rpx;
   padding: 0 20rpx;
   box-sizing: border-box;
+  margin-bottom: 20rpx;
 }
 
+/* 保存资料：药丸圆角 cute-btn 样式 */
 .save-btn {
-  width: 200rpx;
-  padding: 12rpx 0;
+  width: 240rpx;
+  padding: 14rpx 0;
   font-size: 26rpx;
-  margin-top: 16rpx;
+  border-radius: 50rpx;
   background: #ffffff;
   color: #74b9ff;
   box-shadow: 0 6rpx 16rpx rgba(44, 62, 80, 0.12);
 }
 
-/* 区块卡片 */
+/* 区块卡片：使用 cute-card（大圆角 + 柔和阴影 + 四周留白） */
 .section-card {
-  margin-top: 24rpx;
+  margin: 0;
 }
 
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
   color: #2c3e50;
+  padding-top: 8rpx;
   margin-bottom: 8rpx;
+}
+
+/* 空状态：放大图标、增加上下间距 */
+.section-card .empty {
+  padding: 140rpx 0;
+}
+
+.section-card .empty-icon {
+  font-size: 110rpx;
+  margin-bottom: 24rpx;
 }
 
 /* 上报/评价条目 */

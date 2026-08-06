@@ -1,7 +1,8 @@
 <!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
 <view class="page">
   <!-- 地图（大圆角容器，overflow 裁剪边角）
-       公厕标记小图标存放路径：images/marker.png（选中态 images/marker-active.png） -->
+       公厕标记使用可爱马桶卡通图标：images/marker/toilet.png（选中态 images/marker/toilet-active.png）
+       JS 中仍引用 /images/marker.png 与 /images/marker-active.png，两处内容保持一致 -->
   <view class="map-wrap">
     <map
       class="map"
@@ -34,7 +35,7 @@
   <view class="data-tip data-tip-warn" wx:if="{{loadDone && !toilets.length && !initError}}" bindtap="retryLoad">暂未加载到公厕数据，点此重试（请先运行 initData）</view>
 
   <!-- 底部：厕所简要卡片 -->
-  <view class="toilet-card card" wx:if="{{selectedToilet}}" catchtap="noop">
+  <view class="toilet-card card cute-card" wx:if="{{selectedToilet}}" catchtap="noop">
     <view class="card-head">
       <view class="card-name">{{selectedToilet.name}}</view>
       <view class="card-rating">
