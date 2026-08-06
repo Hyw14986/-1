@@ -1,0 +1,88 @@
+﻿<!-- pages/report/report.wxml - 上报公厕页 -->
+<view class="page">
+  <view class="card">
+    <!-- 厕所名称 -->
+    <view class="field">
+      <view class="field-label">厕所名称 <text class="required">*</text></view>
+      <input
+        class="field-input"
+        placeholder="例如：天河公园东门公厕"
+        value="{{name}}"
+        bindinput="onNameInput"
+        maxlength="30"
+      />
+    </view>
+
+    <!-- 位置选择 -->
+    <view class="field">
+      <view class="field-label">位置 <text class="required">*</text></view>
+      <view class="locate-btn btn-outline" bindtap="chooseLocation">📍 在地图上选择位置</view>
+      <view class="locate-result" wx:if="{{location}}">已选择：{{location.address}}</view>
+      <input
+        class="field-input"
+        placeholder="补充详细地址（选填）"
+        value="{{address}}"
+        bindinput="onAddressInput"
+        maxlength="60"
+      />
+    </view>
+
+    <!-- 开放时间 -->
+    <view class="field">
+      <view class="field-label">开放时间</view>
+      <input
+        class="field-input"
+        placeholder="例如：06:00-22:00，留空默认全天开放"
+        value="{{openTime}}"
+        bindinput="onOpenTimeInput"
+        maxlength="30"
+      />
+    </view>
+
+    <!-- 设施标签 -->
+    <view class="field">
+      <view class="field-label">设施标签（多选）</view>
+      <view class="tag-picker">
+        <view
+          class="tag-option {{tags.hasAccessible ? 'active' : ''}}"
+          data-key="hasAccessible"
+          bindtap="toggleTag"
+        >♿ 无障碍</view>
+        <view
+          class="tag-option {{tags.hasBabyCare ? 'active' : ''}}"
+          data-key="hasBabyCare"
+          bindtap="toggleTag"
+        >🍼 母婴室</view>
+        <view
+          class="tag-option {{tags.hasToiletPaper ? 'active' : ''}}"
+          data-key="hasToiletPaper"
+          bindtap="toggleTag"
+        >🧻 有纸巾</view>
+        <view
+          class="tag-option {{tags.isFree ? 'active' : ''}}"
+          data-key="isFree"
+          bindtap="toggleTag"
+        >💰 免费</view>
+      </view>
+    </view>
+
+    <!-- 现场照片 -->
+    <view class="field">
+      <view class="field-label">现场照片（最多 3 张）</view>
+      <view class="photo-picker">
+        <view class="photo-item" wx:for="{{photos}}" wx:key="*this">
+          <image src="{{item}}" mode="aspectFill" class="photo-img" />
+          <view class="photo-del" data-index="{{index}}" bindtap="removePhoto">×</view>
+        </view>
+        <view class="photo-add" wx:if="{{photos.length < 3}}" bindtap="choosePhotos">＋</view>
+      </view>
+    </view>
+
+    <!-- 提交 -->
+    <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" bindtap="submit">
+      {{submitting ? '提交中...' : '提交上报'}}
+    </view>
+  </view>
+
+  <view class="tips">提交后点位将立即公开，供附近用户查看</view>
+</view>

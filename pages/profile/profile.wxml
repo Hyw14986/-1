@@ -1,0 +1,66 @@
+﻿<!-- pages/profile/profile.wxml - 我的页面 -->
+<view class="page">
+  <!-- 用户信息卡 -->
+  <view class="card user-card">
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="avatar" src="{{avatarTempPath || avatarUrl || defaultAvatar}}" mode="aspectFill" />
+      <view class="avatar-tip">点击更换头像</view>
+    </button>
+    <view class="user-info">
+      <input
+        class="nickname-input"
+        type="nickname"
+        placeholder="点击填写昵称"
+        value="{{nicknameInput}}"
+        bindinput="onNicknameInput"
+        maxlength="20"
+      />
+      <view class="save-btn btn-primary" bindtap="saveProfile">保存资料</view>
+    </view>
+  </view>
+
+  <!-- 我的上报 -->
+  <view class="card section-card">
+    <view class="section-title">我的上报（{{myToilets.length}}）</view>
+    <view class="empty" wx:if="{{!loading && !myToilets.length}}">
+      <view class="empty-icon">📮</view>
+      <view>还没有上报过公厕</view>
+    </view>
+    <view
+      class="report-item"
+      wx:for="{{myToilets}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="goDetail"
+    >
+      <view class="report-head">
+        <view class="report-name">{{item.name}}</view>
+        <view class="report-status">已公开</view>
+      </view>
+      <view class="report-meta">{{item.address}} · {{item.timeText}}</view>
+    </view>
+  </view>
+
+  <!-- 我的评价 -->
+  <view class="card section-card">
+    <view class="section-title">我的评价（{{myComments.length}}）</view>
+    <view class="empty" wx:if="{{!loading && !myComments.length}}">
+      <view class="empty-icon">💬</view>
+      <view>还没有发表过评价</view>
+    </view>
+    <view
+      class="report-item"
+      wx:for="{{myComments}}"
+      wx:key="_id"
+      data-id="{{item.toiletId}}"
+      bindtap="goDetail"
+    >
+      <view class="report-head">
+        <view class="report-name">{{item.toiletName}}</view>
+        <star-rating value="{{item.rating}}" size="22" disabled="{{true}}" />
+      </view>
+      <view class="report-content" wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="report-meta">{{item.timeText}}</view>
+    </view>
+  </view>
+</view>

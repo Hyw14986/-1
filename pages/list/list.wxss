@@ -1,0 +1,75 @@
+﻿/* pages/list/list.wxss - 厕所列表页样式 */
+.page {
+  padding: 20rpx 24rpx 40rpx;
+}
+
+.toast-tip {
+  font-size: 24rpx;
+  color: #9AA5B1;
+  padding: 8rpx 8rpx 20rpx;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toilet-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distance {
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #29B6F6;
+  background: rgba(41, 182, 246, 0.1);
+  border-radius: 8rpx;
+  padding: 6rpx 14rpx;
+  margin-left: 20rpx;
+}
+
+.card-rating {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+}
+
+.rating-num {
+  font-size: 24rpx;
+  color: #FFB400;
+  margin-left: 8rpx;
+}
+
+.rating-count {
+  font-size: 22rpx;
+  color: #9AA5B1;
+  margin-left: 12rpx;
+}
+
+.card-tags {
+  margin-top: 16rpx;
+}
+
+.card-address {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #666666;
+}
+
+.addr-icon {
+  margin-right: 8rpx;
+}
+
+.empty-btn {
+  width: 320rpx;
+  margin: 40rpx auto 0;
+}

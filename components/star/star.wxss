@@ -1,0 +1,13 @@
+﻿/* components/star/star.wxss */
+.star-wrap {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+.star {
+  color: #E0E6EC;
+  margin-right: 4rpx;
+}
+.star.on {
+  color: #FFB400;
+}

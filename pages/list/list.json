@@ -1,0 +1,8 @@
+﻿{
+  "usingComponents": {
+    "star-rating": "/components/star/star"
+  },
+  "navigationBarTitleText": "附近公厕",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#F5F7FA"
+}

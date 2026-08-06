@@ -1,0 +1,16 @@
+﻿# 依赖
+node_modules/
+
+# 小程序构建产物
+miniprogram_npm/
+dist/
+
+# 开发者本地个人配置
+project.private.config.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log

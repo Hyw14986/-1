@@ -1,0 +1,9 @@
+﻿{
+  "name": "initData",
+  "version": "1.0.0",
+  "description": "初始化演示数据（广州珠江新城周边公厕点位）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

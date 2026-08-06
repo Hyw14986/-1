@@ -1,0 +1,50 @@
+﻿<!-- pages/index/index.wxml - 首页：地图 + 公厕简要卡片 -->
+<view class="page">
+  <!-- 地图 -->
+  <map
+    class="map"
+    latitude="{{latitude}}"
+    longitude="{{longitude}}"
+    scale="{{scale}}"
+    markers="{{markers}}"
+    show-location="{{hasLocation}}"
+    bindmarkertap="onMarkerTap"
+    bindtap="onMapTap"
+  ></map>
+
+  <!-- 顶部：列表视图切换按钮 -->
+  <view class="switch-btn" bindtap="goList">
+    <text class="switch-icon">☰</text>
+    <text>列表视图</text>
+  </view>
+
+  <!-- 右下角：回到定位 -->
+  <view class="locate-btn" bindtap="locateMe" hover-class="hover">⌖</view>
+
+  <!-- 底部：厕所简要卡片 -->
+  <view class="toilet-card card" wx:if="{{selectedToilet}}" catchtap="noop">
+    <view class="card-head">
+      <view class="card-name">{{selectedToilet.name}}</view>
+      <view class="card-rating">
+        <star-rating value="{{selectedToilet.rating}}" size="26" disabled="{{true}}" />
+        <text class="rating-num">{{selectedToilet.rating ? selectedToilet.rating : '暂无评分'}}</text>
+        <text class="card-dist" wx:if="{{selectedToilet.distanceText}}">{{selectedToilet.distanceText}}</text>
+      </view>
+    </view>
+    <view class="card-tags" wx:if="{{selectedToilet.tags.length}}">
+      <text class="tag" wx:for="{{selectedToilet.tags}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="card-actions">
+      <view class="action-btn" bindtap="goDetail">查看详情</view>
+      <view class="action-btn action-primary" bindtap="navToToilet">导航</view>
+    </view>
+  </view>
+
+  <!-- 定位失败引导层 -->
+  <view class="locate-mask" wx:if="{{loadingDone && !locationReady}}">
+    <view class="mask-title">获取位置失败</view>
+    <view class="mask-desc">开启定位后，才能展示你附近的公共厕所</view>
+    <view class="mask-btn btn-primary" bindtap="retryLocation">重新定位</view>
+    <view class="mask-link" bindtap="openSetting">去设置开启定位权限</view>
+  </view>
+</view>

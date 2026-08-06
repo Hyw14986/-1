@@ -1,0 +1,41 @@
+﻿<!-- pages/list/list.wxml - 厕所列表页 -->
+<view class="page">
+  <view class="toast-tip" wx:if="{{toilets.length}}">共 {{toilets.length}} 个公共厕所，按距离排序</view>
+
+  <view class="list" wx:if="{{!loading}}">
+    <view
+      class="list-card"
+      wx:for="{{toilets}}"
+      wx:key="_id"
+      data-id="{{item._id}}"
+      bindtap="goDetail"
+    >
+      <view class="card-top">
+        <view class="toilet-name">{{item.name}}</view>
+        <view class="distance">{{item.distanceText}}</view>
+      </view>
+      <view class="card-rating">
+        <star-rating value="{{item.rating}}" size="26" disabled="{{true}}" />
+        <text class="rating-num">{{item.rating ? item.rating : '暂无评分'}}</text>
+        <text class="rating-count" wx:if="{{item.ratingCount}}">({{item.ratingCount}}人评价)</text>
+      </view>
+      <view class="card-tags" wx:if="{{item.tags.length}}">
+        <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+      </view>
+      <view class="card-address" wx:if="{{item.address}}">
+        <text class="addr-icon">📍</text>
+        <text>{{item.address}}</text>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!toilets.length}}">
+      <view class="empty-icon">🚽</view>
+      <view>附近暂时没有公厕，点击下方按钮上报一个吧</view>
+      <view class="empty-btn btn-primary" bindtap="goMap">返回首页</view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{loading}}">
+    <view>加载中...</view>
+  </view>
+</view>

@@ -1,0 +1,123 @@
+﻿/* pages/profile/profile.wxss - 我的页面样式 */
+.page {
+  padding: 24rpx 24rpx 60rpx;
+}
+
+/* 用户信息卡 */
+.user-card {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 28rpx;
+}
+
+.avatar-btn {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 140rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: none;
+  line-height: 1.2;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #EAF2F7;
+}
+
+.avatar-tip {
+  font-size: 20rpx;
+  color: #9AA5B1;
+  margin-top: 8rpx;
+}
+
+.user-info {
+  flex: 1;
+  margin-left: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.nickname-input {
+  width: 100%;
+  height: 72rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.save-btn {
+  width: 200rpx;
+  padding: 12rpx 0;
+  font-size: 26rpx;
+  margin-top: 12rpx;
+}
+
+/* 区块卡片 */
+.section-card {
+  margin-top: 24rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+/* 上报/评价条目 */
+.report-item {
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #F5F7FA;
+}
+
+.report-item:last-child {
+  border-bottom: none;
+}
+
+.report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 20rpx;
+}
+
+.report-status {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #29B6F6;
+  background: rgba(41, 182, 246, 0.1);
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+}
+
+.report-meta {
+  font-size: 22rpx;
+  color: #9AA5B1;
+  margin-top: 8rpx;
+}
+
+.report-content {
+  font-size: 26rpx;
+  color: #555555;
+  margin-top: 10rpx;
+}

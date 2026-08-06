@@ -1,0 +1,194 @@
+﻿// pages/profile/profile.js - 我的页面：头像昵称授权、我的上报、我的评价
+const app = getApp()
+const db = wx.cloud.database()
+const util = require('../../utils/util.js')
+
+Page({
+  data: {
+    // 用户资料
+    nickname: '',
+    nicknameInput: '',
+    avatarUrl: '',
+    // 本地待上传的头像
+    avatarTempPath: '',
+    // 我的上报
+    myToilets: [],
+    // 我的评价
+    myComments: [],
+    loading: true,
+    defaultAvatar: '/images/default-avatar.png'
+  },
+
+  onShow() {
+    this.initPage()
+  },
+
+  /**
+   * 初始化：获取 openid、加载资料与数据
+   */
+  async initPage() {
+    try {
+      const openid = await util.getOpenId()
+      this.openid = openid
+      await this.loadUser()
+      this.loadMyToilets()
+      this.loadMyComments()
+    } catch (err) {
+      console.error('初始化我的页面失败', err)
+      this.setData({ loading: false })
+    }
+  },
+
+  /**
+   * 加载用户资料（头像昵称）
+   */
+  async loadUser() {
+    try {
+      const res = await db.collection('user').where({ _openid: this.openid }).limit(1).get()
+      if (res.data.length) {
+        const user = res.data[0]
+        this.setData({
+          nickname: user.nickname || '',
+          nicknameInput: user.nickname || '',
+          avatarUrl: user.avatarUrl || ''
+        })
+      }
+    } catch (err) {
+      console.error('加载用户资料失败', err)
+    } finally {
+      this.setData({ loading: false })
+    }
+  },
+
+  /**
+   * 选择微信头像（新版头像填写能力）
+   */
+  onChooseAvatar(e) {
+    this.setData({ avatarTempPath: e.detail.avatarUrl })
+  },
+
+  /**
+   * 输入昵称（新版昵称填写能力）
+   */
+  onNicknameInput(e) {
+    this.setData({ nicknameInput: e.detail.value })
+  },
+
+  /**
+   * 保存资料：上传头像到云存储，昵称头像写入 user 集合
+   */
+  async saveProfile() {
+    const nickname = this.data.nicknameInput.trim()
+    if (!nickname) {
+      wx.showToast({ title: '请填写昵称', icon: 'none' })
+      return
+    }
+    wx.showLoading({ title: '保存中', mask: true })
+    try {
+      // 上传新头像（如有）
+      let avatarUrl = this.data.avatarUrl
+      if (this.data.avatarTempPath) {
+        const ext = (this.data.avatarTempPath.match(/\.(\w+)$/) || [])[1] || 'png'
+        const cloudPath =
+          'avatars/' + this.openid + '-' + Date.now() + '.' + ext
+        const uploadRes = await wx.cloud.uploadFile({
+          cloudPath,
+          filePath: this.data.avatarTempPath
+        })
+        avatarUrl = uploadRes.fileID
+      }
+
+      // 查询是否已有资料记录，有则更新、无则新增
+      const existed = await db.collection('user').where({ _openid: this.openid }).limit(1).get()
+      const data = {
+        nickname,
+        avatarUrl,
+        updateTime: db.serverDate()
+      }
+      if (existed.data.length) {
+        await db.collection('user').doc(existed.data[0]._id).update({ data })
+      } else {
+        await db.collection('user').add({ data })
+      }
+
+      this.setData({
+        nickname,
+        avatarUrl,
+        avatarTempPath: ''
+      })
+      wx.hideLoading()
+      wx.showToast({ title: '保存成功', icon: 'success' })
+    } catch (err) {
+      console.error('保存资料失败', err)
+      wx.hideLoading()
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+    }
+  },
+
+  /**
+   * 加载我的上报（按时间倒序）
+   */
+  async loadMyToilets() {
+    try {
+      const res = await db
+        .collection('toilet')
+        .where({ _openid: this.openid })
+        .orderBy('createTime', 'desc')
+        .limit(20)
+        .get()
+      const myToilets = res.data.map((item) => ({
+        ...item,
+        timeText: util.formatTime(item.createTime)
+      }))
+      this.setData({ myToilets })
+    } catch (err) {
+      console.error('加载我的上报失败', err)
+    }
+  },
+
+  /**
+   * 加载我的评价（按时间倒序，并补充公厕名称）
+   */
+  async loadMyComments() {
+    try {
+      const res = await db
+        .collection('comment')
+        .where({ _openid: this.openid })
+        .orderBy('createTime', 'desc')
+        .limit(20)
+        .get()
+      const comments = res.data
+
+      // 批量查询关联公厕名称
+      const toiletIds = [...new Set(comments.map((c) => c.toiletId))]
+      const nameMap = {}
+      if (toiletIds.length) {
+        const _ = db.command
+        const toiletRes = await db
+          .collection('toilet')
+          .where({ _id: _.in(toiletIds) })
+          .limit(20)
+          .get()
+        toiletRes.data.forEach((t) => {
+          nameMap[t._id] = t.name
+        })
+      }
+
+      const myComments = comments.map((item) => ({
+        ...item,
+        toiletName: nameMap[item.toiletId] || '公厕',
+        timeText: util.formatTime(item.createTime)
+      }))
+      this.setData({ myComments })
+    } catch (err) {
+      console.error('加载我的评价失败', err)
+    }
+  },
+
+  // 跳转到公厕详情
+  goDetail(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
+  }
+})

@@ -1,0 +1,200 @@
+﻿/* pages/detail/detail.wxss - 厕所详情页样式 */
+.page {
+  padding: 24rpx;
+  padding-bottom: 60rpx;
+}
+
+/* 基本信息卡 */
+.name {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.rating-row {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+}
+
+.score {
+  font-size: 30rpx;
+  color: #FFB400;
+  font-weight: 600;
+  margin-left: 12rpx;
+}
+
+.count {
+  font-size: 24rpx;
+  color: #9AA5B1;
+  margin-left: 16rpx;
+}
+
+.dist {
+  font-size: 24rpx;
+  color: #29B6F6;
+  background: rgba(41, 182, 246, 0.1);
+  border-radius: 8rpx;
+  padding: 4rpx 12rpx;
+  margin-left: 20rpx;
+}
+
+.tags {
+  margin-top: 20rpx;
+}
+
+.info-grid {
+  margin-top: 24rpx;
+  border-top: 2rpx solid #F0F3F6;
+  padding-top: 8rpx;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #F5F7FA;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  width: 150rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #9AA5B1;
+}
+
+.info-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333333;
+}
+
+.nav-btn {
+  margin-top: 28rpx;
+}
+
+/* 照片 */
+.photo-card {
+  margin-top: 24rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 20rpx;
+}
+
+.photo-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.photo {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
+  margin: 0 16rpx 16rpx 0;
+}
+
+/* 评价列表 */
+.comment-card,
+.form-card,
+.my-comment-card {
+  margin-top: 24rpx;
+}
+
+.comment-item {
+  display: flex;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #F5F7FA;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #EAF2F7;
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+  margin-left: 20rpx;
+}
+
+.comment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nickname {
+  font-size: 26rpx;
+  color: #333333;
+  font-weight: 600;
+}
+
+.time {
+  font-size: 22rpx;
+  color: #B9C4CE;
+}
+
+.comment-content {
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: #555555;
+  line-height: 1.6;
+}
+
+/* 评价表单 */
+.form-rating {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #333333;
+  margin-right: 24rpx;
+}
+
+.form-score {
+  font-size: 26rpx;
+  color: #FFB400;
+  margin-left: 20rpx;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 180rpx;
+  background: #F7FAFC;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  font-size: 26rpx;
+}
+
+.submit-btn {
+  margin-top: 24rpx;
+}
+
+/* 已评价 */
+.my-comment-card .comment-content {
+  margin: 12rpx 0;
+}
+
+.done-tip {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #9AA5B1;
+}

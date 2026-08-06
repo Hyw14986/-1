@@ -1,0 +1,6 @@
+﻿{
+  "usingComponents": {
+    "star-rating": "/components/star/star"
+  },
+  "navigationBarTitleText": "公厕详情"
+}
