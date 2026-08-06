@@ -136,7 +136,19 @@ Page({
       longitude: toilet.longitude,
       name: toilet.name,
       address: toilet.address || '',
-      scale: 18
+      scale: 18,
+      fail: (err) => {
+        const msg = (err && err.errMsg) || ''
+        if (msg.indexOf('auth deny') > -1 || msg.indexOf('privacy') > -1) {
+          wx.showModal({
+            title: '无法打开导航',
+            content: '未授权位置信息或隐私接口未开启，请在小程序设置中允许使用位置信息后重试。',
+            showCancel: false
+          })
+        } else {
+          wx.showToast({ title: '打开地图失败，请重试', icon: 'none' })
+        }
+      }
     })
   },
 

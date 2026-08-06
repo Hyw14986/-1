@@ -29,6 +29,10 @@
         <text class="addr-icon">📍</text>
         <text>{{item.address}}</text>
       </view>
+      <view class="card-actions">
+        <view class="action-btn" catchtap="goDetail" data-id="{{item._id}}">查看详情</view>
+        <view class="action-btn action-primary" catchtap="navToToilet" data-id="{{item._id}}">🧭 导航</view>
+      </view>
         </view>
       </view>
     </view>
