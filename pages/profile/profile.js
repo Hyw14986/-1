@@ -40,6 +40,50 @@ Page({
   },
 
   /**
+   * 开发工具：一键导入演示数据（调用 initData 云函数）
+   */
+  initDemoData() {
+    wx.showLoading({ title: '导入中', mask: true })
+    wx.cloud
+      .callFunction({ name: 'initData' })
+      .then((res) => {
+        wx.hideLoading()
+        const r = res.result || {}
+        if (r.code === 0) {
+          wx.showModal({
+            title: '导入成功',
+            content: '已导入 ' + r.inserted + ' 个演示公厕，返回首页即可在地图上查看。',
+            showCancel: false
+          })
+        } else if (r.code === 2) {
+          wx.showModal({
+            title: '已存在演示数据',
+            content: '数据库已有 ' + r.existed + ' 条演示数据，无需重复导入。',
+            showCancel: false
+          })
+        } else {
+          wx.showModal({ title: '导入结果', content: r.msg || '未知结果', showCancel: false })
+        }
+      })
+      .catch((err) => {
+        wx.hideLoading()
+        const msg = (err && (err.errMsg || err.message || '')) || ''
+        const notDeployed =
+          msg.indexOf('FunctionName') > -1 ||
+          msg.indexOf('not found') > -1 ||
+          msg.indexOf('-501000') > -1 ||
+          msg.indexOf('function not exists') > -1
+        wx.showModal({
+          title: '导入失败',
+          content: notDeployed
+            ? '云函数 initData 尚未部署：请在开发者工具中右键 cloudfunctions/initData 文件夹 → 上传并部署：云端安装依赖，然后重试。'
+            : '导入失败：' + msg,
+          showCancel: false
+        })
+      })
+  },
+
+  /**
    * 加载用户资料（头像昵称）
    */
   async loadUser() {

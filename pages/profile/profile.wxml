@@ -63,4 +63,11 @@
       <view class="report-meta">{{item.timeText}}</view>
     </view>
   </view>
+
+  <!-- 开发工具：一键导入演示数据 -->
+  <view class="card section-card">
+    <view class="section-title">开发工具</view>
+    <view class="dev-tip">首次使用请先部署云函数 initData，再点击下方按钮一键导入 111 个演示公厕（会自动创建集合并导入数据，无需云端测试）。</view>
+    <view class="dev-btn btn-primary" bindtap="initDemoData">一键导入演示数据</view>
+  </view>
 </view>

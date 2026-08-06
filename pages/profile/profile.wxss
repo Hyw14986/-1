@@ -121,3 +121,16 @@
   color: #555555;
   margin-top: 10rpx;
 }
+
+/* 开发工具 */
+.dev-tip {
+  font-size: 24rpx;
+  color: #9AA5B1;
+  margin-bottom: 20rpx;
+}
+
+.dev-btn {
+  width: 100%;
+  padding: 14rpx 0;
+  font-size: 28rpx;
+}
