@@ -57,9 +57,9 @@ Page({
   async loadToilets() {
     this.setData({ loading: true })
     try {
-      const res = await db.collection('toilet').where({ status: 1 }).limit(20).get()
+      // 分页拉取全部公厕：列表展示所有点位（小程序端单次查询上限 20 条）
       const loc = app.globalData.userLocation
-      const toilets = res.data
+      const toilets = (await util.fetchAllRecords(db.collection('toilet').where({ status: 1 })))
         .map((item) => {
           const meters = util.getDistance(loc.latitude, loc.longitude, item.latitude, item.longitude)
           return {

@@ -82,6 +82,25 @@ function getFacilityTags(toilet) {
 }
 
 /**
+ * 分页拉取某查询的全部记录
+ * 小程序端云数据库单次 get 上限 20 条，这里循环分页取完，保证列表/地图能展示全部点位
+ * @param {object} query 已构造好的查询对象（如 db.collection('toilet').where({ status: 1 })）
+ * @param {number} pageSize 单页条数（小程序端上限 20）
+ * @returns {Promise<Array>} 全部记录数组
+ */
+async function fetchAllRecords(query, pageSize = 20) {
+  const all = []
+  let skip = 0
+  while (true) {
+    const res = await query.skip(skip).limit(pageSize).get()
+    all.push(...res.data)
+    if (res.data.length < pageSize) break
+    skip += pageSize
+  }
+  return all
+}
+
+/**
  * 获取当前用户 openid（调用 getOpenId 云函数，带全局缓存）
  * @returns {Promise<string>} openid
  */
@@ -113,5 +132,6 @@ module.exports = {
   formatTime,
   getFacilityTags,
   getOpenId,
+  fetchAllRecords,
   FACILITY_LABELS
 }

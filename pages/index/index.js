@@ -78,8 +78,8 @@ Page({
   async loadToilets() {
     wx.showLoading({ title: '加载中', mask: true })
     try {
-      const res = await db.collection('toilet').where({ status: 1 }).limit(20).get()
-      const toilets = res.data
+      // 分页拉取全部可见公厕：保证地图上所有点位都打上公厕图标（小程序端单次查询上限 20 条）
+      const toilets = await util.fetchAllRecords(db.collection('toilet').where({ status: 1 }))
       const markers = toilets.map((item, index) => ({
         id: index,
         toiletId: item._id,
