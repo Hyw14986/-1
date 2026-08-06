@@ -1,5 +1,11 @@
 <!-- pages/profile/profile.wxml - 我的页面 -->
 <view class="page">
+  <!-- 返回主页 -->
+  <view class="back-home" bindtap="goHome" hover-class="hover">
+    <text class="back-home-icon">🏠</text>
+    <text>返回主页</text>
+  </view>
+
   <!-- 用户信息卡 -->
   <view class="card user-card">
     <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
