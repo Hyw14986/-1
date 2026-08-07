@@ -14,7 +14,7 @@
 1. 仅用户手动点击「开始寻找」触发完整查询流程；只要自有数据库（getNearToilet 云函数）查询成功即消耗 1 次查询次数并新增查询记录，腾讯地图接口异常不影响扣次数与记录；仅当数据库云函数本身异常才不消耗次数；筛选、查看详情、再次查询回填半径都不消耗次数
 2. 次数上限每日 20 次，每日 0 点重置，重置逻辑全部在云函数 `quotaOperate` 内部完成（比对 `quotaDate`），前端不做时间重置，防改手机时间作弊
 3. 全程统一 GCJ-02 坐标系；红圈外点位不渲染、不进列表、不参与统计（禁止仅 CSS 视觉隐藏）
-4. 数据源合并：`toiletAll` 自有库（gov 政府导入 / user 用户上报 / tencent 腾讯缓存 / osm 开放地图导入）+ 周边 POI 多源降级（腾讯 place/v1/search → 高德 place/around → 百度 place/v2/search → OSM Overpass 兜底）；POI 返回后做球面距离二次过滤，只保留圈内点位；腾讯 POI 命中时经 `saveTencentPoi` 50 米去重后缓存回库
+4. 数据源合并：`toiletAll` 自有库（gov 政府导入 / user 用户上报 / tencent 腾讯缓存 / osm 开放地图导入）+ 周边 POI 多源降级（高德 place/around → 百度 place/v2/search → 天地图 → 腾讯 place/v1/search 保底 → OSM Overpass 兜底）；POI 返回后做球面距离二次过滤，只保留圈内点位；腾讯 POI 命中时经 `saveTencentPoi` 50 米去重后缓存回库
 5. 腾讯 POI 只缓存用户真实查询触发、且处于红圈之内的点位，`saveTencentPoi` 云函数内 50 米同名去重
 6. 用户上报必须 `auditStatus=pass` 才展示；`invalid=true` 的点位全部过滤
 7. 所有写库操作全部经由云函数（上报、评价、收藏、举报、查询记录、次数扣减），前端不直接写数据库，规避恶意刷数据
@@ -68,7 +68,7 @@
 ### 4. 为 toiletAll 创建地理索引（重要）
 `getNearToilet` 使用 `geoNear` 地理位置聚合，必须先在云开发控制台为 `toiletAll` 集合创建地理索引：
 - 点击 `toiletAll` → 索引管理 → 新建索引 → 字段 `lat` 与 `lng` 设置为**地理位置索引（2dsphere）**
-- 未创建索引时 `getNearToilet` 会返回失败，首页会自动降级为腾讯 POI 查询，功能仍可用，但自有库点位无法按半径检索
+- 未创建索引时 `getNearToilet` 会返回失败，首页会自动降级为地图服务商 POI 查询（高德/百度/天地图为主、腾讯保底），功能仍可用，但自有库点位无法按半径检索
 
 ### 5. 部署云函数
 在开发者工具左侧资源管理器，找到 `cloudfunctions` 目录，依次对全部 11 个函数【右键 → 上传并部署：云端安装依赖】：
@@ -87,7 +87,7 @@
 - **每日配额**：未认证个人账号「地点搜索」默认 **200 次/日**（QPS 5），完成实名认证后默认提升至 **2000 次/日** 并可申请更高额度（如 50000 次/日）。建议到 [腾讯位置服务-配额提升](https://lbs.qq.com/quotaImprove) 提交申请；代码内置本地每日调用预算保护（`pages/index/index.js` 顶部 `TENCENT_DAILY_BUDGET`，默认 190 次/日），达预算后当天不再发起腾讯请求、自动交由高德/百度/天地图等其他源，避免直接打满 121 硬限额
 
 ### 7.5 配置高德 / 百度 / 天地图 Key（备用数据源，可选）
-周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用腾讯 / 高德 / 百度 / 天地图并合并去重点位（点位最多），各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
+周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用高德 / 百度 / 天地图（主流源）并合并去重点位（点位最多），**腾讯仅作保底**——只有主流源均无点位时才查询腾讯补位（配额紧张，省着用）；各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（高德→百度→天地图→腾讯保底→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
 
 - **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com` 个人开发者「周边搜索」默认 QPS 3，代码内置高德并发限制（`AMAP_MAX_CONCURRENCY`，默认 3，超出自动排队），避免并发过高报 infocode=10045（QPS 超限）
 - **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
@@ -95,7 +95,7 @@
 - **天地图**：Key 类型必须为「服务端」，存放在云函数 `searchTiandituPoi/index.js` 顶部 `TIANDITU_KEY`（已填入 `efac1d7241be6075e3b3a653e0acdc69`）。小程序客户端直连会被天地图识别为浏览器端访问，使用服务端 Key 会报 403（code 301013 权限类型错误），因此必须经该云函数代理查询；在开发者工具中部署 `searchTiandituPoi` 后前端自动生效，未部署时静默跳过该源
   - 天地图坐标基准为 CGCS2000（≈WGS-84），云函数内置 `wgs84ToGcj02` 自动转 GCJ-02；周边搜索走 `v2/search` 接口（旧版 `/search` 已失效返回 404，必须用 v2）`queryType=3`（pointLonlat + queryRadius），按天配额有限，当日用尽自动跳过；云函数出网不受小程序 request 合法域名白名单限制
 - **OSM**：部署 `fetchOsmToilet` 云函数后自动生效，无需 Key；未部署时前端静默跳过
-- **多关键词**：四个地图源按 `公共厕所 / 公厕 / 卫生间 / 洗手间 / 公共卫生间 / 旅游厕所` 逐词查询后合并去重（高德 `keywords` 用 `|` 一次传多词）。**高德 / 百度设为主流查询**（全 6 词），腾讯配额紧张仅查 1 个主词，天地图全 6 词；可在 `pages/index/index.js` 顶部 `SOURCE_KEYWORD_COUNT` 调整每个数据源的查询强度，各源遇到配额/限流类错误自动停止后续关键词
+- **多关键词**：四个地图源按 `公共厕所 / 公厕 / 卫生间 / 洗手间 / 公共卫生间 / 旅游厕所` 逐词查询后合并去重（高德 `keywords` 用 `|` 一次传多词）。**高德 / 百度设为主流查询**（全 6 词），腾讯配额紧张仅查 1 个主词**且仅作保底**，天地图全 6 词；可在 `pages/index/index.js` 顶部 `SOURCE_KEYWORD_COUNT` 调整每个数据源的查询强度，各源遇到配额/限流类错误自动停止后续关键词
 - **全源合规缓存**：任意地图服务商（tencent/amap/baidu/tianditu/osm）查询返回且处于红圈内的点位，都会经云函数 `saveTencentPoi`（历史命名，已支持全部来源）做 50 米同名去重后写入 `toiletAll`，跨用户共享、越用越多，减少后续 API 调用
 - **用户查找历史**：每次查询成功并扣减次数后，前端调用云函数 `saveSearchedToilets` 把本次圈内公厕记录到 `toilet_view_record` 集合（字段：openid、toiletId、name、lat/lng、source、createTime/lastSeenTime）；同一用户 + 同名 + 50 米内视为同一条，只更新时间不重复插入，单次最多记 50 条，便于后续「我的」页面展示个人查找历史
 

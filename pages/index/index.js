@@ -1,6 +1,6 @@
 // pages/index/index.js - 附近厕所主页面
 // 核心交互：选择半径（实时预览红圈）→ 点击【开始寻找】→ 渲染红圈 → 加载圈内公厕 → 整套查询成功后才消耗次数并写记录
-// 查询分支：①库有数据+腾讯失败→仅展示本地库；②库空+腾讯有数据→正常渲染腾讯POI；③两边无数据→空状态弹窗；④接口异常→不扣次数提示重试
+// 查询分支：①库有数据+POI服务商失败→仅展示本地库；②库空+服务商有数据→正常渲染POI点位；③两边无数据→空状态弹窗；④接口异常→不扣次数提示重试
 // 错误处理：所有云函数/地图接口异常均 console.error 打印完整错误对象；球面距离过滤被丢弃点位打印距离，便于排查误过滤
 // 数据源：toiletAll 自有库（gov/user/tencent 缓存）+ 腾讯/高德/百度/天地图 POI 多源合并（可降级）
 const app = getApp()
@@ -12,11 +12,11 @@ const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 // 公厕多关键词（各数据源逐词查询后合并去重，显著提升召回率；高德 keywords 支持 | 一次传多词）
 const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所']
 const SEARCH_KEYWORD = SEARCH_KEYWORDS[0] // 单关键词兼容
-// 各数据源关键词数量：高德/百度设为主流查询（全 6 词）；腾讯配额紧张（每日易触发 status=121）仅查 1 个主词；
+// 各数据源关键词数量：高德/百度设为主流查询（全 6 词）；腾讯配额紧张（每日易触发 status=121）仅查 1 个主词且仅作保底；
 // 天地图按天配额较宽松保持全 6 词。修改此处即可调整每个数据源的查询强度
 const SOURCE_KEYWORD_COUNT = { tencent: 1, amap: SEARCH_KEYWORDS.length, baidu: SEARCH_KEYWORDS.length, tianditu: SEARCH_KEYWORDS.length }
 
-// 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
+// 高德地图 Web 服务配置（主流数据源）
 const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
 const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 // 高德 Web服务 API 并发限制：个人开发者「周边搜索」默认 QPS≈3，超出返回 infocode=10045（QPS 超限）
@@ -42,7 +42,7 @@ function pumpAmapQueue() {
   }
 }
 
-// 百度地图 Web 服务配置（第三备用数据源：腾讯/高德均失败或为空时启用）
+// 百度地图 Web 服务配置（主流数据源）
 // 需在百度地图开放平台（https://lbsyun.baidu.com/）申请「服务端」类型 AK，
 // 并到微信公众平台把 https://api.map.baidu.com 加入 request 合法域名
 const BAIDU_AK = 'JggVZQfYf3r0sklCquGHKUAWNfus2BbG'
@@ -56,8 +56,8 @@ const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 // 云函数出网不受小程序 request 合法域名白名单限制，无需在微信公众平台添加天地图域名。
 const TIANDITU_ENABLED = true // 是否启用天地图数据源（依赖云函数 searchTiandituPoi 已部署）
 
-// 多源合并模式：true=每次查询并行调用腾讯/高德/百度/天地图并合并点位（点位最多，各源当日额度耗尽自动跳过）
-// false=降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，接口调用更省）
+// 多源合并模式：true=并行调用高德/百度/天地图（主流源）并合并点位，仅当主流源均无点位时才查询腾讯保底（配额紧张，省着用）
+// false=降级链模式（高德→百度→天地图→腾讯保底→OSM，任一成功即停止，接口调用更省）
 const MERGE_ALL_PROVIDERS = true
 
 // 定位失败兜底中心（广州珠江新城）
@@ -317,7 +317,7 @@ Page({
    * 点击【开始寻找】：
    * 1. 校验定位就绪、经纬度有效、剩余次数 > 0
    * 2. 渲染红色查询圈，按钮进入 loading 状态（防重复点击）
-   * 3. 执行 loadToiletData 完整查询（geoNear + 腾讯降级）
+   * 3. 执行 loadToiletData 完整查询（geoNear + 多源POI降级）
    * 4. 整套查询成功后才消耗 1 次查询次数并写查询记录；失败不扣次数、不写记录
    */
   startSearch() {
@@ -365,12 +365,12 @@ Page({
 
   /**
    * 加载圈内公厕（完整查询流程，容错重构）：
-   * 执行顺序：① getNearToilet 读自有库 → ② 腾讯 place 接口（带超时）
+   * 执行顺序：① getNearToilet 读自有库 → ② 多源 POI（高德/百度/天地图主流并行，腾讯保底）
    * 分支：
-   *  - 情况1：腾讯正常返回 POI → 合并过滤数据库点位与腾讯点位
-   *  - 情况2：腾讯报错/超时/返回空 → 不判定整体失败，保留数据库点位继续渲染，toast「地图服务商暂时异常，仅展示用户上报的厕所点位」
-   *  - 情况3：数据库云函数失败 && 腾讯也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数
-   *  - 情况4：数据库无数据 && 腾讯无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」
+   *  - 情况1：服务商正常返回 POI → 合并过滤数据库点位与 POI 点位
+   *  - 情况2：服务商报错/超时/返回空 → 不判定整体失败，保留数据库点位继续渲染，toast「地图服务商暂时异常，仅展示用户上报的厕所点位」
+   *  - 情况3：数据库云函数失败 && 服务商也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数
+   *  - 情况4：数据库无数据 && 服务商无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」
    * 次数规则：只要自有数据库查询成功即消耗 1 次并写查询记录；仅数据库云函数本身异常才不消耗次数
    * 注意：toiletAll 必须建立 loc 字段 2dsphere 地理位置索引（写入时需带 loc: db.Geo.Point(lng, lat)，见 cloudfunctions/getNearToilet/index.js 顶部注释）；未建索引时 getNearToilet 已内置 JS 距离过滤降级，不会误判查询失败
    */
@@ -408,7 +408,7 @@ Page({
       console.error('[index] getNearToilet 调用异常 errCode=', (err && err.errCode) || 'N/A', '| errMsg=', (err && err.errMsg) || (err && err.message) || 'N/A')
     }
 
-    // 2. 周边 POI：腾讯优先，失败/为空/额度耗尽时自动切高德备用（失败不阻断整体查询，只轻提示）
+    // 2. 周边 POI：高德/百度/天地图主流并行，腾讯仅作保底（失败不阻断整体查询，只轻提示）
     const poiRes = await this.searchPoiWithFallback(latitude, longitude, selectedRadius)
     const poiOk = poiRes.ok
     const poiList = poiRes.list || []
@@ -454,7 +454,7 @@ Page({
         toastText = '数据库服务异常，仅展示地图服务商点位'
         shouldConsume = false
       } else {
-        // 情况3：数据库云函数失败 && 腾讯也失败 → 弹窗，不扣次数
+        // 情况3：数据库云函数失败 && 服务商也失败 → 弹窗，不扣次数
         queryFail = true
         toastText = '查询失败，本次未消耗次数，请稍后重试'
         shouldConsume = false
@@ -470,7 +470,7 @@ Page({
           this.savePoiCache(this.dedupeToilets(filtered))
         }
       } else if (near.length > 0) {
-        // 情况2：腾讯报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
+        // 情况2：服务商报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
         toilets = near.slice()
         if (!poiOk) {
           toastText = '地图服务商暂时异常，仅展示用户上报的厕所点位'
@@ -478,7 +478,7 @@ Page({
           toastText = '今日官方公厕查询额度已用尽，仅展示用户上报的厕所点位'
         }
       } else {
-        // 情况4：数据库无数据 && 腾讯无数据（或腾讯也失败）→ 空状态弹窗
+        // 情况4：数据库无数据 && 服务商无数据（或全部失败）→ 空状态弹窗
         toilets = []
         showEmpty = true
         if (!poiOk) {
@@ -659,7 +659,7 @@ Page({
   },
 
   /**
-   * 高德 POI 周边搜索（v3/place/around，备用数据源）
+   * 高德 POI 周边搜索（v3/place/around，主流数据源）
    * 坐标：高德返回 GCJ-02（location 格式为 经度,纬度），与小程序地图一致
    * 搜索策略：优先按分类 200300（公共设施;公共厕所）搜索（召回比单关键词更全），
    *          分类无结果时回退多关键词搜索兜底（公共厕所|公厕|卫生间|洗手间）
@@ -769,7 +769,7 @@ Page({
     })
   },
   /**
-   * 百度 POI 周边搜索（place/v2/search，第三备用数据源）
+   * 百度 POI 周边搜索（place/v2/search，主流数据源）
    * 坐标：百度返回 BD-09，需经 bd09ToGcj02 转换为 GCJ-02 后供小程序 map 使用
    * 返回 { ok, list, errCode }：
    *  - ok=true   查询成功
@@ -873,7 +873,7 @@ Page({
   },
 
   /**
-   * 天地图周边搜索（第四数据源，经云函数 searchTiandituPoi 代理）
+   * 天地图周边搜索（主流数据源，经云函数 searchTiandituPoi 代理）
    * 为什么走云函数：天地图 Key 若为「服务端」类型，前端 wx.request 直连返回 403（301013 权限类型错误），
    * 必须由云函数以服务端身份访问；坐标转换（CGCS2000→GCJ-02）也统一在云函数内完成。
    * 返回 { ok, list, errCode }：云函数未部署/接口失败/解析失败均 ok=false，不阻断其他数据源与次数消耗。
@@ -930,20 +930,18 @@ Page({
   },
 
   /**
-   * 周边 POI 多源降级：腾讯优先 → 高德 → 百度 → OSM 兜底
-   * 返回 { ok, list, errCode, provider }：provider = tencent | amap | baidu | osm
+   * 周边 POI 多源降级：高德/百度/天地图主流（合并模式并行、降级模式按链），腾讯仅作保底 → OSM 兜底
+   * 返回 { ok, list, errCode, provider }：provider = tencent | amap | baidu | tianditu | osm
    */
   async searchPoiWithFallback(latitude, longitude, radius) {
-    // ===== 合并模式：并行查询腾讯/高德/百度/天地图，四源点位合并（点位最多）=====
+    // ===== 合并模式：并行查询高德/百度/天地图（主流源），腾讯仅作保底（主流源均无点位时才查询）=====
     if (MERGE_ALL_PROVIDERS) {
-      const [tencentRes, amapRes, baiduRes, tiandituRes] = await Promise.all([
-        this.searchTencentPoi(latitude, longitude, radius),
+      const [amapRes, baiduRes, tiandituRes] = await Promise.all([
         this.searchAmapPoi(latitude, longitude, radius),
         this.searchBaiduPoi(latitude, longitude, radius),
         this.searchTiandituPoi(latitude, longitude, radius)
       ])
       const sources = [
-        { name: 'tencent', res: tencentRes },
         { name: 'amap', res: amapRes },
         { name: 'baidu', res: baiduRes },
         { name: 'tianditu', res: tiandituRes }
@@ -962,25 +960,35 @@ Page({
           errCodes[s.name + 'ErrCode'] = s.res.errCode
         }
       }
+      // 腾讯保底：主流源（高德/百度/天地图）均无有效点位时，才调用腾讯补位（配额紧张，省着用）
       if (merged.length === 0) {
-        // 四源全部为空/失败 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+        console.log('[index] 高德/百度/天地图均无点位，启用腾讯保底查询')
+        const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
+        if (tencentRes.ok && (tencentRes.list || []).length > 0) {
+          merged = tencentRes.list
+          okSources.push('tencent')
+        } else if (tencentRes.ok) {
+          console.log('[index] tencent 保底返回空点位')
+        } else {
+          console.warn('[index] tencent 保底查询失败 errCode=', tencentRes.errCode)
+          errCodes.tencentErrCode = tencentRes.errCode
+        }
+      }
+      if (merged.length === 0) {
+        // 主流源与腾讯保底全部为空/失败 → OSM 云函数兜底（尽力而为，失败不影响主流程）
         const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
         if (osmRes.ok && (osmRes.list || []).length > 0) {
           return { ...osmRes, provider: 'osm' }
         }
         // 全部无数据：ok=false 让上层按服务商异常处理（不阻断数据库点位渲染）
-        return { ok: false, list: [], provider: 'tencent+amap+baidu+tianditu', errCode: -1, ...errCodes, osmErrCode: osmRes.errCode, tiandituErrCode: tiandituRes.errCode }
+        return { ok: false, list: [], provider: 'amap+baidu+tianditu', errCode: -1, ...errCodes, osmErrCode: osmRes.errCode, tiandituErrCode: tiandituRes.errCode }
       }
       console.log('[index] 合并模式点位 provider=', okSources.join('+'), '原始点位=', merged.length)
       return { ok: true, list: merged, errCode: 0, provider: okSources.join('+'), merged: true, ...errCodes }
     }
 
-    // ===== 降级模式：任一服务商成功即停止，接口调用更省 =====
-    const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
-    if (tencentRes.ok && (tencentRes.list || []).length > 0) {
-      return { ...tencentRes, provider: 'tencent' }
-    }
-    // 腾讯失败/为空/额度耗尽 → 高德备用
+    // ===== 降级模式：主流源优先，任一成功即停止，腾讯仅作保底 =====
+    // 高德（主流源）
     const amapRes = await this.searchAmapPoi(latitude, longitude, radius)
     if (amapRes.ok && (amapRes.list || []).length > 0) {
       return { ...amapRes, provider: 'amap' }
@@ -995,7 +1003,12 @@ Page({
     if (tiandituRes.ok && (tiandituRes.list || []).length > 0) {
       return { ...tiandituRes, provider: 'tianditu' }
     }
-    // 前四源均无数据 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+    // 主流源均无数据 → 腾讯保底查询（配额紧张，仅兜底时调用）
+    const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
+    if (tencentRes.ok && (tencentRes.list || []).length > 0) {
+      return { ...tencentRes, provider: 'tencent' }
+    }
+    // 腾讯保底也无数据 → OSM 云函数兜底（尽力而为，失败不影响主流程）
     const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
     if (osmRes.ok && (osmRes.list || []).length > 0) {
       return { ...osmRes, provider: 'osm' }
