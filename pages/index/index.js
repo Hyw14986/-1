@@ -442,7 +442,8 @@ Page({
   },
 
   /**
-   * 腾讯 POI 周边搜索
+   * 腾讯 POI 周边搜索（place/v1/search）
+   * 参数：boundary=nearby(lat,lng,radius)，腾讯已废弃 location+radius（会返回 status=348）
    * 返回 { ok, list, errCode }：
    *  - ok=true   查询成功，或按规则跳过（当日额度已用尽 / 未配置 Key）
    *  - ok=false  接口报错或网络异常（完整错误已打印到控制台）
@@ -466,10 +467,11 @@ Page({
       }
       wx.request({
         url: QQ_SEARCH_URL,
+        // 重要：腾讯 place/v1/search 已废弃 location+radius，必须用 boundary=nearby(lat,lng,radius)，
+        // 否则返回 status=348「boundary 参数不合法」，导致腾讯接口必败（实测验证）
         data: {
           keyword: SEARCH_KEYWORD,
-          location: latitude + ',' + longitude,
-          radius: radius,
+          boundary: 'nearby(' + latitude + ',' + longitude + ',' + radius + ')',
           page_size: 20,
           key: QQ_MAP_KEY
         },
