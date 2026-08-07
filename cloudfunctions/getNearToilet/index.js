@@ -3,7 +3,12 @@
  * 按半径查询周边有效公厕（geoNear 地理位置聚合）
  * 入参：latitude、longitude、radius（米）
  * 过滤：invalid=false 且 auditStatus='pass'（仅展示有效且审核通过的点位）
- * 注意：需在云开发控制台为 toiletAll 集合的 lat/lng 字段创建 2dsphere 地理索引
+ *
+ * 【必读】toiletAll 集合 2dsphere 地理位置索引配置（否则 geoNear 报错，返回 code=2）：
+ * 1. 打开微信开发者工具 → 云开发控制台 → 数据库 → 集合 toiletAll
+ * 2. 点击「索引管理」→「新建索引」
+ * 3. 字段名选择 lat，类型选择「地理位置（2dsphere）」，或同时将 lat/lng 组合索引设为 2dsphere
+ * 4. 保存后，本函数才能按距离聚合检索；未建索引时前端会提示并降级为腾讯 POI 查询
  */
 const cloud = require('wx-server-sdk')
 
@@ -50,6 +55,6 @@ exports.main = async (event) => {
     return { code: 0, msg: 'ok', list, total: list.length }
   } catch (err) {
     console.error('geoNear 查询失败（请确认 toiletAll 已创建 2dsphere 索引）', err)
-    return { code: 2, msg: '查询失败：' + ((err && err.errMsg) || (err && err.message) || 'geoNear 索引缺失') }
+    return { code: 2, msg: '查询失败：' + ((err && err.errMsg) || (err && err.message) || 'geoNear 索引缺失') + '（请为 toiletAll 的 lat/lng 创建 2dsphere 地理位置索引）' }
   }
 }

@@ -57,6 +57,7 @@ Page({
         })
       },
       fail: (err) => {
+        console.error('[report] 选择位置失败（完整错误）', err)
         // 用户取消不提示；授权失败时引导
         if (err.errMsg && err.errMsg.indexOf('auth') > -1) {
           wx.showModal({

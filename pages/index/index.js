@@ -1,5 +1,7 @@
 // pages/index/index.js - 附近厕所主页面
-// 核心交互：选择半径 → 点击【开始寻找】→ 消耗 1 次查询次数 → 渲染红色查询圈 → 加载圈内公厕
+// 核心交互：选择半径 → 点击【开始寻找】→ 渲染红色查询圈 → 加载圈内公厕
+// 次数规则：整套查询全部成功后才消耗 1 次查询次数并写查询记录；任一步失败不扣次数、不生成查询记录
+// 错误处理：所有云函数/地图接口异常均 console.error 打印完整错误对象，便于调试
 // 数据源：toiletAll 自有库（gov/user/tencent 缓存）+ 腾讯 POI 降级补充
 const app = getApp()
 const util = require('../../utils/util.js')
@@ -120,7 +122,7 @@ Page({
     const timer = setTimeout(() => {
       if (settled) return
       settled = true
-      console.warn('[index] 定位超时，使用默认坐标')
+      console.error('[index] 定位超时（完整信息）：已切换默认坐标', DEFAULT_CENTER)
       wx.showToast({ title: '定位超时，已切换到默认位置', icon: 'none' })
       self.setData({ locationReady: false, loadingDone: true })
     }, LOCATE_TIMEOUT)
@@ -135,10 +137,11 @@ Page({
         self.setData({ ...location, locationReady: true, loadingDone: true })
         console.log('[index] 定位成功', location)
       },
-      fail: () => {
+      fail: (err) => {
         if (settled) return
         settled = true
         clearTimeout(timer)
+        console.error('[index] 定位失败（完整错误）', err)
         wx.showToast({ title: '定位失败，已切换到默认位置', icon: 'none' })
         self.setData({ locationReady: false, loadingDone: true })
       }
@@ -157,9 +160,11 @@ Page({
       if (r.code === 0) {
         this.setData({ remaining: r.remaining, dailyLimit: r.dailyLimit })
         console.log('[index] 今日剩余查询次数', r.remaining, '/', r.dailyLimit)
+      } else {
+        console.error('[index] quotaOperate get 返回错误（完整返回）', JSON.stringify(r))
       }
     }).catch((err) => {
-      console.warn('[index] 获取剩余次数失败', err)
+      console.error('[index] 获取剩余次数失败（完整错误）', err)
     })
   },
 
@@ -174,10 +179,14 @@ Page({
   },
 
   /**
-   * 点击【开始寻找】：校验并消耗 1 次查询次数 → 渲染红圈 → 加载圈内公厕
+   * 点击【开始寻找】：
+   * 1. 校验定位就绪、经纬度有效、剩余次数 > 0
+   * 2. 渲染红色查询圈
+   * 3. 执行 loadToiletData 完整查询（geoNear + 腾讯降级）
+   * 4. 整套查询成功后才消耗 1 次查询次数并写查询记录；失败不扣次数、不写记录
    */
   startSearch() {
-    const { loading, loadingDone, remaining } = this.data
+    const { loading, loadingDone, remaining, latitude, longitude } = this.data
     if (loading) return
     // 定位未完成前禁止查询；定位失败已回退默认坐标（loadingDone=true）时允许按默认位置查询
     if (!loadingDone) {
@@ -185,36 +194,19 @@ Page({
       this.ensureLocation()
       return
     }
+    // 经纬度校验：无效直接提示开启定位权限，不发起任何请求
+    if (!isValidCoordinate(latitude, longitude)) {
+      console.error('[index] 经纬度无效，拒绝发起查询', latitude, longitude)
+      wx.showToast({ title: '获取定位失败，请开启位置权限', icon: 'none' })
+      return
+    }
     if (remaining <= 0) {
       wx.showToast({ title: '今日查询次数已用完，每日0点将会重置次数', icon: 'none' })
       return
     }
     this.setData({ loading: true, emptyText: '' })
-    // 消耗一次查询次数（云函数内部做每日 0 点重置）
-    wx.cloud.callFunction({
-      name: 'quotaOperate',
-      data: { action: 'consume' }
-    }).then((res) => {
-      const r = res.result || {}
-      if (r.code === 3) {
-        // 今日次数已用尽
-        this.setData({ loading: false, remaining: 0 })
-        wx.showToast({ title: '今日查询次数已用完，每日0点将会重置次数', icon: 'none' })
-        return
-      }
-      if (r.code !== 0) {
-        this.setData({ loading: false })
-        wx.showToast({ title: r.msg || '查询失败', icon: 'none' })
-        return
-      }
-      this.setData({ remaining: r.remaining })
-      this.renderCircle()
-      this.loadToiletData()
-    }).catch((err) => {
-      console.error('[index] 消耗查询次数失败', err)
-      this.setData({ loading: false })
-      wx.showToast({ title: '网络异常，请稍后重试', icon: 'none' })
-    })
+    this.renderCircle()
+    this.loadToiletData()
   },
 
   /**
@@ -237,55 +229,121 @@ Page({
   },
 
   /**
-   * 加载圈内公厕：优先 toiletAll 自有库；≤2 条时降级调用腾讯 POI 并做球面距离二次过滤
+   * 加载圈内公厕（完整查询流程）：
+   * 0. geoNear 前校验经纬度有效（定位为空直接提示，不发请求）
+   * 1. getNearToilet 查 toiletAll 自有库
+   *    注意：toiletAll 必须创建 lat/lng 的 2dsphere 地理位置索引（见 cloudfunctions/getNearToilet/index.js 顶部注释），否则 geoNear 返回错误
+   * 2. 自有库 ≤2 条时降级调用腾讯 place/v1/search，并做球面距离二次过滤
+   * 3. 整套查询成功（自有库成功 且 腾讯成功或按规则跳过）才消耗 1 次次数并写查询记录
+   *    任一步失败：不扣次数、不生成查询记录，控制台打印完整错误
    */
   async loadToiletData() {
     const { latitude, longitude, selectedRadius } = this.data
+
+    // 0. geoNear 查询前校验经纬度
+    if (!isValidCoordinate(latitude, longitude)) {
+      console.error('[index] 经纬度无效，无法发起 geoNear 查询', latitude, longitude)
+      wx.showToast({ title: '获取定位失败，请开启位置权限', icon: 'none' })
+      this.setData({ loading: false })
+      return
+    }
+
+    // 1. 自有库 geoNear 查询（依赖 toiletAll 的 2dsphere 地理位置索引）
+    let dbOk = false
+    let near = []
     try {
-      // 1. 自有库 geoNear 查询（失败不阻断，继续腾讯降级）
-      let near = []
-      try {
-        const nearRes = await wx.cloud.callFunction({
-          name: 'getNearToilet',
-          data: { latitude, longitude, radius: selectedRadius }
-        })
-        near = (nearRes.result && nearRes.result.list) || []
-      } catch (err) {
-        console.warn('[index] 自有库查询失败（云函数未部署或 2dsphere 索引缺失），降级腾讯 POI', err)
+      const nearRes = await wx.cloud.callFunction({
+        name: 'getNearToilet',
+        data: { latitude, longitude, radius: selectedRadius }
+      })
+      const r = nearRes.result || {}
+      if (r.code === 0) {
+        dbOk = true
+        near = Array.isArray(r.list) ? r.list : []
+        console.log('[index] 自有库圈内点位=', near.length)
+      } else {
+        // 常见原因：toiletAll 未创建 / 未建 2dsphere 索引 / 权限异常，完整返回打印到控制台
+        console.error('[index] getNearToilet 返回错误（完整返回），请检查 toiletAll 2dsphere 索引', JSON.stringify(r))
       }
-      console.log('[index] 自有库圈内点位=', near.length)
+    } catch (err) {
+      console.error('[index] getNearToilet 调用异常（云函数未部署或网络异常，完整错误）', err)
+    }
 
-      let toilets = near.slice()
+    let toilets = near.slice()
+    let tencentOk = true
+    let tencentTried = false
 
-      // 2. 降级：自有库 ≤2 条时调用腾讯 place/v1/search
-      if (near.length <= 2) {
-        const poiList = await this.searchTencentPoi(latitude, longitude, selectedRadius)
-        console.log('[index] 腾讯返回原始点位=', poiList.length)
-        // 球面距离二次过滤：只保留红圈内点位
-        const filtered = poiList.filter((p) => getDistance(latitude, longitude, p.lat, p.lng) <= selectedRadius)
-        console.log('[index] 球面距离过滤后圈内腾讯点位=', filtered.length)
-        if (filtered.length) {
-          // 缓存腾讯 POI 到 toiletAll（不阻塞渲染）
-          this.saveTencentPois(filtered)
-          toilets = toilets.concat(filtered)
-        }
+    // 2. 降级：自有库 ≤2 条时调用腾讯 place/v1/search
+    if (near.length <= 2) {
+      tencentTried = true
+      const poiRes = await this.searchTencentPoi(latitude, longitude, selectedRadius)
+      tencentOk = poiRes.ok
+      const poiList = poiRes.list || []
+      console.log('[index] 腾讯返回原始点位=', poiList.length, 'ok=', tencentOk)
+      // 球面距离二次过滤：只保留红圈内点位
+      const filtered = poiList.filter((p) => getDistance(latitude, longitude, p.lat, p.lng) <= selectedRadius)
+      console.log('[index] 球面距离过滤后圈内腾讯点位=', filtered.length)
+      if (filtered.length && tencentOk) {
+        // 缓存腾讯 POI 到 toiletAll（不阻塞渲染）
+        this.saveTencentPois(filtered)
+        toilets = toilets.concat(filtered)
       }
+    }
 
-      // 3. 圈内点位去重合并（同名 50 米内去重）
-      toilets = this.dedupeToilets(toilets)
+    // 3. 判定整套查询是否成功
+    const querySuccess = dbOk && tencentOk
+
+    // 圈内点位去重合并（同名 50 米内去重）
+    toilets = this.dedupeToilets(toilets)
+
+    if (!querySuccess) {
+      // 查询失败：不扣次数、不生成查询记录，仅展示已获得的点位
       this.renderToilets(toilets)
+      if (!dbOk && tencentOk) {
+        wx.showToast({ title: '自有数据查询异常，仅展示腾讯点位，本次未消耗次数', icon: 'none' })
+      } else if (dbOk && !tencentOk) {
+        wx.showToast({ title: '官方公厕查询失败，仅展示自有数据，本次未消耗次数', icon: 'none' })
+      } else {
+        wx.showToast({ title: '查询失败，本次未消耗次数，请稍后重试', icon: 'none' })
+      }
+      return
+    }
 
-      // 4. 写查询记录（含本次查到数量）
+    // 4. 查询成功：渲染 marker → 消耗 1 次次数 → 写查询记录
+    this.renderToilets(toilets)
+    try {
+      const quotaRes = await wx.cloud.callFunction({
+        name: 'quotaOperate',
+        data: { action: 'consume' }
+      })
+      const q = quotaRes.result || {}
+      if (q.code === 3) {
+        // 查询已完成但次数配额已用尽（如多端同时使用）
+        console.warn('[index] 查询完成但次数配额已用尽（完整返回）', JSON.stringify(q))
+        this.setData({ remaining: 0 })
+        wx.showToast({ title: '今日查询次数已用完，每日0点将会重置次数', icon: 'none' })
+        return
+      }
+      if (q.code !== 0) {
+        console.error('[index] 消耗次数返回错误（完整返回）', JSON.stringify(q))
+        wx.showToast({ title: q.msg || '次数扣减失败，请稍后重试', icon: 'none' })
+        return
+      }
+      this.setData({ remaining: q.remaining })
+      console.log('[index] 查询成功，已消耗 1 次，剩余', q.remaining, '/', q.dailyLimit)
       this.addSearchRecord(toilets.length)
     } catch (err) {
-      console.error('[index] 加载公厕失败', err)
-      this.setData({ loading: false })
-      wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
+      // 次数扣减失败：数据已展示，但未扣次数、不写查询记录
+      console.error('[index] 消耗查询次数异常（查询已完成但未扣次数，完整错误）', err)
+      wx.showToast({ title: '查询已完成，次数同步失败，请检查网络', icon: 'none' })
     }
   },
 
   /**
-   * 腾讯 POI 周边搜索（仅当 Key 已配置；接口失败只弹 toast，不清空自有库点位）
+   * 腾讯 POI 周边搜索
+   * 返回 { ok, list, errCode }：
+   *  - ok=true   查询成功，或按规则跳过（当日额度已用尽 / 未配置 Key）
+   *  - ok=false  接口报错或网络异常（完整错误已打印到控制台）
    */
   searchTencentPoi(latitude, longitude, radius) {
     return new Promise((resolve) => {
@@ -296,12 +354,12 @@ Page({
       }
       if (poiQuotaExhausted) {
         console.log('[index] 腾讯 POI 当日额度已用尽，跳过腾讯查询')
-        resolve([])
+        resolve({ ok: true, list: [], errCode: 121 })
         return
       }
       if (!QQ_MAP_KEY || QQ_MAP_KEY.indexOf('请替换') === 0) {
         console.warn('[index] 未配置 QQ_MAP_KEY，跳过腾讯查询')
-        resolve([])
+        resolve({ ok: true, list: [], errCode: 0 })
         return
       }
       wx.request({
@@ -318,29 +376,32 @@ Page({
           const body = res.data || {}
           if (body.status === 0) {
             const list = Array.isArray(body.data) ? body.data : []
-            resolve(list.map((item) => ({
-              name: item.title || '公共厕所',
-              address: item.address || '',
-              lat: item.location && item.location.lat,
-              lng: item.location && item.location.lng
-            })).filter((p) => isValidCoordinate(p.lat, p.lng)))
+            resolve({
+              ok: true,
+              errCode: 0,
+              list: list.map((item) => ({
+                name: item.title || '公共厕所',
+                address: item.address || '',
+                lat: item.location && item.location.lat,
+                lng: item.location && item.location.lng
+              })).filter((p) => isValidCoordinate(p.lat, p.lng))
+            })
             return
           }
           const errCode = body.status
-          console.warn('[index] 腾讯 POI 查询失败 errCode=', errCode, 'message=', body.message)
-          if (errCode === 111) console.warn('[index] 腾讯Key授权AppID不匹配，请核对小程序AppID')
+          // 打印完整返回体，方便定位 Key/配额/参数问题
+          console.error('[index] 腾讯 POI 查询失败（完整返回）', JSON.stringify(body))
+          if (errCode === 111) console.error('[index] 腾讯Key授权AppID不匹配，请核对小程序AppID与Key绑定')
           if (errCode === 121) {
             poiQuotaExhausted = true
             poiQuotaExhaustedDate = today
-            console.warn('[index] 腾讯地图地点搜索当日配额已用尽')
+            console.error('[index] 腾讯地图地点搜索当日配额已用尽')
           }
-          wx.showToast({ title: '官方公厕查询失败，仅展示自有数据', icon: 'none' })
-          resolve([])
+          resolve({ ok: false, list: [], errCode })
         },
         fail: (err) => {
-          console.warn('[index] 腾讯 POI 请求失败', err)
-          wx.showToast({ title: '官方公厕查询失败，仅展示自有数据', icon: 'none' })
-          resolve([])
+          console.error('[index] 腾讯 POI 请求失败（完整错误）', err)
+          resolve({ ok: false, list: [], errCode: -1 })
         }
       })
     })
@@ -357,7 +418,7 @@ Page({
       const r = res.result || {}
       console.log('[index] 腾讯 POI 缓存结果 saved=', r.saved, 'skipped=', r.skipped)
     }).catch((err) => {
-      console.warn('[index] 腾讯 POI 缓存失败', err)
+      console.error('[index] 腾讯 POI 缓存失败（完整错误）', err)
     })
   },
 
@@ -412,7 +473,7 @@ Page({
   },
 
   /**
-   * 写入查询记录（不阻塞）
+   * 写入查询记录（仅在整套查询成功并扣减次数后调用）
    */
   addSearchRecord(searchCount) {
     const { latitude, longitude, selectedRadius } = this.data
@@ -422,7 +483,7 @@ Page({
     }).then((res) => {
       console.log('[index] 查询记录已写入', res.result)
     }).catch((err) => {
-      console.warn('[index] 写入查询记录失败', err)
+      console.error('[index] 写入查询记录失败（完整错误）', err)
     })
   },
 
@@ -512,7 +573,7 @@ Page({
         }
       })
       .catch((err) => {
-        console.warn('[index] 打开公厕失败', err)
+        console.error('[index] 打开公厕失败（完整错误）', err)
         wx.showToast({ title: '未找到该公厕', icon: 'none' })
       })
   },
@@ -524,10 +585,15 @@ Page({
       .callFunction({ name: 'getComments', data: { toiletId } })
       .then((res) => {
         const r = res.result || {}
-        this.setData({ comments: r.list || [] })
+        if (r.code === 0) {
+          this.setData({ comments: r.list || [] })
+        } else {
+          console.error('[index] getComments 返回错误（完整返回）', JSON.stringify(r))
+          this.setData({ comments: [] })
+        }
       })
       .catch((err) => {
-        console.warn('[index] 读取评价失败', err)
+        console.error('[index] 读取评价失败（完整错误）', err)
         this.setData({ comments: [] })
       })
   },
@@ -537,7 +603,9 @@ Page({
     wx.cloud.callFunction({ name: 'favoriteOperate', data: { action: 'check', toiletId } }).then((res) => {
       const r = res.result || {}
       this.setData({ favorited: !!r.favorited })
-    }).catch(() => {})
+    }).catch((err) => {
+      console.error('[index] 检查收藏状态失败（完整错误）', err)
+    })
   },
 
   // 一键导航
@@ -550,7 +618,10 @@ Page({
       name: toilet.name,
       address: toilet.address || '',
       scale: 18,
-      fail: () => wx.showToast({ title: '打开地图失败', icon: 'none' })
+      fail: (err) => {
+        console.error('[index] 打开地图导航失败（完整错误）', err)
+        wx.showToast({ title: '打开地图失败，请检查定位权限', icon: 'none' })
+      }
     })
   },
 
@@ -568,9 +639,13 @@ Page({
         this.setData({ favorited: action === 'add' })
         wx.showToast({ title: action === 'add' ? '收藏成功' : '已取消收藏', icon: 'none' })
       } else if (r.code !== 2) {
+        console.error('[index] favoriteOperate 返回错误（完整返回）', JSON.stringify(r))
         wx.showToast({ title: r.msg || '操作失败', icon: 'none' })
       }
-    }).catch(() => wx.showToast({ title: '网络异常', icon: 'none' }))
+    }).catch((err) => {
+      console.error('[index] 收藏操作失败（完整错误）', err)
+      wx.showToast({ title: '操作失败，请检查网络后重试', icon: 'none' })
+    })
   },
 
   // 评分选择
@@ -603,12 +678,13 @@ Page({
         wx.showToast({ title: '评价成功', icon: 'success' })
         this.closeDetail()
       } else {
+        console.error('[index] submitComment 返回错误（完整返回）', JSON.stringify(r))
         wx.showToast({ title: r.msg || '评价失败', icon: 'none' })
       }
     }).catch((err) => {
-      console.error('[index] 提交评价失败', err)
+      console.error('[index] 提交评价失败（完整错误）', err)
       this.setData({ submittingComment: false })
-      wx.showToast({ title: '网络异常，请重试', icon: 'none' })
+      wx.showToast({ title: '提交评价失败，请检查网络后重试', icon: 'none' })
     })
   },
 
@@ -636,7 +712,10 @@ Page({
         }).then((r) => {
           const result = r.result || {}
           wx.showToast({ title: result.msg || '举报已提交', icon: 'none' })
-        }).catch(() => wx.showToast({ title: '网络异常', icon: 'none' }))
+        }).catch((err) => {
+          console.error('[index] 提交举报失败（完整错误）', err)
+          wx.showToast({ title: '举报提交失败，请检查网络后重试', icon: 'none' })
+        })
       }
     })
   },

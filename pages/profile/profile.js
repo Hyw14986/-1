@@ -67,7 +67,7 @@ Page({
           console.log('[profile] 今日剩余查询次数', r.remaining, '/', r.dailyLimit)
         }
       })
-      .catch((err) => console.warn('[profile] 获取剩余次数失败', err))
+      .catch((err) => console.error('[profile] 获取剩余次数失败（完整错误）', err))
   },
 
   /**
@@ -235,7 +235,7 @@ Page({
         const r = res.result || {}
         this.setData({ favorites: r.list || [] })
       })
-      .catch((err) => console.warn('加载收藏失败', err))
+      .catch((err) => console.error('[profile] 加载收藏失败（完整错误）', err))
   },
 
   /**

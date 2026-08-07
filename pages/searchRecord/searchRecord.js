@@ -69,8 +69,9 @@ Page({
             wx.showToast({ title: result.code === 0 ? '已删除' : (result.msg || '删除失败'), icon: 'none' })
             this.loadRecords()
           })
-          .catch(() => {
-            wx.showToast({ title: '删除失败', icon: 'none' })
+          .catch((err) => {
+            console.error('[searchRecord] 删除记录失败（完整错误）', err)
+            wx.showToast({ title: '删除失败，请检查网络', icon: 'none' })
           })
       }
     })
@@ -94,8 +95,9 @@ Page({
             wx.showToast({ title: result.code === 0 ? '已清空' : (result.msg || '清空失败'), icon: 'none' })
             this.loadRecords()
           })
-          .catch(() => {
-            wx.showToast({ title: '清空失败', icon: 'none' })
+          .catch((err) => {
+            console.error('[searchRecord] 清空记录失败（完整错误）', err)
+            wx.showToast({ title: '清空失败，请检查网络', icon: 'none' })
           })
       }
     })

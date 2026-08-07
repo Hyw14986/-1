@@ -33,7 +33,7 @@
     <view class="quota-bar">
       <view class="quota-fill" style="width: {{remaining / dailyLimit * 100}}%"></view>
     </view>
-    <view class="quota-tip">每次点击「开始寻找」消耗 1 次，每日 0 点自动重置</view>
+    <view class="quota-tip">「开始寻找」查询成功后消耗 1 次，失败不扣次数，每日 0 点自动重置</view>
   </view>
 
   <!-- 功能入口 -->
