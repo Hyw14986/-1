@@ -46,6 +46,10 @@ const REQUEST_TIMEOUT = 8000
 // 腾讯 POI 当日额度耗尽标记（status=121）
 let poiQuotaExhausted = false
 let poiQuotaExhaustedDate = ''
+// 腾讯 POI 本地每日调用预算保护：未认证账号地点搜索默认 200 次/日，预留余量避免打到硬限额
+const TENCENT_DAILY_BUDGET = 190
+let tencentDailyCalls = 0
+let tencentDailyCallsDate = ''
 // 高德 POI 当日额度耗尽标记（infocode=10044）
 let amapQuotaExhausted = false
 let amapQuotaExhaustedDate = ''
@@ -542,6 +546,16 @@ Page({
         resolve({ ok: true, list: [], errCode: 121 })
         return
       }
+      // 本地每日调用预算保护：达预算后本日不再发起腾讯请求（保留余量，避免直接打到 status=121 硬限额）
+      if (tencentDailyCallsDate !== today) {
+        tencentDailyCalls = 0
+        tencentDailyCallsDate = today
+      }
+      if (tencentDailyCalls >= TENCENT_DAILY_BUDGET) {
+        console.warn('[index] 腾讯 POI 本地每日调用预算已达上限（' + TENCENT_DAILY_BUDGET + '），今日跳过腾讯查询')
+        resolve({ ok: true, list: [], errCode: 121 })
+        return
+      }
       if (!QQ_MAP_KEY || QQ_MAP_KEY.indexOf('请替换') === 0) {
         console.warn('[index] 未配置 QQ_MAP_KEY，跳过腾讯查询')
         resolve({ ok: true, list: [], errCode: 0 })
@@ -563,6 +577,8 @@ Page({
           }
           return
         }
+        // 实际发起腾讯请求前计数（本地预算保护用）
+        tencentDailyCalls++
         wx.request({
           url: QQ_SEARCH_URL,
           // 重要：腾讯 place/v1/search 已废弃 location+radius，必须用 boundary=nearby(lat,lng,radius)，
