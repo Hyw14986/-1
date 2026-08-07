@@ -91,8 +91,8 @@
 - **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com`
 - **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
   - 百度接口返回 BD-09 坐标，代码内置 `bd09ToGcj02` 自动转 GCJ-02；若报 302/402（当日配额用尽）当天自动跳过百度源
-- **天地图**：`pages/index/index.js` 顶部 `TIANDITU_KEY` 需自行到 [天地图开放平台](https://console.tianditu.gov.cn/) 注册开发者并申请 Key 后填入（未配置自动跳过该源，不影响其他数据源）；request 合法域名需添加 `https://api.tianditu.gov.cn`
-  - 天地图坐标基准为 CGCS2000（≈WGS-84），代码内置 `wgs84ToGcj02` 自动转 GCJ-02；周边搜索走 `search` 接口 `queryType=3`（pointLonlat + queryRadius），按天配额有限，当日用尽自动跳过
+- **天地图**：`pages/index/index.js` 顶部 `TIANDITU_KEY` 已填入 Key（`efac1d7241be6075e3b3a653e0acdc69`）。配额不足时可到 [天地图开放平台](https://console.tianditu.gov.cn/) 注册开发者重新申请 Key 替换；request 合法域名需添加 `https://api.tianditu.gov.cn`
+  - 天地图坐标基准为 CGCS2000（≈WGS-84），代码内置 `wgs84ToGcj02` 自动转 GCJ-02；周边搜索走 `v2/search` 接口（旧版 `/search` 已失效返回 404，必须用 v2）`queryType=3`（pointLonlat + queryRadius），按天配额有限，当日用尽自动跳过
 - **OSM**：部署 `fetchOsmToilet` 云函数后自动生效，无需 Key；未部署时前端静默跳过
 
 ### 7.6 政府开放数据导入与调研说明

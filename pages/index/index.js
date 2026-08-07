@@ -24,8 +24,8 @@ const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 // 天地图周边搜索配置（第四数据源：CGCS2000≈WGS-84，需转 GCJ-02 后供小程序 map 使用）
 // 需到天地图官网（https://console.tianditu.gov.cn/）注册开发者并申请 Key 后填入；
 // 同时到微信公众平台把 https://api.tianditu.gov.cn 加入 request 合法域名
-const TIANDITU_KEY = '' // 天地图 Key（未配置时自动跳过该源，不影响其他数据源）
-const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/search'
+const TIANDITU_KEY = 'efac1d7241be6075e3b3a653e0acdc69' // 天地图 Key（已配置，每日有查询配额，当日用尽自动跳过该源）
+const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/v2/search'
 
 // 多源合并模式：true=每次查询并行调用腾讯/高德/百度/天地图并合并点位（点位最多，各源当日额度耗尽自动跳过）
 // false=降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，接口调用更省）
@@ -769,7 +769,7 @@ Page({
 
   /**
    * 天地图周边搜索（Tianditu search，第四数据源，CGCS2000≈WGS-84 → GCJ-02）
-   * 接口：https://api.tianditu.gov.cn/search，GET 传 postStr(JSON字符串)+type=query+tk=Key
+   * 接口：https://api.tianditu.gov.cn/v2/search，GET 传 postStr(JSON字符串)+type=query+tk=Key
    * postStr 中 queryType=3 表示周边搜索（配合 pointLonlat 中心点 + queryRadius 半径），
    * mapBound 为地图范围（取搜索圆的外接矩形），level 为缩放级别。
    * 天地图坐标基准为 CGCS2000（≈WGS-84），与小程序 map 的 GCJ-02 有几十米偏差，需经 wgs84ToGcj02 转换。
@@ -807,7 +807,9 @@ Page({
         timeout: REQUEST_TIMEOUT,
         success: (res) => {
           const body = res.data || {}
-          if (body.resultType === 1 && Array.isArray(body.pois)) {
+          // v2 接口成功状态为 status.infocode===1000（旧版 /search 为 status==='0'），兼容两者
+          const tiandituOk = (body.status && body.status.infocode === 1000) || body.status === '0'
+          if (tiandituOk && body.resultType === 1 && Array.isArray(body.pois)) {
             // 打印天地图接口原始返回数据，便于调试
             console.log('[index] 天地图接口原始返回数据（resultType=1）', JSON.stringify(body))
             const list = body.pois.map((item) => {
@@ -829,7 +831,7 @@ Page({
           }
           // 打印完整返回体，方便定位 Key/参数/配额问题
           console.error('[index] 天地图 POI 查询失败（完整返回）', JSON.stringify(body))
-          resolve({ ok: false, list: [], errCode: body.resultType || -1 })
+          resolve({ ok: false, list: [], errCode: (body.status && body.status.infocode) || body.status || body.resultType || -1 })
         },
         fail: (err) => {
           console.error('[index] 天地图 POI 请求失败（完整错误）', err)
