@@ -73,6 +73,39 @@
   color: #ff9fb2;
 }
 
+/* ---------- 一键显示全部厕所 ---------- */
+.showall-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.showall-btn {
+  padding: 12rpx 28rpx;
+  border-radius: 50rpx;
+  background: linear-gradient(135deg, #a8e6cf, #74b9ff);
+  color: #ffffff;
+  font-size: 24rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.35);
+}
+
+.showall-btn.active {
+  background: linear-gradient(135deg, #ffb8d1, #ff9fb2);
+  box-shadow: 0 8rpx 20rpx rgba(255, 184, 209, 0.4);
+}
+
+.showall-btn.hover {
+  opacity: 0.85;
+  transform: scale(0.96);
+}
+
+.db-count {
+  font-size: 24rpx;
+  color: #7f8c8d;
+}
+
 /* ---------- 定位提示条 ---------- */
 .locate-banner {
   margin-top: 20rpx;

@@ -15,6 +15,11 @@
     <view class="quota-text quota-{{remaining === 0 ? 'zero' : (remaining <= 5 ? 'warn' : 'normal')}}" bindtap="onQuotaTap">
       今日剩余查询次数：{{remaining}} /{{dailyLimit}}
     </view>
+    <!-- 一键显示全部厕所 + 数据库已收录总量 -->
+    <view class="showall-row">
+      <view class="showall-btn {{showAllMode ? 'active' : ''}}" hover-class="hover" bindtap="toggleShowAll">{{showAllMode ? '✕ 退出全部模式' : '🗺️ 一键显示全部厕所'}}</view>
+      <text class="db-count">🗄️ 已收录 {{dbTotal}} 座公厕</text>
+    </view>
   </view>
 
   <!-- 定位失败提示条（可关闭，不遮挡地图） -->
@@ -46,6 +51,7 @@
       scale="15"
       markers="{{markers}}"
       circles="{{circles}}"
+      include-points="{{includePoints}}"
       show-location="{{locationReady}}"
       bindmarkertap="onMarkerTap"
       bindtap="onMapTap"
@@ -89,7 +95,8 @@
   <!-- 底部卡片：统计 + 展开（0 个厕所时展开按钮置灰） -->
   <view class="bottom-card cute-card" wx:if="{{searched}}">
     <view class="bottom-head">
-      <text class="bottom-count">在您附近找到 {{totalCount}} 个厕所</text>
+      <text class="bottom-count" wx:if="{{showAllMode}}">🗄️ 数据库共收录 {{dbTotal}} 座公厕 · 展示 {{markers.length}} 个点位</text>
+      <text class="bottom-count" wx:else>在您附近找到 {{totalCount}} 个厕所</text>
       <view class="expand-btn {{totalCount === 0 ? 'disabled' : ''}}" hover-class="hover" bindtap="toggleList">{{showList ? '收起 ▴' : '展开 ▾'}}</view>
     </view>
 

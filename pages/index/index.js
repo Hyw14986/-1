@@ -186,6 +186,10 @@ Page({
     // 今日剩余查询次数
     remaining: 20,
     dailyLimit: 20,
+    // 数据库已收录厕所总量 + 一键显示全部模式
+    dbTotal: 0,
+    showAllMode: false,
+    includePoints: [],
     // 底部列表展开
     showList: false,
     // 顶部筛选（本地过滤，不耗次数）
@@ -205,9 +209,10 @@ Page({
   },
 
   onLoad() {
-    // 页面加载：仅定位 + 读取今日剩余次数，不自动查询、无红圈、无 marker
+    // 页面加载：仅定位 + 读取今日剩余次数 + 读取数据库总量，不自动查询、无红圈、无 marker
     this.ensureLocation()
     this.fetchQuota()
+    this.fetchDbTotal()
   },
 
   onShow() {
@@ -226,8 +231,11 @@ Page({
       app.globalData.pendingToiletId = null
       this.openToiletById(pendingToiletId)
     }
-    // 回到页面时刷新剩余次数
-    if (this.data.loadingDone) this.fetchQuota()
+    // 回到页面时刷新剩余次数与数据库总量
+    if (this.data.loadingDone) {
+      this.fetchQuota()
+      this.fetchDbTotal()
+    }
   },
 
   /**
@@ -1073,7 +1081,7 @@ Page({
         console.warn('[index] 丢弃距离计算异常点位：', item.name, '距离=', dist)
         return
       }
-      if (dist > selectedRadius) {
+      if (!this.data.showAllMode && dist > selectedRadius) {
         console.log('[index] 丢弃圈外点位：', item.name, '距离=', Math.round(dist), '米')
         return
       }
@@ -1165,6 +1173,131 @@ Page({
     this.renderToilets(toilets)
   },
 
+  /**
+   * 获取数据库已收录厕所总量（getAllToilets countOnly，轻量统计）
+   */
+  fetchDbTotal() {
+    wx.cloud.callFunction({
+      name: 'getAllToilets',
+      data: { countOnly: true }
+    }).then((res) => {
+      const r = res.result || {}
+      if (r.code === 0) {
+        this.setData({ dbTotal: r.total })
+        console.log('[index] 数据库已收录公厕总量=', r.total)
+      } else {
+        console.error('[index] 获取公厕总量返回错误（完整返回）', JSON.stringify(r))
+      }
+    }).catch((err) => {
+      console.error('[index] 获取公厕总量失败（完整错误）', err)
+    })
+  },
+
+  // 一键显示全部厕所 / 退出全部模式
+  toggleShowAll() {
+    if (this.data.showAllMode) {
+      this.exitShowAll()
+    } else {
+      this.showAllToilets()
+    }
+  },
+
+  /**
+   * 一键显示所有厕所：读取 toiletAll 全部有效点位（最多 max 个），按距用户由近到远排序渲染，
+   * 隐藏红圈、用 include-points 缩放视野覆盖全量点位；不消耗查询次数、不写查询记录
+   */
+  showAllToilets() {
+    if (this.data.loading) return
+    const { latitude, longitude, filters } = this.data
+    this.setData({ loading: true, markerBubble: false, selectedToilet: null, emptyModal: false, showList: false })
+    wx.cloud.callFunction({
+      name: 'getAllToilets',
+      data: { countOnly: false, max: 2000 }
+    }).then((res) => {
+      const r = res.result || {}
+      if (r.code !== 0) {
+        throw new Error(r.msg || '数据库读取失败')
+      }
+      const list = r.list || []
+      if (list.length === 0) {
+        console.warn('[index] 数据库暂无已收录公厕，total=', r.total)
+        this.setData({ dbTotal: r.total || 0, loading: false, showAllMode: false })
+        wx.showToast({ title: '数据库暂无已收录公厕，试试点击上报', icon: 'none' })
+        return
+      }
+      // 按距用户由近到远排序（全部模式也按距离展示，方便用户就近挑选）
+      const sorted = list
+        .map((t) => {
+          const dist = getDistance(latitude, longitude, t.lat, t.lng)
+          return Object.assign({}, t, { distance: Math.round(dist), distanceText: util.formatDistance(dist) })
+        })
+        .filter((t) => isFinite(t.distance) && isValidCoordinate(t.lat, t.lng))
+        .sort((a, b) => a.distance - b.distance)
+      const markers = sorted.map((item, index) => ({
+        id: 10000 + index, // 数字 id，避开腾讯 POI / 圈内 marker 的 id 段，防止冲突
+        latitude: item.lat,
+        longitude: item.lng,
+        width: 34,
+        height: 34,
+        anchor: { x: 0.5, y: 0.95 },
+        callout: {
+          content: item.name,
+          color: '#2c3e50',
+          fontSize: 12,
+          borderRadius: 8,
+          bgColor: '#ffffff',
+          padding: 6,
+          display: 'BYCLICK'
+        }
+      }))
+      // include-points 视野覆盖：全量传入容易卡顿，均匀抽样最多 99 个点 + 用户位置，足以框住全部点位范围
+      const sample = sorted.filter((_, i) => i % Math.max(1, Math.ceil(sorted.length / 99)) === 0).slice(0, 99)
+      const includePoints = [{ latitude, longitude }].concat(sample.map((t) => ({ latitude: t.lat, longitude: t.lng })))
+      console.log('[index] 一键显示全部厕所 total=', r.total, '展示点位=', markers.length, '截断=', r.truncated)
+      this.setData({
+        dbTotal: r.total,
+        showAllMode: true,
+        loading: false,
+        searched: true,
+        circles: [], // 全部模式不画红圈
+        allToilets: sorted,
+        toilets: sorted,
+        markers,
+        totalCount: markers.length,
+        filterEmpty: false,
+        includePoints
+      })
+      wx.showToast({ title: '已显示全部厕所（共 ' + r.total + ' 座，地图展示 ' + markers.length + ' 个点位）', icon: 'none' })
+      // 若已有筛选条件，继续对全量点位生效
+      if (filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h) {
+        this.applyFilter()
+      }
+    }).catch((err) => {
+      console.error('[index] 获取全部公厕失败（完整错误）', err)
+      this.setData({ loading: false, showAllMode: false })
+      wx.showToast({ title: '获取全部公厕失败，请稍后重试', icon: 'none' })
+    })
+  },
+
+  // 退出全部厕所模式：清空点位与视野，恢复默认附近模式
+  exitShowAll() {
+    this.setData({
+      showAllMode: false,
+      searched: false,
+      circles: [],
+      markers: [],
+      toilets: [],
+      allToilets: [],
+      totalCount: 0,
+      showList: false,
+      markerBubble: false,
+      selectedToilet: null,
+      filterEmpty: false,
+      includePoints: []
+    })
+    wx.showToast({ title: '已退出全部厕所模式', icon: 'none' })
+  },
+
   // 展开/收起底部列表（0 个厕所时不可展开）
   toggleList() {
     if (this.data.totalCount === 0) return
@@ -1234,7 +1367,7 @@ Page({
   relocate() {
     if (app.globalData.userLocation) {
       const { latitude, longitude } = app.globalData.userLocation
-      this.setData({ latitude, longitude, locationReady: true, loadingDone: true })
+      this.setData({ latitude, longitude, locationReady: true, loadingDone: true, includePoints: [] })
       console.log('[index] 回到我的位置', latitude, longitude)
       wx.showToast({ title: '已回到我的位置', icon: 'none' })
     } else {

@@ -4,7 +4,7 @@
 
 ## 功能一览
 
-- **首页（附近厕所）**：页面标题「附近厕所」，左上角下拉选择查询半径（500 / 1000 / 2000 / 3000 米），点击「开始寻找」才执行查询，整套查询成功后才消耗 1 次查询次数（每日上限 20 次，0 点自动重置，失败不扣次数）；地图中心永久锁定用户 GCJ-02 定位，绘制红色圆形查询圈，只渲染圈内公厕 marker；底部卡片统计「在您附近找到 X 个厕所」并可展开按距离排序的列表；点击 marker 打开详情弹窗（来源标签、设施标签、平均分、评价列表、导航 / 收藏 / 写评价 / 举报）
+- **首页（附近厕所）**：页面标题「附近厕所」，左上角下拉选择查询半径（500 / 1000 / 2000 / 3000 米），点击「开始寻找」才执行查询，整套查询成功后才消耗 1 次查询次数（每日上限 20 次，0 点自动重置，失败不扣次数）；地图中心永久锁定用户 GCJ-02 定位，绘制红色圆形查询圈，只渲染圈内公厕 marker；底部卡片统计「在您附近找到 X 个厕所」并可展开按距离排序的列表；点击 marker 打开详情弹窗（来源标签、设施标签、平均分、评价列表、导航 / 收藏 / 写评价 / 举报）；顶部「🗺️ 一键显示全部厕所」按钮读取 toiletAll 全部有效点位（按距用户由近到远排序、include-points 视野覆盖、不消耗查询次数），并实时展示「🗄️ 数据库已收录 X 座公厕」总量
 - **上报页**：填写名称、地图选点、详细地址、开放时间、多选设施标签（无障碍 / 母婴室 / 有纸巾 / 24小时开放）、收费情况单选（免费 / 收费 / 其他自定义）、上传现场照片（最多 3 张，存入云存储）；提交后写入 `toiletAll`，`auditStatus=pending`，需管理员审核通过后才对外展示；50 米内已有公厕会提示重复上报
 - **我的页**：微信头像昵称授权登录；顶部展示「今日剩余查询次数：N / 20」进度条；功能入口：查询记录、关于小程序；模块：我上报的厕所（展示审核状态）、我的评价、我的收藏
 - **查询记录页**：展示每次点击「开始寻找」的历史记录（查询时间、半径、找到厕所数量）；支持「再次查询」（回填半径回首页，不扣次数，需再点开始寻找）、单条删除、一键清空
@@ -39,6 +39,7 @@
 | --- | --- |
 | `quotaOperate` | 获取/消耗今日查询次数，每日 0 点重置（上限 20） |
 | `getNearToilet` | geoNear 按半径查圈内有效公厕（invalid=false 且 auditStatus=pass） |
+| `getAllToilets` | 首页「一键显示全部厕所」：返回 toiletAll 有效公厕总量 + 全量点位（countOnly / max 分页） |
 | `saveTencentPoi` | 缓存腾讯圈内 POI 到 toiletAll（50 米同名去重） |
 | `searchRecordOperate` | 查询记录 add / list / delete / clear |
 | `submitReport` | 用户上报（50 米重复检测 + 写入 pending 待审核） |
@@ -72,7 +73,7 @@
 
 ### 5. 部署云函数
 在开发者工具左侧资源管理器，找到 `cloudfunctions` 目录，依次对全部 11 个函数【右键 → 上传并部署：云端安装依赖】：
-`quotaOperate`、`getNearToilet`、`saveTencentPoi`、`searchRecordOperate`、`submitReport`、`submitComment`、`favoriteOperate`、`submitReportComplaint`、`getComments`、`initData`、`getOpenId`、`importCityToilets`、`importGovToilets`、`fetchOsmToilet`、`fixToiletLoc`
+`quotaOperate`、`getNearToilet`、`getAllToilets`、`saveTencentPoi`、`searchRecordOperate`、`submitReport`、`submitComment`、`favoriteOperate`、`submitReportComplaint`、`getComments`、`initData`、`getOpenId`、`importCityToilets`、`importGovToilets`、`fetchOsmToilet`、`fixToiletLoc`
 
 ### 6. 导入政府公开演示数据
 部署完成后，在 `cloudfunctions/initData` 上【右键 → 云端测试】直接运行（参数可留空），会：
@@ -133,7 +134,7 @@
 ```
 ├── app.js / app.json / app.wxss     # 全局配置：云开发初始化、tabbar（找厕所/我的）、定位权限、全局样式
 ├── project.config.json              # 项目配置（已声明 cloudfunctionRoot）
-├── cloudfunctions/                  # 15 个云函数（见上表）
+├── cloudfunctions/                  # 18 个云函数（见上表）
 ├── components/star/                 # 星级评分组件（展示 + 打分）
 ├── images/                          # tabbar 图标、地图标记、默认头像
 ├── pages/
