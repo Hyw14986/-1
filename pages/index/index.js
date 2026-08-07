@@ -9,7 +9,9 @@ const util = require('../../utils/util.js')
 // 腾讯位置服务配置
 const QQ_MAP_KEY = 'GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU'
 const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
-const SEARCH_KEYWORD = '公共厕所'
+// 公厕多关键词（各数据源逐词查询后合并去重，显著提升召回率；高德 keywords 支持 | 一次传多词）
+const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所', 'WC']
+const SEARCH_KEYWORD = SEARCH_KEYWORDS[0] // 单关键词兼容
 
 // 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
 const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
@@ -431,12 +433,12 @@ Page({
     } else {
       // 数据库查询成功（正常消耗次数）
       if (poiOk && filtered.length > 0) {
-        // 情况1：地图接口正常返回 POI，合并数据库点位与 POI 点位（仅腾讯来源回写缓存）
+        // 情况1：地图接口正常返回 POI，合并数据库点位与 POI 点位（全源回写缓存）
         toilets = near.concat(filtered)
-        // 仅把腾讯来源的圈内点位回写缓存（合并模式下 filtered 混有其他服务商点位）
-        const tencentFiltered = filtered.filter((p) => p.source === 'tencent')
-        if (tencentFiltered.length > 0) {
-          this.saveTencentPois(tencentFiltered)
+        // 全源合规缓存：任意地图服务商（tencent/amap/baidu/tianditu/osm）圈内点位回写 toiletAll，
+        // saveTencentPoi 云函数内部 50 米同名去重，跨用户共享越用越多（函数名为历史命名，已支持全部来源）
+        if (filtered.length > 0) {
+          this.savePoiCache(this.dedupeToilets(filtered))
         }
       } else if (near.length > 0) {
         // 情况2：腾讯报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
@@ -540,52 +542,74 @@ Page({
         resolve({ ok: true, list: [], errCode: 0 })
         return
       }
-      wx.request({
-        url: QQ_SEARCH_URL,
-        // 重要：腾讯 place/v1/search 已废弃 location+radius，必须用 boundary=nearby(lat,lng,radius)，
-        // 否则返回 status=348「boundary 参数不合法」，导致腾讯接口必败（实测验证）
-        data: {
-          keyword: SEARCH_KEYWORD,
-          boundary: 'nearby(' + latitude + ',' + longitude + ',' + radius + ')',
-          page_size: 20,
-          key: QQ_MAP_KEY
-        },
-        timeout: REQUEST_TIMEOUT,
-        success: (res) => {
-          const body = res.data || {}
-          if (body.status === 0) {
-            // 打印腾讯接口原始返回数据，便于调试
-            console.log('[index] 腾讯接口原始返回数据（status=0）', JSON.stringify(body))
-            const list = Array.isArray(body.data) ? body.data : []
-            resolve({
-              ok: true,
-              errCode: 0,
-              list: list.map((item) => ({
+      // 多关键词轮询：腾讯 keyword 单次只支持一个词，逐词查询后按「同名 50 米」去重合并
+      const all = []
+      let anySuccess = false
+      let lastErr = 0
+      const runKeyword = (index) => {
+        if (index >= SEARCH_KEYWORDS.length) {
+          const list = this.dedupeToilets(all)
+          if (list.length > 0 || anySuccess) {
+            resolve({ ok: true, errCode: 0, list })
+          } else {
+            resolve({ ok: false, list: [], errCode: lastErr || -1 })
+          }
+          return
+        }
+        wx.request({
+          url: QQ_SEARCH_URL,
+          // 重要：腾讯 place/v1/search 已废弃 location+radius，必须用 boundary=nearby(lat,lng,radius)，
+          // 否则返回 status=348「boundary 参数不合法」，导致腾讯接口必败（实测验证）
+          data: {
+            keyword: SEARCH_KEYWORDS[index],
+            boundary: 'nearby(' + latitude + ',' + longitude + ',' + radius + ')',
+            page_size: 20,
+            key: QQ_MAP_KEY
+          },
+          timeout: REQUEST_TIMEOUT,
+          success: (res) => {
+            const body = res.data || {}
+            if (body.status === 0) {
+              anySuccess = true
+              // 打印腾讯接口原始返回数据，便于调试
+              console.log('[index] 腾讯接口原始返回数据（keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+              const list = Array.isArray(body.data) ? body.data : []
+              all.push(...list.map((item) => ({
                 name: item.title || '公共厕所',
                 address: item.address || '',
                 lat: item.location && item.location.lat,
                 lng: item.location && item.location.lng,
                 source: 'tencent'
-              })).filter((p) => isValidCoordinate(p.lat, p.lng))
-            })
-            return
+              })).filter((p) => isValidCoordinate(p.lat, p.lng)))
+              runKeyword(index + 1)
+              return
+            }
+            const errCode = body.status
+            lastErr = errCode
+            // 打印完整返回体，方便定位 Key/配额/参数问题
+            console.error('[index] 腾讯 POI 查询失败（完整返回 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+            if (errCode === 111) console.error('[index] 腾讯Key授权AppID不匹配，请核对小程序AppID与Key绑定')
+            if (errCode === 121) {
+              poiQuotaExhausted = true
+              poiQuotaExhaustedDate = today
+              console.error('[index] 腾讯地图地点搜索当日配额已用尽')
+            }
+            // 配额/鉴权类错误停止后续关键词，避免无效消耗；其他错误继续尝试下一关键词
+            if (errCode === 121 || errCode === 111) {
+              const list = this.dedupeToilets(all)
+              resolve({ ok: anySuccess || list.length > 0, list, errCode: errCode || lastErr })
+              return
+            }
+            runKeyword(index + 1)
+          },
+          fail: (err) => {
+            lastErr = -1
+            console.error('[index] 腾讯 POI 请求失败（完整错误 keyword=', SEARCH_KEYWORDS[index], '）', err)
+            runKeyword(index + 1)
           }
-          const errCode = body.status
-          // 打印完整返回体，方便定位 Key/配额/参数问题
-          console.error('[index] 腾讯 POI 查询失败（完整返回）', JSON.stringify(body))
-          if (errCode === 111) console.error('[index] 腾讯Key授权AppID不匹配，请核对小程序AppID与Key绑定')
-          if (errCode === 121) {
-            poiQuotaExhausted = true
-            poiQuotaExhaustedDate = today
-            console.error('[index] 腾讯地图地点搜索当日配额已用尽')
-          }
-          resolve({ ok: false, list: [], errCode })
-        },
-        fail: (err) => {
-          console.error('[index] 腾讯 POI 请求失败（完整错误）', err)
-          resolve({ ok: false, list: [], errCode: -1 })
-        }
-      })
+        })
+      }
+      runKeyword(0)
     })
   },
 
@@ -622,7 +646,7 @@ Page({
           return
         }
         // 分类搜索无结果：回退多关键词兜底，避免漏掉名称匹配但未标注分类的点位
-        this.amapRequest(latitude, longitude, radius, { keywords: '公共厕所|公厕|卫生间|洗手间' }, resolve)
+        this.amapRequest(latitude, longitude, radius, { keywords: SEARCH_KEYWORDS.join('|') }, resolve)
       })
     })
   },
@@ -711,30 +735,42 @@ Page({
         resolve({ ok: false, list: [], errCode: -2 })
         return
       }
-      wx.request({
-        url: BAIDU_SEARCH_URL,
-        // 百度 place/v2/search：location 传 纬度,经度；radius 米；filter 按距离排序
-        data: {
-          query: '公共厕所',
-          location: latitude + ',' + longitude,
-          radius: radius,
-          output: 'json',
-          ak: BAIDU_AK,
-          scope: 2,
-          page_size: 20,
-          filter: 'sort_name:distance|sort_rule:ascending'
-        },
-        timeout: REQUEST_TIMEOUT,
-        success: (res) => {
-          const body = res.data || {}
-          if (String(body.status) === '0') {
-            // 打印百度接口原始返回数据，便于调试
-            console.log('[index] 百度接口原始返回数据（status=0）', JSON.stringify(body))
-            const results = Array.isArray(body.results) ? body.results : []
-            resolve({
-              ok: true,
-              errCode: 0,
-              list: results.map((item) => {
+      // 多关键词轮询：百度 query 单次只支持一个词，逐词查询后按「同名 50 米」去重合并
+      const all = []
+      let anySuccess = false
+      let lastErr = 0
+      const runKeyword = (index) => {
+        if (index >= SEARCH_KEYWORDS.length) {
+          const list = this.dedupeToilets(all)
+          if (list.length > 0 || anySuccess) {
+            resolve({ ok: true, errCode: 0, list })
+          } else {
+            resolve({ ok: false, list: [], errCode: lastErr || -1 })
+          }
+          return
+        }
+        wx.request({
+          url: BAIDU_SEARCH_URL,
+          // 百度 place/v2/search：location 传 纬度,经度；radius 米；filter 按距离排序
+          data: {
+            query: SEARCH_KEYWORDS[index],
+            location: latitude + ',' + longitude,
+            radius: radius,
+            output: 'json',
+            ak: BAIDU_AK,
+            scope: 2,
+            page_size: 20,
+            filter: 'sort_name:distance|sort_rule:ascending'
+          },
+          timeout: REQUEST_TIMEOUT,
+          success: (res) => {
+            const body = res.data || {}
+            if (String(body.status) === '0') {
+              anySuccess = true
+              // 打印百度接口原始返回数据，便于调试
+              console.log('[index] 百度接口原始返回数据（status=0 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+              const results = Array.isArray(body.results) ? body.results : []
+              all.push(...results.map((item) => {
                 const loc = item.location || {}
                 // 百度返回 BD-09，先转 GCJ-02
                 const g = bd09ToGcj02(Number(loc.lat), Number(loc.lng))
@@ -745,31 +781,39 @@ Page({
                   lng: g.lng,
                   source: 'baidu'
                 }
-              }).filter((p) => isValidCoordinate(p.lat, p.lng))
-            })
-            return
+              }).filter((p) => isValidCoordinate(p.lat, p.lng)))
+              runKeyword(index + 1)
+              return
+            }
+            const errCode = body.status
+            lastErr = errCode
+            // 打印完整返回体，方便定位 Key/配额/参数问题
+            console.error('[index] 百度 POI 查询失败（完整返回 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+            if (String(errCode) === '302' || String(errCode) === '402') {
+              baiduQuotaExhausted = true
+              baiduQuotaExhaustedDate = today
+              console.error('[index] 百度地图地点搜索当日配额已用尽（status=', errCode, '）')
+            }
+            // 配额类错误停止后续关键词，避免无效消耗；其他错误继续尝试下一关键词
+            if (String(errCode) === '302' || String(errCode) === '402') {
+              const list = this.dedupeToilets(all)
+              resolve({ ok: anySuccess || list.length > 0, list, errCode: errCode || lastErr })
+              return
+            }
+            runKeyword(index + 1)
+          },
+          fail: (err) => {
+            lastErr = -1
+            console.error('[index] 百度 POI 请求失败（完整错误 keyword=', SEARCH_KEYWORDS[index], '）', err)
+            runKeyword(index + 1)
           }
-          const errCode = body.status
-          // 打印完整返回体，方便定位 Key/配额/参数问题
-          console.error('[index] 百度 POI 查询失败（完整返回）', JSON.stringify(body))
-          if (errCode === 302 || errCode === 402) {
-            baiduQuotaExhausted = true
-            baiduQuotaExhaustedDate = today
-            console.error('[index] 百度地图地点搜索当日配额已用尽（status=' + errCode + '）')
-          }
-          if (errCode === 301 || errCode === 403) console.error('[index] 百度 AK 白名单/IP 限制，请核对 AK 服务端类型与 IP 白名单')
-          if (errCode === 5 || errCode === 200 || errCode === 201) console.error('[index] 百度 AK 无效/被禁用，请核对 BAIDU_AK')
-          resolve({ ok: false, list: [], errCode })
-        },
-        fail: (err) => {
-          console.error('[index] 百度 POI 请求失败（完整错误）', err)
-          resolve({ ok: false, list: [], errCode: -1 })
-        }
-      })
+        })
+      }
+      runKeyword(0)
     })
   },
 
-    /**
+  /**
    * 天地图周边搜索（第四数据源，经云函数 searchTiandituPoi 代理）
    * 为什么走云函数：天地图 Key 若为「服务端」类型，前端 wx.request 直连返回 403（301013 权限类型错误），
    * 必须由云函数以服务端身份访问；坐标转换（CGCS2000→GCJ-02）也统一在云函数内完成。
@@ -902,17 +946,17 @@ Page({
   },
 
   /**
-   * 异步缓存腾讯圈内 POI 到 toiletAll（saveTencentPoi 云函数内部做 50 米去重）
+   * 异步缓存圈内 POI 到 toiletAll（saveTencentPoi 云函数内部做 50 米去重；函数名为历史命名，已支持全部数据源）
    */
-  saveTencentPois(pois) {
+  savePoiCache(pois) {
     wx.cloud.callFunction({
       name: 'saveTencentPoi',
       data: { pois }
     }).then((res) => {
       const r = res.result || {}
-      console.log('[index] 腾讯 POI 缓存结果 saved=', r.saved, 'skipped=', r.skipped)
+      console.log('[index] 全源 POI 缓存结果 saved=', r.saved, 'skipped=', r.skipped)
     }).catch((err) => {
-      console.error('[index] 腾讯 POI 缓存失败（完整错误）', err)
+      console.error('[index] 全源 POI 缓存失败（完整错误）', err)
     })
   },
 

@@ -1,9 +1,10 @@
 /**
- * 云函数 saveTencentPoi
- * 保存腾讯接口返回的圈内公厕点位（source='tencent'）
+ * 云函数 saveTencentPoi（全源 POI 合规缓存，函数名为历史命名，实际已支持全部数据源）
+ * 保存前端查询时由地图服务商（tencent / amap / baidu / tianditu / osm）返回的圈内公厕点位到 toiletAll。
  * 去重规则：
- *  - toiletAll 中 50 米内已存在同名公厕（任意来源）→ 跳过，禁止重复回写
+ *  - toiletAll 中 50 米内已存在同名称公厕（任意来源）→ 跳过，禁止重复回写
  *  - 入库点位均为用户真实查询触发、且经前端球面距离过滤后处于红圈之内
+ *  - source 取自点位自带来源标记；缺失时按 amap 处理（前端现在都会传 source）
  */
 const cloud = require('wx-server-sdk')
 
@@ -34,11 +35,12 @@ exports.main = async (event) => {
     const name = String((poi && poi.name) || '').trim()
     const lat = Number(poi && poi.lat)
     const lng = Number(poi && poi.lng)
+    const source = String((poi && poi.source) || 'amap') // 来源：tencent/amap/baidu/tianditu/osm
     if (!name || !(lat >= -90 && lat <= 90) || !(lng >= -180 && lng <= 180)) {
       skipped++
       continue
     }
-    // 去重：50 米内已存在同名公厕则跳过（含 gov/user/tencent 全部来源，禁止重复回写）
+    // 去重：50 米内已存在同名称公厕则跳过（含 gov/user/tencent/amap/baidu/tianditu/osm 全部来源，禁止重复回写）
     let duplicate = false
     try {
       const nearby = await db.collection('toiletAll').where({ name, invalid: false }).limit(20).get()
@@ -64,7 +66,7 @@ exports.main = async (event) => {
           loc: db.Geo.Point(lng, lat),
           name,
           address: String((poi && poi.address) || ''),
-          source: 'tencent',
+          source,
           invalid: false,
           hasPaper: false,
           isCharge: false,
@@ -81,7 +83,7 @@ exports.main = async (event) => {
       })
       saved++
     } catch (err) {
-      console.warn('写入腾讯 POI 失败', err)
+      console.warn('写入 POI 缓存失败 source=', source, err)
       skipped++
     }
   }
