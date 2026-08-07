@@ -2,7 +2,7 @@
 // 核心交互：选择半径（实时预览红圈）→ 点击【开始寻找】→ 渲染红圈 → 加载圈内公厕 → 整套查询成功后才消耗次数并写记录
 // 查询分支：①库有数据+腾讯失败→仅展示本地库；②库空+腾讯有数据→正常渲染腾讯POI；③两边无数据→空状态弹窗；④接口异常→不扣次数提示重试
 // 错误处理：所有云函数/地图接口异常均 console.error 打印完整错误对象；球面距离过滤被丢弃点位打印距离，便于排查误过滤
-// 数据源：toiletAll 自有库（gov/user/tencent 缓存）+ 腾讯 POI 降级补充
+// 数据源：toiletAll 自有库（gov/user/tencent 缓存）+ 腾讯/高德/百度/天地图 POI 多源合并（可降级）
 const app = getApp()
 const util = require('../../utils/util.js')
 
@@ -21,8 +21,14 @@ const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 const BAIDU_AK = 'JggVZQfYf3r0sklCquGHKUAWNfus2BbG'
 const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 
-// 多源合并模式：true=每次查询并行调用腾讯/高德/百度并合并点位（点位最多，各源当日额度耗尽自动跳过）
-// false=降级链模式（腾讯→高德→百度→OSM，任一成功即停止，接口调用更省）
+// 天地图周边搜索配置（第四数据源：CGCS2000≈WGS-84，需转 GCJ-02 后供小程序 map 使用）
+// 需到天地图官网（https://console.tianditu.gov.cn/）注册开发者并申请 Key 后填入；
+// 同时到微信公众平台把 https://api.tianditu.gov.cn 加入 request 合法域名
+const TIANDITU_KEY = '' // 天地图 Key（未配置时自动跳过该源，不影响其他数据源）
+const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/search'
+
+// 多源合并模式：true=每次查询并行调用腾讯/高德/百度/天地图并合并点位（点位最多，各源当日额度耗尽自动跳过）
+// false=降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，接口调用更省）
 const MERGE_ALL_PROVIDERS = true
 
 // 定位失败兜底中心（广州珠江新城）
@@ -83,6 +89,40 @@ function bd09ToGcj02(lat, lng) {
   const z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * Math.PI * 3000 / 180)
   const theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * Math.PI * 3000 / 180)
   return { lat: z * Math.sin(theta), lng: z * Math.cos(theta) }
+}
+
+// WGS-84（GPS / 天地图 CGCS2000）→ GCJ-02（火星坐标）转换：天地图 POI 返回 CGCS2000≈WGS-84，
+// 微信小程序 map 使用 GCJ-02，转换后坐标才能与定位/其他数据源对齐（偏差几十米，可接受）
+function wgs84ToGcj02(lat, lng) {
+  const a = 6378245.0
+  const ee = 0.00669342162296594323
+  const outOfChina = (lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271)
+  if (outOfChina) return { lat: Number(lat), lng: Number(lng) }
+  let dLat = transformLat(lng - 105.0, lat - 35.0)
+  let dLng = transformLng(lng - 105.0, lat - 35.0)
+  const radLat = (lat / 180.0) * Math.PI
+  let magic = Math.sin(radLat)
+  magic = 1 - ee * magic * magic
+  const sqrtMagic = Math.sqrt(magic)
+  dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI)
+  dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI)
+  return { lat: Number(lat) + dLat, lng: Number(lng) + dLng }
+}
+
+function transformLat(x, y) {
+  let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x))
+  ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0
+  ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0
+  ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0
+  return ret
+}
+
+function transformLng(x, y) {
+  let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x))
+  ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0
+  ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0
+  ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0
+  return ret
 }
 
 Page({
@@ -728,7 +768,79 @@ Page({
   },
 
   /**
-   * OpenStreetMap Overpass 兜底查询（云函数 fetchOsmToilet，第四备用数据源）
+   * 天地图周边搜索（Tianditu search，第四数据源，CGCS2000≈WGS-84 → GCJ-02）
+   * 接口：https://api.tianditu.gov.cn/search，GET 传 postStr(JSON字符串)+type=query+tk=Key
+   * postStr 中 queryType=3 表示周边搜索（配合 pointLonlat 中心点 + queryRadius 半径），
+   * mapBound 为地图范围（取搜索圆的外接矩形），level 为缩放级别。
+   * 天地图坐标基准为 CGCS2000（≈WGS-84），与小程序 map 的 GCJ-02 有几十米偏差，需经 wgs84ToGcj02 转换。
+   * 返回 { ok, list, errCode }：Key 未配置/接口失败/解析失败均 ok=false，不阻断其他数据源与次数消耗。
+   */
+  searchTiandituPoi(latitude, longitude, radius) {
+    return new Promise((resolve) => {
+      if (!TIANDITU_KEY || TIANDITU_KEY.indexOf('请替换') === 0) {
+        console.warn('[index] 未配置 TIANDITU_KEY，跳过天地图查询')
+        resolve({ ok: false, list: [], errCode: -2 })
+        return
+      }
+      // mapBound 取搜索圆的外接矩形（半径换算为经纬度跨度），满足官方必填要求
+      const latSpan = Number(radius) / 111000
+      const lngSpan = Number(radius) / (111000 * Math.cos((Number(latitude) * Math.PI) / 180))
+      const mapBound = [
+        (Number(longitude) - lngSpan).toFixed(6),
+        (Number(latitude) - latSpan).toFixed(6),
+        (Number(longitude) + lngSpan).toFixed(6),
+        (Number(latitude) + latSpan).toFixed(6)
+      ].join(',')
+      const postStr = JSON.stringify({
+        keyWord: SEARCH_KEYWORD,
+        level: '17',
+        mapBound,
+        queryType: '3',
+        pointLonlat: Number(longitude) + ',' + Number(latitude),
+        queryRadius: Number(radius),
+        count: '20',
+        start: '0'
+      })
+      wx.request({
+        url: TIANDITU_SEARCH_URL,
+        data: { postStr, type: 'query', tk: TIANDITU_KEY },
+        timeout: REQUEST_TIMEOUT,
+        success: (res) => {
+          const body = res.data || {}
+          if (body.resultType === 1 && Array.isArray(body.pois)) {
+            // 打印天地图接口原始返回数据，便于调试
+            console.log('[index] 天地图接口原始返回数据（resultType=1）', JSON.stringify(body))
+            const list = body.pois.map((item) => {
+              const loc = String(item.lonlat || '').split(',')
+              const wgsLng = parseFloat(loc[0])
+              const wgsLat = parseFloat(loc[1])
+              // 天地图 CGCS2000≈WGS-84 → GCJ-02（偏差几十米，可接受）
+              const g = wgs84ToGcj02(wgsLat, wgsLng)
+              return {
+                name: item.name || '公共厕所',
+                address: item.address || '',
+                lat: g.lat,
+                lng: g.lng,
+                source: 'tianditu'
+              }
+            }).filter((p) => isValidCoordinate(p.lat, p.lng))
+            resolve({ ok: true, errCode: 0, list })
+            return
+          }
+          // 打印完整返回体，方便定位 Key/参数/配额问题
+          console.error('[index] 天地图 POI 查询失败（完整返回）', JSON.stringify(body))
+          resolve({ ok: false, list: [], errCode: body.resultType || -1 })
+        },
+        fail: (err) => {
+          console.error('[index] 天地图 POI 请求失败（完整错误）', err)
+          resolve({ ok: false, list: [], errCode: -1 })
+        }
+      })
+    })
+  },
+
+  /**
+   * OpenStreetMap Overpass 兜底查询（云函数 fetchOsmToilet，第五备用数据源）
    * OSM 在中国覆盖稀疏且公共实例不稳定，仅作为最后补充：成功则并入点位，失败只记录日志，
    * 不阻断主查询流程，不影响次数消耗。云函数未部署时捕获 FUNCTION_NOT_FOUND 后正常返回空。
    */
@@ -758,17 +870,19 @@ Page({
    * 返回 { ok, list, errCode, provider }：provider = tencent | amap | baidu | osm
    */
   async searchPoiWithFallback(latitude, longitude, radius) {
-    // ===== 合并模式：并行查询腾讯/高德/百度，三源点位合并（点位最多）=====
+    // ===== 合并模式：并行查询腾讯/高德/百度/天地图，四源点位合并（点位最多）=====
     if (MERGE_ALL_PROVIDERS) {
-      const [tencentRes, amapRes, baiduRes] = await Promise.all([
+      const [tencentRes, amapRes, baiduRes, tiandituRes] = await Promise.all([
         this.searchTencentPoi(latitude, longitude, radius),
         this.searchAmapPoi(latitude, longitude, radius),
-        this.searchBaiduPoi(latitude, longitude, radius)
+        this.searchBaiduPoi(latitude, longitude, radius),
+        this.searchTiandituPoi(latitude, longitude, radius)
       ])
       const sources = [
         { name: 'tencent', res: tencentRes },
         { name: 'amap', res: amapRes },
-        { name: 'baidu', res: baiduRes }
+        { name: 'baidu', res: baiduRes },
+        { name: 'tianditu', res: tiandituRes }
       ]
       let merged = []
       const okSources = []
@@ -785,13 +899,13 @@ Page({
         }
       }
       if (merged.length === 0) {
-        // 三源全部为空/失败 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+        // 四源全部为空/失败 → OSM 云函数兜底（尽力而为，失败不影响主流程）
         const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
         if (osmRes.ok && (osmRes.list || []).length > 0) {
           return { ...osmRes, provider: 'osm' }
         }
         // 全部无数据：ok=false 让上层按服务商异常处理（不阻断数据库点位渲染）
-        return { ok: false, list: [], provider: 'tencent+amap+baidu', errCode: -1, ...errCodes, osmErrCode: osmRes.errCode }
+        return { ok: false, list: [], provider: 'tencent+amap+baidu+tianditu', errCode: -1, ...errCodes, osmErrCode: osmRes.errCode, tiandituErrCode: tiandituRes.errCode }
       }
       console.log('[index] 合并模式点位 provider=', okSources.join('+'), '原始点位=', merged.length)
       return { ok: true, list: merged, errCode: 0, provider: okSources.join('+'), merged: true, ...errCodes }
@@ -812,13 +926,18 @@ Page({
     if (baiduRes.ok && (baiduRes.list || []).length > 0) {
       return { ...baiduRes, provider: 'baidu' }
     }
-    // 前三源均无数据 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+    // 百度失败/为空 → 天地图备用（未配置 Key 时快速跳过）
+    const tiandituRes = await this.searchTiandituPoi(latitude, longitude, radius)
+    if (tiandituRes.ok && (tiandituRes.list || []).length > 0) {
+      return { ...tiandituRes, provider: 'tianditu' }
+    }
+    // 前四源均无数据 → OSM 云函数兜底（尽力而为，失败不影响主流程）
     const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
     if (osmRes.ok && (osmRes.list || []).length > 0) {
       return { ...osmRes, provider: 'osm' }
     }
     // 全部无数据：保留腾讯结果状态（ok 原样），附上各源错误码便于排查
-    return { ...tencentRes, provider: 'tencent', amapErrCode: amapRes.errCode, baiduErrCode: baiduRes.errCode, osmErrCode: osmRes.errCode }
+    return { ...tencentRes, provider: 'tencent', amapErrCode: amapRes.errCode, baiduErrCode: baiduRes.errCode, tiandituErrCode: tiandituRes.errCode, osmErrCode: osmRes.errCode }
   },
 
   /**

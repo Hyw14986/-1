@@ -82,7 +82,7 @@ async function batchInsert(records, existing, concurrency) {
             address: rec.address || '',
             city: rec.city || '',
             district: rec.district || '',
-            source: rec.source === 'osm' ? 'osm' : 'tencent',
+            source: ['osm', 'amap'].indexOf(rec.source) >= 0 ? rec.source : 'tencent',
             invalid: false,
             hasPaper: false,
             isCharge: false,

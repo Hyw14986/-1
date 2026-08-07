@@ -86,17 +86,20 @@
 - 同时在小程序后台【开发管理 → 开发设置 → 服务器域名】的 request 合法域名中添加：`https://apis.map.qq.com`
 
 ### 7.5 配置高德 / 百度地图 Key（备用数据源，可选）
-周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用腾讯 / 高德 / 百度并合并去重点位（点位最多），各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（腾讯→高德→百度→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
+周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用腾讯 / 高德 / 百度 / 天地图并合并去重点位（点位最多），各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
 
 - **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com`
 - **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
   - 百度接口返回 BD-09 坐标，代码内置 `bd09ToGcj02` 自动转 GCJ-02；若报 302/402（当日配额用尽）当天自动跳过百度源
+- **天地图**：`pages/index/index.js` 顶部 `TIANDITU_KEY` 需自行到 [天地图开放平台](https://console.tianditu.gov.cn/) 注册开发者并申请 Key 后填入（未配置自动跳过该源，不影响其他数据源）；request 合法域名需添加 `https://api.tianditu.gov.cn`
+  - 天地图坐标基准为 CGCS2000（≈WGS-84），代码内置 `wgs84ToGcj02` 自动转 GCJ-02；周边搜索走 `search` 接口 `queryType=3`（pointLonlat + queryRadius），按天配额有限，当日用尽自动跳过
 - **OSM**：部署 `fetchOsmToilet` 云函数后自动生效，无需 Key；未部署时前端静默跳过
 
 ### 7.6 政府开放数据导入与调研说明
 政府开放数据没有单一「全国全集」，本仓库按可落地原则处理：
-- **已内置可导入**（有经纬度）：`importCityToilets`（武汉 296 + 湛江 48）、`importGovToilets`（达州宣汉旅游厕所 45 条 + 宿迁洋河新区公厕 34 条，CGCS2000≈WGS-84，入库自动转 GCJ-02）。部署后在云开发控制台右键对应函数 → 云端测试即可，幂等可重复执行
+- **已内置可导入**（有经纬度）：`importCityToilets`（武汉 3131 + 湛江 487：高德POI网格采集 3274 + 腾讯POI 199 + OSM 145，2026-08-08 扩充）、`importGovToilets`（达州宣汉旅游厕所 45 条 + 宿迁洋河新区公厕 34 条，CGCS2000≈WGS-84，入库自动转 GCJ-02）。部署后在云开发控制台右键对应函数 → 云端测试即可，幂等可重复执行
 - **调研结论（未内置）**：北海市 473 条（`bh.data.gxzf.gov.cn` 可直接下载但无经纬度，纯文本地址需地理编码，成本高未纳入）；达州平台同款 CMS 已破解下载直链；深圳/广州/山东平台存在公厕数据集，但下载需登录或字段不含坐标，待后续单独对接
+- **住建部「城市公厕云平台」调研结论（不可接入）**：原入口 `lavatory.cnues.com` 域名已过期进入出售状态（实测为 4.cn 出售页），平台已停止运营，且从未公开过 API / 数据接口，无法接入；替代方案是各省市公共数据开放平台——已确认无锡（`data.wuxi.gov.cn` 环卫公厕分页查询服务）、温州鹿城（`data.wenzhou.gov.cn`，含高德经纬度）、十堰（`opendata.shiyan.gov.cn`，接口 `queryggcs`）等含经纬度公厕数据集，留待后续批量采集
 - 政府数据统一写入 `toiletAll`，`source='gov'`、`auditStatus='pass'`、含 `loc` 地理字段，可直接参与 geoNear 圈内查询与地图渲染
 
 ### 8. 编译运行
