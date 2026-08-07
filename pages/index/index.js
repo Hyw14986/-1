@@ -22,9 +22,20 @@ let poiQuotaExhaustedDate = ''
 
 /**
  * 球面距离（haversine 公式，单位米）
+ * 数值校验：入参非法/NaN/越界经纬度时返回 NaN，由调用方 isFinite 兜底丢弃该点位，
+ * 防止 NaN 把全部有效点位误过滤掉。
  * 已验证：同点=0m；纬度差 1° ≈ 111.2km；北京→上海 ≈ 1067km，精度可靠，可用于圈内过滤
  */
 function getDistance(lat1, lng1, lat2, lng2) {
+  lat1 = Number(lat1); lng1 = Number(lng1); lat2 = Number(lat2); lng2 = Number(lng2)
+  if (!isFinite(lat1) || !isFinite(lng1) || !isFinite(lat2) || !isFinite(lng2)) {
+    console.warn('[index] 球面距离计算入参非法，返回 NaN', lat1, lng1, lat2, lng2)
+    return NaN
+  }
+  if (lat1 < -90 || lat1 > 90 || lat2 < -90 || lat2 > 90 || lng1 < -180 || lng1 > 180 || lng2 < -180 || lng2 > 180) {
+    console.warn('[index] 球面距离计算入参越界，返回 NaN', lat1, lng1, lat2, lng2)
+    return NaN
+  }
   const rad = (d) => (d * Math.PI) / 180
   const R = 6371000
   const dLat = rad(lat2 - lat1)
