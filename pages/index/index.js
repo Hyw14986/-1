@@ -15,6 +15,12 @@ const SEARCH_KEYWORD = '公共厕所'
 const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
 const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 
+// 百度地图 Web 服务配置（第三备用数据源：腾讯/高德均失败或为空时启用）
+// 需在百度地图开放平台（https://lbsyun.baidu.com/）申请「服务端」类型 AK，
+// 并到微信公众平台把 https://api.map.baidu.com 加入 request 合法域名
+const BAIDU_AK = '请替换为你的百度地图服务端AK'
+const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
+
 // 定位失败兜底中心（广州珠江新城）
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 const LOCATE_TIMEOUT = 8000
@@ -26,6 +32,9 @@ let poiQuotaExhaustedDate = ''
 // 高德 POI 当日额度耗尽标记（infocode=10044）
 let amapQuotaExhausted = false
 let amapQuotaExhaustedDate = ''
+// 百度 POI 当日额度耗尽标记（status=302 天配额超限 / 402 配额超限）
+let baiduQuotaExhausted = false
+let baiduQuotaExhaustedDate = ''
 
 /**
  * 球面距离（haversine 公式，单位米）
@@ -61,6 +70,15 @@ function isValidCoordinate(latitude, longitude) {
     latitude >= -90 && latitude <= 90 &&
     longitude >= -180 && longitude <= 180
   )
+}
+
+// BD-09（百度坐标）→ GCJ-02（火星坐标）转换：百度 POI 返回 BD-09，微信小程序 map 使用 GCJ-02
+function bd09ToGcj02(lat, lng) {
+  const x = Number(lng) - 0.0065
+  const y = Number(lat) - 0.006
+  const z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * Math.PI * 3000 / 180)
+  const theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * Math.PI * 3000 / 180)
+  return { lat: z * Math.sin(theta), lng: z * Math.cos(theta) }
 }
 
 Page({
@@ -622,8 +640,116 @@ Page({
     })
   },
   /**
-   * 周边 POI 双源降级：腾讯优先，失败/为空/额度耗尽时切高德
-   * 返回 { ok, list, errCode, provider }：provider = tencent | amap
+   * 百度 POI 周边搜索（place/v2/search，第三备用数据源）
+   * 坐标：百度返回 BD-09，需经 bd09ToGcj02 转换为 GCJ-02 后供小程序 map 使用
+   * 返回 { ok, list, errCode }：
+   *  - ok=true   查询成功
+   *  - ok=false  接口报错/网络异常/未配置 Key/当日额度用尽
+   */
+  searchBaiduPoi(latitude, longitude, radius) {
+    return new Promise((resolve) => {
+      const today = new Date().toDateString()
+      if (baiduQuotaExhaustedDate !== today) {
+        baiduQuotaExhausted = false
+        baiduQuotaExhaustedDate = today
+      }
+      if (baiduQuotaExhausted) {
+        console.log('[index] 百度 POI 当日额度已用尽，跳过百度查询')
+        resolve({ ok: false, list: [], errCode: 302, quotaExhausted: true })
+        return
+      }
+      if (!BAIDU_AK || BAIDU_AK.indexOf('请替换') === 0) {
+        console.warn('[index] 未配置 BAIDU_AK，跳过百度查询')
+        resolve({ ok: false, list: [], errCode: -2 })
+        return
+      }
+      wx.request({
+        url: BAIDU_SEARCH_URL,
+        // 百度 place/v2/search：location 传 纬度,经度；radius 米；filter 按距离排序
+        data: {
+          query: '公共厕所',
+          location: latitude + ',' + longitude,
+          radius: radius,
+          output: 'json',
+          ak: BAIDU_AK,
+          scope: 2,
+          page_size: 20,
+          filter: 'sort_name:distance|sort_rule:ascending'
+        },
+        timeout: REQUEST_TIMEOUT,
+        success: (res) => {
+          const body = res.data || {}
+          if (String(body.status) === '0') {
+            // 打印百度接口原始返回数据，便于调试
+            console.log('[index] 百度接口原始返回数据（status=0）', JSON.stringify(body))
+            const results = Array.isArray(body.results) ? body.results : []
+            resolve({
+              ok: true,
+              errCode: 0,
+              list: results.map((item) => {
+                const loc = item.location || {}
+                // 百度返回 BD-09，先转 GCJ-02
+                const g = bd09ToGcj02(Number(loc.lat), Number(loc.lng))
+                return {
+                  name: item.name || '公共厕所',
+                  address: item.address || '',
+                  lat: g.lat,
+                  lng: g.lng,
+                  source: 'baidu'
+                }
+              }).filter((p) => isValidCoordinate(p.lat, p.lng))
+            })
+            return
+          }
+          const errCode = body.status
+          // 打印完整返回体，方便定位 Key/配额/参数问题
+          console.error('[index] 百度 POI 查询失败（完整返回）', JSON.stringify(body))
+          if (errCode === 302 || errCode === 402) {
+            baiduQuotaExhausted = true
+            baiduQuotaExhaustedDate = today
+            console.error('[index] 百度地图地点搜索当日配额已用尽（status=' + errCode + '）')
+          }
+          if (errCode === 301 || errCode === 403) console.error('[index] 百度 AK 白名单/IP 限制，请核对 AK 服务端类型与 IP 白名单')
+          if (errCode === 5 || errCode === 200 || errCode === 201) console.error('[index] 百度 AK 无效/被禁用，请核对 BAIDU_AK')
+          resolve({ ok: false, list: [], errCode })
+        },
+        fail: (err) => {
+          console.error('[index] 百度 POI 请求失败（完整错误）', err)
+          resolve({ ok: false, list: [], errCode: -1 })
+        }
+      })
+    })
+  },
+
+  /**
+   * OpenStreetMap Overpass 兜底查询（云函数 fetchOsmToilet，第四备用数据源）
+   * OSM 在中国覆盖稀疏且公共实例不稳定，仅作为最后补充：成功则并入点位，失败只记录日志，
+   * 不阻断主查询流程，不影响次数消耗。云函数未部署时捕获 FUNCTION_NOT_FOUND 后正常返回空。
+   */
+  fetchOsmToilet(latitude, longitude, radius) {
+    return new Promise((resolve) => {
+      wx.cloud.callFunction({
+        name: 'fetchOsmToilet',
+        data: { latitude, longitude, radius }
+      }).then((res) => {
+        const r = res.result || {}
+        if (r.code === 0 && Array.isArray(r.list)) {
+          console.log('[index] OSM 兜底返回点位数量=', r.list.length)
+          resolve({ ok: true, list: r.list.filter((p) => isValidCoordinate(p.lat, p.lng)), errCode: 0 })
+          return
+        }
+        console.warn('[index] OSM 兜底无结果 code=', r.code, 'msg=', r.msg)
+        resolve({ ok: false, list: [], errCode: r.code || -1 })
+      }).catch((err) => {
+        console.warn('[index] OSM 兜底云函数不可用（可能未部署，忽略）', (err && err.errMsg) || err)
+        resolve({ ok: false, list: [], errCode: -3 })
+      })
+    })
+  },
+
+  /**
+   * 周边 POI 多源降级：腾讯优先 → 高德 → 百度 → OSM 兜底
+   * 返回 { ok, list, errCode, provider }：provider = tencent | amap | baidu | osm
    */
   async searchPoiWithFallback(latitude, longitude, radius) {
     const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
@@ -635,8 +761,18 @@ Page({
     if (amapRes.ok && (amapRes.list || []).length > 0) {
       return { ...amapRes, provider: 'amap' }
     }
-    // 双源均无数据：保留腾讯结果状态（ok 原样），附上高德错误码便于排查
-    return { ...tencentRes, provider: 'tencent', amapErrCode: amapRes.errCode }
+    // 高德失败/为空 → 百度备用（未配置 AK 时快速跳过）
+    const baiduRes = await this.searchBaiduPoi(latitude, longitude, radius)
+    if (baiduRes.ok && (baiduRes.list || []).length > 0) {
+      return { ...baiduRes, provider: 'baidu' }
+    }
+    // 前三源均无数据 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+    const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
+    if (osmRes.ok && (osmRes.list || []).length > 0) {
+      return { ...osmRes, provider: 'osm' }
+    }
+    // 全部无数据：保留腾讯结果状态（ok 原样），附上各源错误码便于排查
+    return { ...tencentRes, provider: 'tencent', amapErrCode: amapRes.errCode, baiduErrCode: baiduRes.errCode, osmErrCode: osmRes.errCode }
   },
 
   /**

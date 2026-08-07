@@ -14,11 +14,12 @@
 1. 仅用户手动点击「开始寻找」触发完整查询流程；只要自有数据库（getNearToilet 云函数）查询成功即消耗 1 次查询次数并新增查询记录，腾讯地图接口异常不影响扣次数与记录；仅当数据库云函数本身异常才不消耗次数；筛选、查看详情、再次查询回填半径都不消耗次数
 2. 次数上限每日 20 次，每日 0 点重置，重置逻辑全部在云函数 `quotaOperate` 内部完成（比对 `quotaDate`），前端不做时间重置，防改手机时间作弊
 3. 全程统一 GCJ-02 坐标系；红圈外点位不渲染、不进列表、不参与统计（禁止仅 CSS 视觉隐藏）
-4. 数据源合并：`toiletAll` 自有库（gov 政府导入 / user 用户上报 / tencent 腾讯缓存）+ 腾讯 place/v1/search 周边搜索降级（自有库圈内 ≤2 条才调用）；腾讯返回后做球面距离二次过滤，只保留圈内点位
+4. 数据源合并：`toiletAll` 自有库（gov 政府导入 / user 用户上报 / tencent 腾讯缓存 / osm 开放地图导入）+ 周边 POI 多源降级（腾讯 place/v1/search → 高德 place/around → 百度 place/v2/search → OSM Overpass 兜底）；POI 返回后做球面距离二次过滤，只保留圈内点位；腾讯 POI 命中时经 `saveTencentPoi` 50 米去重后缓存回库
 5. 腾讯 POI 只缓存用户真实查询触发、且处于红圈之内的点位，`saveTencentPoi` 云函数内 50 米同名去重
 6. 用户上报必须 `auditStatus=pass` 才展示；`invalid=true` 的点位全部过滤
 7. 所有写库操作全部经由云函数（上报、评价、收藏、举报、查询记录、次数扣减），前端不直接写数据库，规避恶意刷数据
-8. 查询容错（腾讯接口报错 / 超时 / 返回空均不判定整体失败）：①腾讯正常返回 → 合并过滤数据库点位与腾讯 POI；②腾讯异常但数据库有数据 → 保留数据库点位渲染，toast「地图服务商暂时异常，仅展示用户上报的厕所点位」；③数据库云函数失败且腾讯也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数；④数据库无数据且腾讯无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」（含扩大半径 / 上报按钮）
+8. 查询容错（任一地图服务商报错 / 超时 / 返回空均不判定整体失败）：①任一服务商正常返回 → 合并过滤数据库点位与 POI 点位（来源分别标记 gov / user / tencent / amap / baidu / osm）；②服务商全部异常但数据库有数据 → 保留数据库点位渲染，toast「地图服务商暂时异常，仅展示用户上报的厕所点位」；③数据库云函数失败且服务商也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数；④数据库无数据且服务商无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」（含扩大半径 / 上报按钮）；百度接口报 302/402（当日配额用尽）当日自动跳过；OSM 云函数未部署时静默跳过
+9. 政府开放数据导入：`importCityToilets`（武汉 296 条 + 湛江 48 条）与 `importGovToilets`（达州宣汉旅游厕所 45 条，CGCS2000≈WGS-84 入库时自动转 GCJ-02）两个导入云函数均已内置点位且幂等；在云开发控制台右键「云端测试」即可导入，重复执行不产生重复数据
 
 ## 云数据库集合
 
@@ -47,6 +48,10 @@
 | `getComments` | 公开读取公厕评价列表（管理员身份读取，不受权限限制） |
 | `initData` | 一键导入全国 110+ 政府公开演示点位到 toiletAll（湖北 / 广东为真实地址） |
 | `getOpenId` | 获取当前用户 openid |
+| `importCityToilets` | 批量导入城市公厕点位（武汉 / 湛江，腾讯POI+OSM，GCJ-02，幂等） |
+| `importGovToilets` | 批量导入政府开放数据点位（达州宣汉旅游厕所 45 条，WGS-84→GCJ-02，幂等） |
+| `fetchOsmToilet` | OpenStreetMap Overpass 兜底查询（WGS-84→GCJ-02，多镜像重试） |
+| `fixToiletLoc` | 批量补全 toiletAll 缺失 loc 字段（仅云端测试手动触发，勿在客户端自动调用） |
 
 ## 部署步骤（重要）
 
@@ -67,7 +72,7 @@
 
 ### 5. 部署云函数
 在开发者工具左侧资源管理器，找到 `cloudfunctions` 目录，依次对全部 11 个函数【右键 → 上传并部署：云端安装依赖】：
-`quotaOperate`、`getNearToilet`、`saveTencentPoi`、`searchRecordOperate`、`submitReport`、`submitComment`、`favoriteOperate`、`submitReportComplaint`、`getComments`、`initData`、`getOpenId`
+`quotaOperate`、`getNearToilet`、`saveTencentPoi`、`searchRecordOperate`、`submitReport`、`submitComment`、`favoriteOperate`、`submitReportComplaint`、`getComments`、`initData`、`getOpenId`、`importCityToilets`、`importGovToilets`、`fetchOsmToilet`、`fixToiletLoc`
 
 ### 6. 导入政府公开演示数据
 部署完成后，在 `cloudfunctions/initData` 上【右键 → 云端测试】直接运行（参数可留空），会：
@@ -79,6 +84,20 @@
 `pages/index/index.js` 顶部 `QQ_MAP_KEY` 已填入一个 WebServiceAPI Key（`GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU`）。
 - 若提示 111（Key 授权 AppID 不匹配）或 121（当日配额用尽），请到 [腾讯位置服务](https://lbs.qq.com) 申请自己的 Key 并替换
 - 同时在小程序后台【开发管理 → 开发设置 → 服务器域名】的 request 合法域名中添加：`https://apis.map.qq.com`
+
+### 7.5 配置高德 / 百度地图 Key（备用数据源，可选）
+周边 POI 查询为多源降级链：**腾讯 → 高德 → 百度 → OSM 兜底**，任一源失败/为空自动切换下一源，不影响整体查询与次数消耗。
+
+- **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com`
+- **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
+  - 百度接口返回 BD-09 坐标，代码内置 `bd09ToGcj02` 自动转 GCJ-02；若报 302/402（当日配额用尽）当天自动跳过百度源
+- **OSM**：部署 `fetchOsmToilet` 云函数后自动生效，无需 Key；未部署时前端静默跳过
+
+### 7.6 政府开放数据导入与调研说明
+政府开放数据没有单一「全国全集」，本仓库按可落地原则处理：
+- **已内置可导入**（有经纬度）：`importCityToilets`（武汉 296 + 湛江 48）、`importGovToilets`（达州宣汉旅游厕所 45 条，CGCS2000≈WGS-84，入库自动转 GCJ-02）。部署后在云开发控制台右键对应函数 → 云端测试即可，幂等可重复执行
+- **调研结论（未内置）**：北海市 473 条（`bh.data.gxzf.gov.cn` 可直接下载但无经纬度，纯文本地址需地理编码，成本高未纳入）；达州平台同款 CMS 已破解下载直链；深圳/广州/山东平台存在公厕数据集，但下载需登录或字段不含坐标，待后续单独对接
+- 政府数据统一写入 `toiletAll`，`source='gov'`、`auditStatus='pass'`、含 `loc` 地理字段，可直接参与 geoNear 圈内查询与地图渲染
 
 ### 8. 编译运行
 点击【编译】即可使用。首次进入会请求位置权限，请允许。首页默认展示「请选择范围并点击开始寻找」，选择半径点击按钮后才会渲染红圈并加载公厕。
@@ -95,7 +114,7 @@
 ```
 ├── app.js / app.json / app.wxss     # 全局配置：云开发初始化、tabbar（找厕所/我的）、定位权限、全局样式
 ├── project.config.json              # 项目配置（已声明 cloudfunctionRoot）
-├── cloudfunctions/                  # 11 个云函数（见上表）
+├── cloudfunctions/                  # 15 个云函数（见上表）
 ├── components/star/                 # 星级评分组件（展示 + 打分）
 ├── images/                          # tabbar 图标、地图标记、默认头像
 ├── pages/
