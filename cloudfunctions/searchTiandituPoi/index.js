@@ -23,7 +23,7 @@ const TIANDITU_KEY = 'efac1d7241be6075e3b3a653e0acdc69'
 const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/v2/search'
 const REQUEST_TIMEOUT = 8000
 // 公厕多关键词：逐词查询合并，提升召回率（天地图对部分关键词命中偏少，多词互补）
-const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所', 'WC']
+const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所']
 
 // CGCS2000≈WGS-84 → GCJ-02 火星坐标转换（标准算法，与前端保持一致）
 function wgs84ToGcj02(lat, lng) {

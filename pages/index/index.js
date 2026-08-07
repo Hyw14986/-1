@@ -10,7 +10,7 @@ const util = require('../../utils/util.js')
 const QQ_MAP_KEY = 'GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU'
 const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 // 公厕多关键词（各数据源逐词查询后合并去重，显著提升召回率；高德 keywords 支持 | 一次传多词）
-const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所', 'WC']
+const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所']
 const SEARCH_KEYWORD = SEARCH_KEYWORDS[0] // 单关键词兼容
 
 // 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
