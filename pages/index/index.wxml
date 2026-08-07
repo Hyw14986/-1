@@ -74,6 +74,7 @@
         <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'amap'}}">高德POI</text>
         <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'baidu'}}">百度POI</text>
         <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'osm'}}">开放地图</text>
+        <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'chain'}}">连锁洗手间</text>
         <text class="tag" wx:if="{{selectedMarker.hasPaper}}">有纸</text>
         <text class="tag" wx:if="{{selectedMarker.isBarrierFree}}">无障碍</text>
       </view>
@@ -107,6 +108,7 @@
             <text class="tag" wx:elif="{{item.source === 'amap'}}">高德POI</text>
             <text class="tag" wx:elif="{{item.source === 'baidu'}}">百度POI</text>
             <text class="tag" wx:elif="{{item.source === 'osm'}}">开放地图</text>
+        <text class="tag tag-source" wx:elif="{{item.source === 'chain'}}">连锁洗手间</text>
             <text class="tag" wx:if="{{item.hasPaper}}">有纸</text>
             <text class="tag" wx:if="{{item.isBarrierFree}}">无障碍</text>
             <text class="tag" wx:if="{{item.hasBabyRoom}}">母婴室</text>
@@ -151,6 +153,7 @@
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'amap'}}">高德POI</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'baidu'}}">百度POI</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'osm'}}">开放地图</text>
+        <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'chain'}}">连锁洗手间</text>
         <text class="tag" wx:if="{{selectedToilet.hasPaper}}">🧻 有纸</text>
         <text class="tag" wx:if="{{selectedToilet.isBarrierFree}}">♿ 无障碍</text>
         <text class="tag" wx:if="{{selectedToilet.hasBabyRoom}}">🍼 母婴室</text>

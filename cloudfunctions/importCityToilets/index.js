@@ -1,7 +1,7 @@
 /**
  * 云函数 importCityToilets（城市公厕批量导入工具）
- * 用途：把 data.js 中爬取的两城公厕点位（武汉/湛江，腾讯POI + OpenStreetMap，GCJ-02）写入 toiletAll
- * 数据字段：name、address、lat、lng（GCJ-02）、city、district、source（tencent / osm）
+ * 用途：把 data.js 中爬取的城市公厕点位（武汉/湛江/北京/上海/广州/深圳/成都/杭州/重庆/西安/南京/郑州，高德POI网格 + 腾讯POI + OpenStreetMap + 连锁洗手间，GCJ-02）写入 toiletAll
+ * 数据字段：name、address、lat、lng（GCJ-02）、city、district、source（tencent / osm / amap / chain）
  *
  * 幂等：写入前按「同名 + 50 米内」与 toiletAll 现有记录去重，重复执行不会产生重复数据；
  * 已存在的记录跳过，仅新增缺失点位。可直接在云开发控制台对本函数执行「云端测试」触发。
@@ -50,7 +50,7 @@ async function loadAllExisting() {
   return rows
 }
 
-// 并行控制：分批写入，避免超时
+// 并行控制：批量写入（每批20条），失败自动降级逐条插入，避免云函数超时
 async function batchInsert(records, existing, concurrency) {
   let inserted = 0
   let skipped = 0
@@ -63,48 +63,60 @@ async function batchInsert(records, existing, concurrency) {
     }
     return false
   }
-  for (let i = 0; i < records.length; i += concurrency) {
-    const chunk = records.slice(i, i + concurrency)
-    await Promise.all(chunk.map(async (rec) => {
-      const lat = Number(rec.lat)
-      const lng = Number(rec.lng)
-      const name = rec.name || '公共厕所'
-      if (!isValidCoordinate(lat, lng)) { skipped++; return }
+  // 先全部校验 + 去重，组装成纯文档数组（loc 为地理位置字段，配合 2dsphere 索引）
+  const docs = []
+  for (const rec of records) {
+    const lat = Number(rec.lat)
+    const lng = Number(rec.lng)
+    const name = rec.name || '公共厕所'
+    if (!isValidCoordinate(lat, lng)) { skipped++; continue }
+    if (isDup(lat, lng, name)) { skipped++; continue }
+    docs.push({
+      lat,
+      lng,
+      loc: db.Geo.Point(lng, lat),
+      name,
+      address: rec.address || '',
+      city: rec.city || '',
+      district: rec.district || '',
+      source: ['osm', 'amap', 'chain'].indexOf(rec.source) >= 0 ? rec.source : 'tencent',
+      invalid: false,
+      hasPaper: false,
+      isCharge: false,
+      isBarrierFree: false,
+      hasBabyRoom: false,
+      isOpen24h: false,
+      openTime: '',
+      feeType: 'free',
+      feeDesc: '',
+      photoUrls: [],
+      auditStatus: 'pass',
+      rating: 0,
+      ratingCount: 0,
+      createTime: db.serverDate()
+    })
+  }
+  const BATCH = 20
+  for (let i = 0; i < docs.length; i += BATCH * concurrency) {
+    const slice = docs.slice(i, i + BATCH * concurrency)
+    const jobs = []
+    for (let j = 0; j < slice.length; j += BATCH) jobs.push(slice.slice(j, j + BATCH))
+    const results = await Promise.all(jobs.map(async (batchDocs) => {
       try {
-        if (isDup(lat, lng, name)) { skipped++; return }
-        await db.collection('toiletAll').add({
-          data: {
-            lat,
-            lng,
-            // 地理位置字段：配合 loc 2dsphere 索引供 geoNear 使用
-            loc: db.Geo.Point(lng, lat),
-            name,
-            address: rec.address || '',
-            city: rec.city || '',
-            district: rec.district || '',
-            source: ['osm', 'amap'].indexOf(rec.source) >= 0 ? rec.source : 'tencent',
-            invalid: false,
-            hasPaper: false,
-            isCharge: false,
-            isBarrierFree: false,
-            hasBabyRoom: false,
-            isOpen24h: false,
-            openTime: '',
-            feeType: 'free',
-            feeDesc: '',
-            photoUrls: [],
-            auditStatus: 'pass',
-            rating: 0,
-            ratingCount: 0,
-            createTime: db.serverDate()
-          }
-        })
-        inserted++
+        await db.collection('toiletAll').add({ data: batchDocs })
+        return batchDocs.length
       } catch (err) {
-        failed++
-        console.error('[importCityToilets] 写入失败', name, err)
+        // 批量写入失败：降级为逐条，保证不丢数据
+        let ok = 0
+        for (const d of batchDocs) {
+          try { await db.collection('toiletAll').add({ data: d }); ok++ }
+          catch (e) { failed++; console.error('[importCityToilets] 写入失败', d.name, e) }
+        }
+        return ok
       }
     }))
+    inserted += results.reduce((a, b) => a + b, 0)
+    if (i % 2000 === 0) console.log('[importCityToilets] 写入进度', i, '/', docs.length)
   }
   return { inserted, skipped, failed }
 }
