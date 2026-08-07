@@ -12,7 +12,7 @@ const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 const SEARCH_KEYWORD = '公共厕所'
 
 // 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
-const AMAP_KEY = '请替换为你的高德Web服务Key'
+const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
 const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 
 // 定位失败兜底中心（广州珠江新城）
