@@ -502,6 +502,8 @@ Page({
         }
         this.setData({ remaining: q.remaining })
         console.log('[index] 查询成功，已消耗 1 次，剩余', q.remaining, '/', q.dailyLimit)
+        // 记录用户本次查找过的厕所（toilet_view_record，云函数内按用户+同名50米去重）
+        this.saveSearchedToilets(toilets)
         this.addSearchRecord(toilets.length)
       } catch (err) {
         // 次数扣减失败：数据已展示，但未扣次数、不写查询记录
@@ -1044,6 +1046,24 @@ Page({
       console.log('[index] 查询记录已写入', res.result)
     }).catch((err) => {
       console.error('[index] 写入查询记录失败（完整错误）', err)
+    })
+  },
+
+  /**
+   * 记录用户查找过的厕所（saveSearchedToilets 云函数写入 toilet_view_record）
+   * 在整套查询成功并扣减次数后调用；云函数内按 openid+同名50米去重，只更新时间不重复插入
+   */
+  saveSearchedToilets(toilets) {
+    const list = Array.isArray(toilets) ? toilets.filter((t) => t && isValidCoordinate(t.lat, t.lng)) : []
+    if (list.length === 0) return
+    wx.cloud.callFunction({
+      name: 'saveSearchedToilets',
+      data: { toilets: list }
+    }).then((res) => {
+      const r = res.result || {}
+      console.log('[index] 查找过的厕所已记录 saved=', r.saved, 'updated=', r.updated, 'skipped=', r.skipped)
+    }).catch((err) => {
+      console.error('[index] 记录查找过的厕所失败（完整错误）', err)
     })
   },
 
