@@ -89,7 +89,7 @@
 ### 7.5 配置高德 / 百度 / 天地图 Key（备用数据源，可选）
 周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用腾讯 / 高德 / 百度 / 天地图并合并去重点位（点位最多），各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
 
-- **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com`
+- **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com` 个人开发者「周边搜索」默认 QPS 3，代码内置高德并发限制（`AMAP_MAX_CONCURRENCY`，默认 3，超出自动排队），避免并发过高报 infocode=10045（QPS 超限）
 - **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
   - 百度接口返回 BD-09 坐标，代码内置 `bd09ToGcj02` 自动转 GCJ-02；若报 302/402（当日配额用尽）当天自动跳过百度源
 - **天地图**：Key 类型必须为「服务端」，存放在云函数 `searchTiandituPoi/index.js` 顶部 `TIANDITU_KEY`（已填入 `efac1d7241be6075e3b3a653e0acdc69`）。小程序客户端直连会被天地图识别为浏览器端访问，使用服务端 Key 会报 403（code 301013 权限类型错误），因此必须经该云函数代理查询；在开发者工具中部署 `searchTiandituPoi` 后前端自动生效，未部署时静默跳过该源

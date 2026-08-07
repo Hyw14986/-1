@@ -19,6 +19,28 @@ const SOURCE_KEYWORD_COUNT = { tencent: 1, amap: SEARCH_KEYWORDS.length, baidu: 
 // 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
 const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
 const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
+// 高德 Web服务 API 并发限制：个人开发者「周边搜索」默认 QPS≈3，超出返回 infocode=10045（QPS 超限）
+// 用信号量把高德请求并发控制在 AMAP_MAX_CONCURRENCY=3 以内，超出部分排队依次执行
+const AMAP_MAX_CONCURRENCY = 3
+let amapActiveCount = 0
+const amapWaitingQueue = []
+function runAmapWithLimit(task) {
+  return new Promise((resolve, reject) => {
+    amapWaitingQueue.push({ task, resolve, reject })
+    pumpAmapQueue()
+  })
+}
+function pumpAmapQueue() {
+  while (amapActiveCount < AMAP_MAX_CONCURRENCY && amapWaitingQueue.length > 0) {
+    const item = amapWaitingQueue.shift()
+    amapActiveCount++
+    console.log('[index] 高德请求开始，当前并发', amapActiveCount, '，等待队列', amapWaitingQueue.length)
+    Promise.resolve().then(item.task).then(
+      (res) => { amapActiveCount--; item.resolve(res); pumpAmapQueue() },
+      (err) => { amapActiveCount--; item.reject(err); pumpAmapQueue() }
+    )
+  }
+}
 
 // 百度地图 Web 服务配置（第三备用数据源：腾讯/高德均失败或为空时启用）
 // 需在百度地图开放平台（https://lbsyun.baidu.com/）申请「服务端」类型 AK，
@@ -679,6 +701,18 @@ Page({
    * 返回 { ok, list, errCode }，list 已映射 name/address/lat/lng/source 并过滤非法坐标
    */
   amapRequest(latitude, longitude, radius, extraParams, callback) {
+    // 高德并发限制：个人版 Web服务 API 周边搜索默认 QPS≈3，超过会报 infocode=10045（QPS 超限）；
+    // 通过信号量排队，把高德请求并发控制在 AMAP_MAX_CONCURRENCY=3 以内
+    runAmapWithLimit(() => this.doAmapRequest(latitude, longitude, radius, extraParams, callback)).catch((err) => {
+      console.error('[index] 高德请求排队执行异常（完整错误）', err)
+      callback({ ok: false, list: [], errCode: -1 })
+    })
+  },
+
+  /**
+   * 高德 place/around 单次请求（由 amapRequest 信号量排队后调用）
+   */
+  doAmapRequest(latitude, longitude, radius, extraParams, callback) {
     wx.request({
       url: AMAP_SEARCH_URL,
       // 高德 place/around：location 传 经度,纬度；radius 米；extraParams 传 types 或 keywords
