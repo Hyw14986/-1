@@ -1,4 +1,5 @@
 // 政府开放数据导入：达州市宣汉县旅游厕所（来源：达州市公共数据开放平台）
+// 第二批：宿迁市洋河新区公厕34条（公共数据开放平台，含经纬度）
 // 字段：name 名称、address 地址、lat/lng 原始坐标（CGCS2000≈WGS-84）、charge 收费说明
 // city 城市、district 区县、source=gov 政府导入、srcId 平台原始编号
 // 说明：入库前会在 index.js 中按 coordType 参数统一转换为 GCJ-02（默认 wgs84→gcj02）
@@ -47,5 +48,39 @@ module.exports = [
   {"name":"香炉山景区公共卫生间","address":"宣汉县","lat":31.476271,"lng":107.593375,"charge":"免费开放","city":"达州","district":"宣汉县","source":"gov","srcId":"SC-DZ-0279"},
   {"name":"庙安花果山公共卫生间1","address":"宣汉县","lat":31.254161,"lng":107.645137,"charge":"免费开放","city":"达州","district":"宣汉县","source":"gov","srcId":"SC-DZ-0280"},
   {"name":"庙安花果山公共卫生间2","address":"宣汉县","lat":31.257014,"lng":107.637224,"charge":"免费开放","city":"达州","district":"宣汉县","source":"gov","srcId":"SC-DZ-0281"},
-  {"name":"荷塘明月公共卫生间","address":"宣汉县","lat":31.398901,"lng":107.666395,"charge":"免费开放","city":"达州","district":"宣汉县","source":"gov","srcId":"SC-DZ-0288"}
+  {"name":"荷塘明月公共卫生间","address":"宣汉县","lat":31.398901,"lng":107.666395,"charge":"免费开放","city":"达州","district":"宣汉县","source":"gov","srcId":"SC-DZ-0288"},
+  {"name":"洋河庄西城市驿站公厕","address":"宿迁市宿城区洋河新区南大街洋河文化广场","lat":33.771324,"lng":118.399649,"charge":"免费开放","openTime":"24小时","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-1"},
+  {"name":"梅香街街坊公舍","address":"宿迁市宿城区洋河新区经典家园东北侧","lat":33.773985,"lng":118.390326,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-2"},
+  {"name":"洋河华夏酒都商贸城公厕","address":"宿迁市洋河新区华夏酒都商贸城南区","lat":33.777293,"lng":118.372692,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-3"},
+  {"name":"洋河酒文化主题公园公厕","address":"宿迁市洋河新区酒文化主题公园内，篮球场旁","lat":33.800436,"lng":118.357132,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-4"},
+  {"name":"洋河新城大道公厕","address":"新城大道与玉带河东路交叉口东北角","lat":33.801942,"lng":118.368055,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-5"},
+  {"name":"洋河玉带河路公厕","address":"宿迁市洋河新区苹果小区二期附近","lat":33.804908,"lng":118.368538,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-6"},
+  {"name":"洋河爱情公园东公厕","address":"宿迁市洋河新区爱情公园东侧与站前路交叉口","lat":33.8058,"lng":118.378468,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-7"},
+  {"name":"洋河梦都大道公厕","address":"宿迁市洋河新区梦都大道北段东侧公交站台处","lat":33.808463,"lng":118.360902,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-8"},
+  {"name":"洋河德阳中学公厕","address":"宿迁市洋河新区拦马河路南侧","lat":33.771534,"lng":118.382641,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-9"},
+  {"name":"洋河平安路（酒坊路）公厕","address":"宿迁市洋河新区酒坊路与梅香街交叉口","lat":33.778967,"lng":118.380595,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-10"},
+  {"name":"洋河爱情公园西公厕","address":"宿迁市洋河新区爱情主题公园南侧，白洋河大道北侧","lat":33.808286,"lng":118.371273,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-11"},
+  {"name":"洋河新城名苑公厕","address":"宿迁市洋河新区新城名苑商业街","lat":33.797477,"lng":118.35226,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-12"},
+  {"name":"洋河火车站公厕","address":"宿迁市洋河新区火车站内","lat":33.797933,"lng":118.375064,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-13"},
+  {"name":"洋河水景秀公厕","address":"宿迁市洋河新区酒文化主题公园东厕","lat":33.801577,"lng":118.358498,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-14"},
+  {"name":"洋河人和路公厕","address":"宿迁市洋河新区洋河初级中学西侧30米","lat":33.797339,"lng":118.355147,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-15"},
+  {"name":"洋河府苑小区公厕","address":"宿迁市洋河新区府苑小区南侧50米","lat":33.775863,"lng":118.386749,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-16"},
+  {"name":"世纪商贸城公厕","address":"宿迁市宿城区洋河新区世纪商贸城后农贸市场东侧","lat":33.770327,"lng":118.391088,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-17"},
+  {"name":"徐淮路工商所公厕","address":"宿迁市宿城区洋河新区徐淮路原工商所旁","lat":33.775781,"lng":118.404463,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-18"},
+  {"name":"九车间公厕","address":"宿迁市宿城区洋河新区徐淮路-128车间东侧","lat":33.778382,"lng":118.393909,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-19"},
+  {"name":"敬老院公厕","address":"宿迁市宿城区洋河新区徐淮路与金樽路交叉口西侧","lat":33.773702,"lng":118.406045,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-20"},
+  {"name":"工业园区公厕","address":"宿迁市宿城区洋河新区振洋路南段-工业园区","lat":33.770473,"lng":118.415175,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-21"},
+  {"name":"汉匠坊公厕","address":"宿迁市宿城区洋河新区兴洋东路汉匠坊北门西侧","lat":33.764576,"lng":118.412813,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-22"},
+  {"name":"东大街公厕","address":"宿迁市宿城区洋河新区中大街与斜路交汇处","lat":33.785716,"lng":118.396922,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-23"},
+  {"name":"新集街公厕","address":"宿迁市宿城区洋河新区中大街与新集街交叉口向南30米","lat":33.786337,"lng":118.394079,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-24"},
+  {"name":"中大街农业银行公厕","address":"宿迁市宿城区洋河新区中大街农业银行后面","lat":33.787589,"lng":118.393801,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-25"},
+  {"name":"金樽路公厕","address":"宿迁市宿城区洋河新区金樽路与古山河路红绿灯旁","lat":33.785101,"lng":118.408578,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-26"},
+  {"name":"东圩农贸市场公厕","address":"宿迁市宿城区洋河新区中大街-东圩农贸市场内部","lat":33.780634,"lng":118.407819,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-27"},
+  {"name":"酒厂北门公厕","address":"宿迁市宿城区洋河新区酒厂北门与白洋河大道交汇处北侧","lat":33.798809,"lng":118.390648,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-28"},
+  {"name":"酒家北路公厕","address":"宿迁市宿城区洋河新区酒家北路与白洋河道交汇处北侧","lat":33.794722,"lng":118.397565,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-29"},
+  {"name":"大停车场公厕","address":"宿迁市宿城区洋河新区嘉年华-李六路东停车场","lat":33.760196,"lng":118.457072,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-30"},
+  {"name":"润易公厕","address":"宿迁市宿城区洋河新区徐淮路-润易农业园","lat":33.761848,"lng":118.446949,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-31"},
+  {"name":"中大街西厕","address":"宿迁市宿城区洋河新区中大街与酒坊路交汇处","lat":33.789992,"lng":118.388678,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-32"},
+  {"name":"酒街公厕","address":"宿迁市宿城区洋河新区凤翔街与酒街交汇处南边15米","lat":33.783639,"lng":118.392215,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-33"},
+  {"name":"酒家路公厕","address":"宿迁市宿城区洋河新区酒家路仁爱医院北旁","lat":33.780469,"lng":118.389058,"charge":"免费开放","openTime":"5:30-21:30","city":"宿迁市","district":"洋河新区","source":"gov","srcId":"suqian-34"}
 ]

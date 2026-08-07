@@ -1,7 +1,7 @@
 /**
  * 云函数 importGovToilets（政府开放数据批量导入工具）
  * 用途：把 data.js 中整理的政府开放数据公厕点位写入 toiletAll
- *       当前数据集：达州市宣汉县旅游厕所 45 条（来源：达州市公共数据开放平台，原始坐标 CGCS2000≈WGS-84）
+ *       当前数据集：达州市宣汉县旅游厕所 45 条 + 宿迁市洋河新区公厕 34 条（来源：达州市/宿迁市公共数据开放平台，原始坐标 CGCS2000≈WGS-84）
  * 数据字段：name、address、lat/lng（原始坐标）、city、district、charge、source=gov、srcId 平台编号
  *
  * 坐标系说明：政府开放数据平台一般发布 CGCS2000（与 WGS-84 误差约 1 米），
@@ -126,7 +126,7 @@ async function batchInsert(records, existing, concurrency) {
             isBarrierFree: false,
             hasBabyRoom: false,
             isOpen24h: false,
-            openTime: '',
+            openTime: rec.openTime || '',
             feeType: 'free',
             feeDesc: rec.charge || '',
             photoUrls: [],
