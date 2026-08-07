@@ -22,10 +22,12 @@ const BAIDU_AK = 'JggVZQfYf3r0sklCquGHKUAWNfus2BbG'
 const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 
 // 天地图周边搜索配置（第四数据源：CGCS2000≈WGS-84，需转 GCJ-02 后供小程序 map 使用）
-// 需到天地图官网（https://console.tianditu.gov.cn/）注册开发者并申请 Key 后填入；
-// 同时到微信公众平台把 https://api.tianditu.gov.cn 加入 request 合法域名
-const TIANDITU_KEY = 'efac1d7241be6075e3b3a653e0acdc69' // 天地图 Key（已配置，每日有查询配额，当日用尽自动跳过该源）
-const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/v2/search'
+// 重要：天地图 Key 分「浏览器端 / 服务端」两种权限类型，小程序 wx.request 直连会被识别为浏览器端访问；
+//       本项目使用「服务端」类型 Key，必须经云函数 searchTiandituPoi 代理查询（服务端访问），
+//       否则返回 403（code 301013 权限类型错误）。Key 存放在云函数 searchTiandituPoi/index.js 顶部 TIANDITU_KEY。
+// 云函数 searchTiandituPoi 需在微信开发者工具中右键部署后生效；未部署时前端静默跳过该源，不影响其他数据源。
+// 云函数出网不受小程序 request 合法域名白名单限制，无需在微信公众平台添加天地图域名。
+const TIANDITU_ENABLED = true // 是否启用天地图数据源（依赖云函数 searchTiandituPoi 已部署）
 
 // 多源合并模式：true=每次查询并行调用腾讯/高德/百度/天地图并合并点位（点位最多，各源当日额度耗尽自动跳过）
 // false=降级链模式（腾讯→高德→百度→天地图→OSM，任一成功即停止，接口调用更省）
@@ -767,81 +769,38 @@ Page({
     })
   },
 
-  /**
-   * 天地图周边搜索（Tianditu search，第四数据源，CGCS2000≈WGS-84 → GCJ-02）
-   * 接口：https://api.tianditu.gov.cn/v2/search，GET 传 postStr(JSON字符串)+type=query+tk=Key
-   * postStr 中 queryType=3 表示周边搜索（配合 pointLonlat 中心点 + queryRadius 半径），
-   * mapBound 为地图范围（取搜索圆的外接矩形），level 为缩放级别。
-   * 天地图坐标基准为 CGCS2000（≈WGS-84），与小程序 map 的 GCJ-02 有几十米偏差，需经 wgs84ToGcj02 转换。
-   * 返回 { ok, list, errCode }：Key 未配置/接口失败/解析失败均 ok=false，不阻断其他数据源与次数消耗。
+    /**
+   * 天地图周边搜索（第四数据源，经云函数 searchTiandituPoi 代理）
+   * 为什么走云函数：天地图 Key 若为「服务端」类型，前端 wx.request 直连返回 403（301013 权限类型错误），
+   * 必须由云函数以服务端身份访问；坐标转换（CGCS2000→GCJ-02）也统一在云函数内完成。
+   * 返回 { ok, list, errCode }：云函数未部署/接口失败/解析失败均 ok=false，不阻断其他数据源与次数消耗。
    */
   searchTiandituPoi(latitude, longitude, radius) {
     return new Promise((resolve) => {
-      if (!TIANDITU_KEY || TIANDITU_KEY.indexOf('请替换') === 0) {
-        console.warn('[index] 未配置 TIANDITU_KEY，跳过天地图查询')
+      if (!TIANDITU_ENABLED) {
+        console.warn('[index] 未启用天地图数据源，跳过查询')
         resolve({ ok: false, list: [], errCode: -2 })
         return
       }
-      // mapBound 取搜索圆的外接矩形（半径换算为经纬度跨度），满足官方必填要求
-      const latSpan = Number(radius) / 111000
-      const lngSpan = Number(radius) / (111000 * Math.cos((Number(latitude) * Math.PI) / 180))
-      const mapBound = [
-        (Number(longitude) - lngSpan).toFixed(6),
-        (Number(latitude) - latSpan).toFixed(6),
-        (Number(longitude) + lngSpan).toFixed(6),
-        (Number(latitude) + latSpan).toFixed(6)
-      ].join(',')
-      const postStr = JSON.stringify({
-        keyWord: SEARCH_KEYWORD,
-        level: '17',
-        mapBound,
-        queryType: '3',
-        pointLonlat: Number(longitude) + ',' + Number(latitude),
-        queryRadius: Number(radius),
-        count: '20',
-        start: '0'
-      })
-      wx.request({
-        url: TIANDITU_SEARCH_URL,
-        data: { postStr, type: 'query', tk: TIANDITU_KEY },
-        timeout: REQUEST_TIMEOUT,
-        success: (res) => {
-          const body = res.data || {}
-          // v2 接口成功状态为 status.infocode===1000（旧版 /search 为 status==='0'），兼容两者
-          const tiandituOk = (body.status && body.status.infocode === 1000) || body.status === '0'
-          if (tiandituOk && body.resultType === 1 && Array.isArray(body.pois)) {
-            // 打印天地图接口原始返回数据，便于调试
-            console.log('[index] 天地图接口原始返回数据（resultType=1）', JSON.stringify(body))
-            const list = body.pois.map((item) => {
-              const loc = String(item.lonlat || '').split(',')
-              const wgsLng = parseFloat(loc[0])
-              const wgsLat = parseFloat(loc[1])
-              // 天地图 CGCS2000≈WGS-84 → GCJ-02（偏差几十米，可接受）
-              const g = wgs84ToGcj02(wgsLat, wgsLng)
-              return {
-                name: item.name || '公共厕所',
-                address: item.address || '',
-                lat: g.lat,
-                lng: g.lng,
-                source: 'tianditu'
-              }
-            }).filter((p) => isValidCoordinate(p.lat, p.lng))
-            resolve({ ok: true, errCode: 0, list })
-            return
-          }
-          // 打印完整返回体，方便定位 Key/参数/配额问题
-          console.error('[index] 天地图 POI 查询失败（完整返回）', JSON.stringify(body))
-          resolve({ ok: false, list: [], errCode: (body.status && body.status.infocode) || body.status || body.resultType || -1 })
-        },
-        fail: (err) => {
-          console.error('[index] 天地图 POI 请求失败（完整错误）', err)
-          resolve({ ok: false, list: [], errCode: -1 })
+      wx.cloud.callFunction({
+        name: 'searchTiandituPoi',
+        data: { latitude, longitude, radius }
+      }).then((res) => {
+        const r = res.result || {}
+        if (r.code === 0 && Array.isArray(r.list)) {
+          console.log('[index] 天地图（云函数代理）返回点位数量=', r.list.length)
+          resolve({ ok: true, list: r.list.filter((p) => isValidCoordinate(p.lat, p.lng)), errCode: 0 })
+          return
         }
+        console.warn('[index] 天地图云函数无结果 code=', r.code, 'msg=', r.msg)
+        resolve({ ok: false, list: [], errCode: r.code || -1 })
+      }).catch((err) => {
+        console.warn('[index] 天地图云函数不可用（可能未部署，忽略）', (err && err.errMsg) || err)
+        resolve({ ok: false, list: [], errCode: -3 })
       })
     })
   },
-
-  /**
+/**
    * OpenStreetMap Overpass 兜底查询（云函数 fetchOsmToilet，第五备用数据源）
    * OSM 在中国覆盖稀疏且公共实例不稳定，仅作为最后补充：成功则并入点位，失败只记录日志，
    * 不阻断主查询流程，不影响次数消耗。云函数未部署时捕获 FUNCTION_NOT_FOUND 后正常返回空。
