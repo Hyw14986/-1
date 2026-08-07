@@ -1,6 +1,6 @@
-// pages/report/report.js - 上报厕所页：提交新公厕点位到云数据库
-const db = wx.cloud.database()
-
+// pages/report/report.js - 上报厕所页
+// 提交流程：表单校验 → 上传现场照片到云存储 → 调用 submitReport 云函数写入 toiletAll
+// 上报点位 auditStatus=pending，需管理员审核通过后才对外展示；上报不消耗查询次数
 Page({
   data: {
     // 表单数据
@@ -9,12 +9,12 @@ Page({
     openTime: '',
     // 位置（由 wx.chooseLocation 选择）
     location: null,
-    // 设施标签开关
+    // 设施标签开关（与 toiletAll 字段一一对应）
     tags: {
-      hasAccessible: false,
-      hasBabyCare: false,
-      hasToiletPaper: false,
-      isFree: false
+      hasPaper: false,
+      isBarrierFree: false,
+      hasBabyRoom: false,
+      isOpen24h: false
     },
     // 收费情况：free 免费 / paid 收费 / other 其他（自定义）
     feeType: 'free',
@@ -118,11 +118,11 @@ Page({
   },
 
   /**
-   * 校验表单并提交
+   * 校验表单并提交（调用 submitReport 云函数，写库全部在云函数端完成）
    */
   async submit() {
     if (this.data.submitting) return
-    const { name, address, location, openTime, tags } = this.data
+    const { name, address, location, openTime, tags, feeType, feeDesc } = this.data
 
     // 表单校验
     if (!name.trim()) {
@@ -144,43 +144,54 @@ Page({
       // 1. 上传照片到云存储
       const photoFileIDs = await this.uploadPhotos()
 
-      // 2. 写入公厕点位到云数据库（自动带上当前用户 _openid）
-      const res = await db.collection('toilet').add({
+      // 2. 收费映射：免费=false；收费/其他=true
+      const isCharge = feeType === 'paid' || feeType === 'other'
+
+      // 3. 调用云函数提交（云函数端做重复检测并写入 toiletAll）
+      const res = await wx.cloud.callFunction({
+        name: 'submitReport',
         data: {
           name: name.trim(),
           address: address.trim(),
-          latitude: location.latitude,
-          longitude: location.longitude,
+          lat: location.latitude,
+          lng: location.longitude,
           openTime: openTime.trim() || '全天开放',
-          hasAccessible: tags.hasAccessible,
-          hasBabyCare: tags.hasBabyCare,
-          hasToiletPaper: tags.hasToiletPaper,
-          isFree: this.data.feeType === 'free',
-          feeType: this.data.feeType,
-          feeDesc: this.data.feeType === 'other' ? this.data.feeDesc.trim() : '',
-          photos: photoFileIDs,
-          rating: 0,
-          ratingCount: 0,
-          status: 1, // 1=公开可见（无需审核）
-          source: 'user', // 来源：用户上报
-          createTime: db.serverDate()
+          hasPaper: tags.hasPaper,
+          isCharge,
+          isBarrierFree: tags.isBarrierFree,
+          hasBabyRoom: tags.hasBabyRoom,
+          isOpen24h: tags.isOpen24h,
+          feeType,
+          feeDesc: feeType === 'other' ? feeDesc.trim() : '',
+          photoUrls: photoFileIDs
         }
       })
-
+      const result = res.result || {}
       wx.hideLoading()
-      wx.showModal({
-        title: '上报成功',
-        content: '新的公厕点位已公开，感谢你的贡献！',
-        confirmText: '查看详情',
-        cancelText: '返回首页',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            wx.redirectTo({ url: '/pages/detail/detail?id=' + res._id })
-          } else {
+
+      if (result.code === 0) {
+        wx.showModal({
+          title: '上报成功',
+          content: '已提交审核，审核通过后将在附近厕所地图展示，感谢你的贡献！',
+          confirmText: '返回首页',
+          showCancel: false,
+          success: () => {
             wx.switchTab({ url: '/pages/index/index' })
           }
-        }
-      })
+        })
+      } else if (result.code === 2) {
+        wx.showModal({
+          title: '重复上报',
+          content: result.msg || '该位置 50 米内已存在公厕',
+          showCancel: false
+        })
+      } else {
+        wx.showModal({
+          title: '提交失败',
+          content: result.msg || '请稍后重试',
+          showCancel: false
+        })
+      }
     } catch (err) {
       console.error('上报失败', err)
       wx.hideLoading()

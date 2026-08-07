@@ -2,5 +2,6 @@
   "usingComponents": {
     "star-rating": "/components/star/star"
   },
-  "navigationBarTitleText": "去哪儿拉"
+  "navigationBarTitleText": "附近厕所",
+  "backgroundColor": "#f7faff"
 }

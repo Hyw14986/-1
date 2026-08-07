@@ -1,4 +1,6 @@
-// pages/profile/profile.js - 我的页面：头像昵称授权、我的上报、我的评价
+// pages/profile/profile.js - 我的页面
+// 模块：用户资料、今日剩余查询次数、查询记录、我上报的厕所（审核状态）、我的评价、我的收藏、关于小程序
+// 次数配额/查询记录/收藏等全部走云函数，前端不直写数据库
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')
@@ -9,12 +11,16 @@ Page({
     nickname: '',
     nicknameInput: '',
     avatarUrl: '',
-    // 本地待上传的头像
     avatarTempPath: '',
+    // 今日剩余查询次数
+    remaining: 20,
+    dailyLimit: 20,
     // 我的上报
     myToilets: [],
     // 我的评价
     myComments: [],
+    // 我的收藏
+    favorites: [],
     loading: true,
     defaultAvatar: '/images/default-avatar.png'
   },
@@ -22,6 +28,7 @@ Page({
   onShow() {
     this.initPage()
   },
+
   /**
    * 返回主页（tabBar 页使用 switchTab）
    */
@@ -30,15 +37,17 @@ Page({
   },
 
   /**
-   * 初始化：获取 openid、加载资料与数据
+   * 初始化：获取 openid、次数配额与各模块数据
    */
   async initPage() {
     try {
       const openid = await util.getOpenId()
       this.openid = openid
-      await this.loadUser()
+      this.fetchQuota()
+      this.loadUser()
       this.loadMyToilets()
       this.loadMyComments()
+      this.loadFavorites()
     } catch (err) {
       console.error('初始化我的页面失败', err)
       this.setData({ loading: false })
@@ -46,53 +55,19 @@ Page({
   },
 
   /**
-   * 开发工具：一键导入演示数据（调用 initData 云函数）
+   * 今日剩余查询次数（quotaOperate get，不消耗）
    */
-  initDemoData() {
-    wx.showLoading({ title: '导入中', mask: true })
+  fetchQuota() {
     wx.cloud
-      .callFunction({ name: 'initData' })
+      .callFunction({ name: 'quotaOperate', data: { action: 'get' } })
       .then((res) => {
-        wx.hideLoading()
         const r = res.result || {}
         if (r.code === 0) {
-          wx.showModal({
-            title: '导入成功',
-            content: '已导入 ' + r.inserted + ' 个演示公厕，返回首页即可在地图上查看。',
-            showCancel: false
-          })
-        } else if (r.code === 3) {
-          wx.showModal({
-            title: '数据已更新',
-            content: '已为 ' + r.patched + ' 个公厕补齐蹲位状态与附近便利店信息，重新编译即可体验新功能。',
-            showCancel: false
-          })
-        } else if (r.code === 2) {
-          wx.showModal({
-            title: '已存在演示数据',
-            content: '数据库已有 ' + r.existed + ' 条演示数据，无需重复导入。',
-            showCancel: false
-          })
-        } else {
-          wx.showModal({ title: '导入结果', content: r.msg || '未知结果', showCancel: false })
+          this.setData({ remaining: r.remaining, dailyLimit: r.dailyLimit })
+          console.log('[profile] 今日剩余查询次数', r.remaining, '/', r.dailyLimit)
         }
       })
-      .catch((err) => {
-        wx.hideLoading()
-        const msg = (err && (err.errMsg || err.message || '')) || ''
-        const notDeployed =
-          msg.indexOf('FunctionName') > -1 ||
-          msg.indexOf('not found') > -1 ||
-          msg.indexOf('-501000') > -1 ||
-          msg.indexOf('function not exists') > -1
-        wx.showModal({
-          title: '导入失败',
-          content: notDeployed
-            ? '云函数 initData 尚未部署：请在开发者工具中右键 cloudfunctions/initData 文件夹 → 上传并部署：云端安装依赖，然后重试。'
-            : '导入失败：' + msg,
-          showCancel: false
-        })
-      })
+      .catch((err) => console.warn('[profile] 获取剩余次数失败', err))
   },
 
   /**
@@ -145,8 +120,7 @@ Page({
       let avatarUrl = this.data.avatarUrl
       if (this.data.avatarTempPath) {
         const ext = (this.data.avatarTempPath.match(/\.(\w+)$/) || [])[1] || 'png'
-        const cloudPath =
-          'avatars/' + this.openid + '-' + Date.now() + '.' + ext
+        const cloudPath = 'avatars/' + this.openid + '-' + Date.now() + '.' + ext
         const uploadRes = await wx.cloud.uploadFile({
           cloudPath,
           filePath: this.data.avatarTempPath
@@ -182,18 +156,28 @@ Page({
   },
 
   /**
-   * 加载我的上报（按时间倒序）
+   * 审核状态文案
+   */
+  auditText(status) {
+    if (status === 'pass') return '已通过'
+    if (status === 'reject') return '已驳回'
+    return '待审核'
+  },
+
+  /**
+   * 加载我的上报（toiletAll 中本人上报，按时间倒序，展示审核状态）
    */
   async loadMyToilets() {
     try {
       const res = await db
-        .collection('toilet')
+        .collection('toiletAll')
         .where({ _openid: this.openid })
         .orderBy('createTime', 'desc')
         .limit(20)
         .get()
       const myToilets = res.data.map((item) => ({
         ...item,
+        auditText: this.auditText(item.auditStatus),
         timeText: util.formatTime(item.createTime)
       }))
       this.setData({ myToilets })
@@ -203,13 +187,13 @@ Page({
   },
 
   /**
-   * 加载我的评价（按时间倒序，并补充公厕名称）
+   * 加载我的评价（toilet_comment，按时间倒序，并补充公厕名称）
    */
   async loadMyComments() {
     try {
       const res = await db
-        .collection('comment')
-        .where({ _openid: this.openid })
+        .collection('toilet_comment')
+        .where({ openid: this.openid })
         .orderBy('createTime', 'desc')
         .limit(20)
         .get()
@@ -221,7 +205,7 @@ Page({
       if (toiletIds.length) {
         const _ = db.command
         const toiletRes = await db
-          .collection('toilet')
+          .collection('toiletAll')
           .where({ _id: _.in(toiletIds) })
           .limit(20)
           .get()
@@ -241,10 +225,46 @@ Page({
     }
   },
 
-  // 跳转到公厕详情
-  goDetail(e) {
+  /**
+   * 加载我的收藏（favoriteOperate list）
+   */
+  loadFavorites() {
+    wx.cloud
+      .callFunction({ name: 'favoriteOperate', data: { action: 'list' } })
+      .then((res) => {
+        const r = res.result || {}
+        this.setData({ favorites: r.list || [] })
+      })
+      .catch((err) => console.warn('加载收藏失败', err))
+  },
+
+  /**
+   * 打开公厕详情：回首页并唤起详情弹窗
+   */
+  openToilet(e) {
     const id = e.currentTarget.dataset.id
     if (!id) return
-    wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
+    app.globalData.pendingToiletId = id
+    wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  /**
+   * 进入查询记录页
+   */
+  goSearchRecord() {
+    wx.navigateTo({ url: '/pages/searchRecord/searchRecord' })
+  },
+
+  /**
+   * 关于小程序
+   */
+  showAbout() {
+    wx.showModal({
+      title: '关于小程序',
+      content:
+        '去哪儿拉 - 便民找厕所小程序\n\n数据来源：政府公开导入 + 用户上报 + 腾讯地图周边查询缓存。\n\n每人每日可查询 20 次，每日 0 点自动重置。',
+      showCancel: false,
+      confirmText: '知道了'
+    })
   }
 })

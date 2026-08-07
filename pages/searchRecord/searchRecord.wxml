@@ -1,0 +1,37 @@
+<!-- pages/searchRecord/searchRecord.wxml - 查询记录页 -->
+<view class="page">
+  <!-- 头部：标题 + 一键清空 -->
+  <view class="head-row">
+    <view class="head-title">📋 查询记录</view>
+    <view class="clear-btn" wx:if="{{records.length}}" hover-class="hover" bindtap="clearAll">🗑 一键清空</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && !records.length}}">
+    <view class="empty-icon">🗒️</view>
+    <view class="empty-text">暂无查询历史记录</view>
+    <view class="empty-sub">去首页选择范围并点击「开始寻找」即可生成记录</view>
+  </view>
+
+  <!-- 记录列表 -->
+  <view class="record-card cute-card" wx:for="{{records}}" wx:key="_id">
+    <view class="record-main">
+      <view class="record-row">
+        <text class="record-label">查询半径</text>
+        <text class="record-value">{{item.radiusText}}</text>
+      </view>
+      <view class="record-row">
+        <text class="record-label">找到厕所</text>
+        <text class="record-value">{{item.searchCount}} 个</text>
+      </view>
+      <view class="record-row">
+        <text class="record-label">查询时间</text>
+        <text class="record-value">{{item.timeText}}</text>
+      </view>
+    </view>
+    <view class="record-actions">
+      <view class="again-btn" hover-class="hover" data-radius="{{item.searchRadius}}" bindtap="againSearch">🔄 再次查询</view>
+      <view class="del-btn" hover-class="hover" data-id="{{item._id}}" bindtap="deleteRecord">删除</view>
+    </view>
+  </view>
+</view>

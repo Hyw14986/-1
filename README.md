@@ -1,35 +1,51 @@
-# 去哪儿拉 - 便民找公共厕所小程序
+# 去哪儿拉 - 便民找公共厕所小程序（附近厕所版）
 
-基于微信云开发（云数据库 + 云存储 + 云函数）的找厕所小程序：查看附近公厕、地图导航、打分评价、上报新点位。
+基于微信云开发（云数据库 + 云存储 + 云函数）的找厕所小程序：按半径查找周边公厕、地图导航、评分评价、上报新点位、查询次数配额管理。
 
 ## 功能一览
 
-- **首页（地图）**：获取定位，地图展示周边公厕标记点（可爱马桶图标）；点击标记弹出简要卡片，可一键查看详情或导航；支持「母婴室 / 无障碍」精准筛选与蹲位余量提示；快捷区含「一键导航 / 我要上报 / 评价记录 / 附近买纸」
-- **列表页**：全部公厕按距离由近到远排序，卡片展示距离、星级评分、设施标签（无障碍 / 母婴室 / 收费 / 纸巾）
-- **详情页**：公厕完整信息（地址、开放时间、收费情况、设施），【导航】按钮调用微信地图跳转；综合星级评分 + 用户评价列表 + 评价表单（1-5 星 + 文字）
-- **上报页**：填写名称、地图选点、开放时间、多选设施标签（无障碍 / 母婴室 / 纸巾）、收费情况单选（免费 / 收费 / 其他自定义）、上传现场照片（最多 3 张，存入云存储），提交后立即公开
-- **我的页**：微信头像昵称填写能力授权登录；我的上报、我的评价列表
+- **首页（附近厕所）**：页面标题「附近厕所」，左上角下拉选择查询半径（500 / 1000 / 2000 / 3000 米），点击「开始寻找」才执行查询并消耗 1 次查询次数（每日上限 20 次，0 点自动重置）；地图中心永久锁定用户 GCJ-02 定位，绘制红色圆形查询圈，只渲染圈内公厕 marker；底部卡片统计「在您附近找到 X 个厕所」并可展开按距离排序的列表；点击 marker 打开详情弹窗（来源标签、设施标签、平均分、评价列表、导航 / 收藏 / 写评价 / 举报）
+- **上报页**：填写名称、地图选点、详细地址、开放时间、多选设施标签（无障碍 / 母婴室 / 有纸巾 / 24小时开放）、收费情况单选（免费 / 收费 / 其他自定义）、上传现场照片（最多 3 张，存入云存储）；提交后写入 `toiletAll`，`auditStatus=pending`，需管理员审核通过后才对外展示；50 米内已有公厕会提示重复上报
+- **我的页**：微信头像昵称授权登录；顶部展示「今日剩余查询次数：N / 20」进度条；功能入口：查询记录、关于小程序；模块：我上报的厕所（展示审核状态）、我的评价、我的收藏
+- **查询记录页**：展示每次点击「开始寻找」的历史记录（查询时间、半径、找到厕所数量）；支持「再次查询」（回填半径回首页，不扣次数，需再点开始寻找）、单条删除、一键清空
 
-## 技术要点
+## 重要业务规则
 
-- 全部页面使用 `rpx` 适配移动端，主色调清新浅蓝（`#29B6F6` / `#4FC3F7`）
-- 云数据库集合：
-  - `toilet`：公厕点位（含经纬度、设施、评分、照片 fileID、收费情况 feeType/feeDesc、蹲位状态 seatStatus、附近便利店 nearStore）
-  - `comment`：用户评价（含 toiletId、openid、星级、文字、头像昵称快照）
-  - `user`：用户头像昵称资料
-- 云函数：
-  - `submitComment`：评价唯一性校验（同一 openid 对同一 toiletId 仅允许一条）+ 聚合更新公厕综合评分
-  - `getOpenId`：获取当前用户 openid
-  - `initData`：一键导入覆盖全国 110+ 个演示公厕点位（湖北 / 广东为真实地址数据，其他省市为地标附近粗略点位）
-- 距离计算：前端 haversine 公式按用户定位计算，无需额外服务
+1. 仅用户手动点击「开始寻找」触发完整查询流程时：消耗 1 次查询次数、缓存腾讯 POI、新增一条查询记录；筛选、查看详情、再次查询回填半径都不消耗次数
+2. 次数上限每日 20 次，每日 0 点重置，重置逻辑全部在云函数 `quotaOperate` 内部完成（比对 `quotaDate`），前端不做时间重置，防改手机时间作弊
+3. 全程统一 GCJ-02 坐标系；红圈外点位不渲染、不进列表、不参与统计（禁止仅 CSS 视觉隐藏）
+4. 数据源合并：`toiletAll` 自有库（gov 政府导入 / user 用户上报 / tencent 腾讯缓存）+ 腾讯 place/v1/search 周边搜索降级（自有库圈内 ≤2 条才调用）；腾讯返回后做球面距离二次过滤，只保留圈内点位
+5. 腾讯 POI 只缓存用户真实查询触发、且处于红圈之内的点位，`saveTencentPoi` 云函数内 50 米同名去重
+6. 用户上报必须 `auditStatus=pass` 才展示；`invalid=true` 的点位全部过滤
+7. 所有写库操作全部经由云函数（上报、评价、收藏、举报、查询记录、次数扣减），前端不直接写数据库，规避恶意刷数据
 
+## 云数据库集合
 
-### 演示数据来源（initData）
-- **湖北·武汉汉阳区 21 座**：武汉市汉阳区城管执法局《延时开放公厕》官方名录（24 小时开放 19 座、6:00-24:00 开放 2 座），地址为官方公布地址
-- **湖北·宜昌 / 襄阳等**：当地公共数据开放平台与公开地图地址，坐标为地标级精度
-- **广东·东莞黄江 12 座**：《黄江镇公厕管理维护服务项目用户需求书》官方归集表，坐标为官方提供
-- **广东·广州 / 深圳 / 佛山 / 珠海等**：公开地图与媒体报道的真实公厕地址，坐标为地标级精度
-- **其他城市**：城市地标附近粗略点位，仅供演示
+| 集合 | 用途 | 关键字段 |
+| --- | --- | --- |
+| `toiletAll` | 公厕主集合 | lat、lng（GCJ-02）、name、address、source（gov/user/tencent）、invalid、hasPaper、isCharge、isBarrierFree、hasBabyRoom、isOpen24h、openTime、feeType、feeDesc、photoUrls、auditStatus（pending/pass/reject）、rating、ratingCount |
+| `toilet_comment` | 评价 | toiletId、openid、score（1-5）、content、nickname、avatarUrl、createTime；同一 openid 对同一 toiletId 仅一条 |
+| `toilet_favorite` | 收藏 | openid、toiletId、createTime |
+| `toilet_report` | 举报 | toiletId、reason、openid、createTime |
+| `toilet_search_record` | 查询记录 | openid、searchRadius、searchCount、userLat、userLng、searchTime |
+| `toilet_user_quota` | 每日次数配额 | openid、quotaDate（YYYY-MM-DD）、usedCount（上限 20） |
+| `user` | 用户资料 | nickname、avatarUrl |
+
+## 云函数清单（cloudfunctions/）
+
+| 云函数 | 作用 |
+| --- | --- |
+| `quotaOperate` | 获取/消耗今日查询次数，每日 0 点重置（上限 20） |
+| `getNearToilet` | geoNear 按半径查圈内有效公厕（invalid=false 且 auditStatus=pass） |
+| `saveTencentPoi` | 缓存腾讯圈内 POI 到 toiletAll（50 米同名去重） |
+| `searchRecordOperate` | 查询记录 add / list / delete / clear |
+| `submitReport` | 用户上报（50 米重复检测 + 写入 pending 待审核） |
+| `submitComment` | 提交评价（唯一性校验 + 聚合回写评分） |
+| `favoriteOperate` | 收藏 add / remove / list / check |
+| `submitReportComplaint` | 提交举报 |
+| `getComments` | 公开读取公厕评价列表（管理员身份读取，不受权限限制） |
+| `initData` | 一键导入全国 110+ 政府公开演示点位到 toiletAll（湖北 / 广东为真实地址） |
+| `getOpenId` | 获取当前用户 openid |
 
 ## 部署步骤（重要）
 
@@ -37,52 +53,56 @@
 打开微信开发者工具 → 导入项目 → 选择本目录，AppID 已配置为 `wx059b081bb01787a0`（如无该 AppID 的云开发权限，请换成自己的小程序 AppID）。
 
 ### 2. 开通云开发
-工具栏点击【云开发】→ 开通 → 创建环境（环境 ID 建议使用 `cloudbase-d7gjo6cw585f5db63`）。
-若你创建的环境 ID 不同，请修改 `app.js` 中 `wx.cloud.init({ env: '你的环境ID' })`。
+工具栏点击【云开发】→ 开通 → 创建环境。若环境 ID 与你现有环境不同，请修改 `app.js` 中 `wx.cloud.init({ env: '你的环境ID' })`（当前为 `cloudbase-d7gjo6cw585f5db63`）。
 
-### 3. 创建数据库集合
-> 可跳过：运行 `initData` 云函数时会自动创建 `toilet`、`comment`、`user` 三个集合。
+### 3. 创建数据库集合并配置权限
+云开发控制台 → 数据库，创建 7 个集合：`toiletAll`、`toilet_comment`、`toilet_favorite`、`toilet_report`、`toilet_search_record`、`toilet_user_quota`、`user`（或直接部署并运行 `initData`，它会自动创建这些集合）。
+每个集合权限建议设置为：**所有用户可读，仅创建者可读写**（自定义安全规则更佳：读开放，写仅管理员/云函数）。
 
-在云开发控制台 → 数据库，创建 3 个集合：`toilet`、`comment`、`user`（或直接运行 initData 自动创建）。
-每个集合权限均设置为：**所有用户可读，仅创建者可读写**（控制台里叫"仅创建者可读写，所有人可读"）。
+### 4. 为 toiletAll 创建地理索引（重要）
+`getNearToilet` 使用 `geoNear` 地理位置聚合，必须先在云开发控制台为 `toiletAll` 集合创建地理索引：
+- 点击 `toiletAll` → 索引管理 → 新建索引 → 字段 `lat` 与 `lng` 设置为**地理位置索引（2dsphere）**
+- 未创建索引时 `getNearToilet` 会返回失败，首页会自动降级为腾讯 POI 查询，功能仍可用，但自有库点位无法按半径检索
 
-### 4. 部署云函数
-在开发者工具左侧资源管理器，找到 `cloudfunctions` 目录，依次对以下 3 个函数【右键 → 上传并部署：云端安装依赖】：
-- `submitComment`
-- `getOpenId`
-- `initData`
+### 5. 部署云函数
+在开发者工具左侧资源管理器，找到 `cloudfunctions` 目录，依次对全部 11 个函数【右键 → 上传并部署：云端安装依赖】：
+`quotaOperate`、`getNearToilet`、`saveTencentPoi`、`searchRecordOperate`、`submitReport`、`submitComment`、`favoriteOperate`、`submitReportComplaint`、`getComments`、`initData`、`getOpenId`
 
-### 5. 导入演示数据
-部署完成后，在 `cloudfunctions/initData` 上【右键 → 云端测试】直接运行（参数可留空），会自动创建 `toilet` / `comment` / `user` 三个集合并向 `toilet` 导入覆盖全国 110+ 个演示公厕（含湖北 / 广东真实点位）。
-> 幂等设计：已存在演示数据时会自动跳过；如需强制重导，测试参数传 `{"force": true}`。
-> 若之前已导入过演示数据，重新点击「一键导入」会自动为已有数据补齐「蹲位状态 / 附近便利店」新字段，无需重导。
+### 6. 导入政府公开演示数据
+部署完成后，在 `cloudfunctions/initData` 上【右键 → 云端测试】直接运行（参数可留空），会：
+- 自动创建缺失的集合
+- 向 `toiletAll` 导入 110+ 个点位（`source='gov'`、`auditStatus='pass'`，湖北 / 广东为真实地址，其余省市为地标附近粗略点位）
+> 幂等设计：已存在 `source='gov'` 数据时自动跳过；如需强制重导，测试参数传 `{"force": true}`。
 
-### 6. 编译运行
-点击【编译】即可使用。首次进入会请求位置权限，请允许。演示点位已覆盖全国主要城市，无论你在哪个城市，首页地图和列表页都会按你当前位置就近展示。
+### 7. 配置腾讯位置服务 Key（可选增强）
+`pages/index/index.js` 顶部 `QQ_MAP_KEY` 已填入一个 WebServiceAPI Key（`GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU`）。
+- 若提示 111（Key 授权 AppID 不匹配）或 121（当日配额用尽），请到 [腾讯位置服务](https://lbs.qq.com) 申请自己的 Key 并替换
+- 同时在小程序后台【开发管理 → 开发设置 → 服务器域名】的 request 合法域名中添加：`https://apis.map.qq.com`
+
+### 8. 编译运行
+点击【编译】即可使用。首次进入会请求位置权限，请允许。首页默认展示「请选择范围并点击开始寻找」，选择半径点击按钮后才会渲染红圈并加载公厕。
 
 ## 真机与发布注意事项
 
-- **位置接口**：`app.json` 已声明 `permission` 和 `requiredPrivateInfos`（`getLocation`、`chooseLocation`）。真机运行前需在小程序后台【开发管理 → 接口设置】申请开通"地理位置"接口，并在【设置 → 服务内容声明】中补充《用户隐私保护指引》并勾选"位置信息"
+- **位置接口**：`app.json` 已声明 `permission` 与 `requiredPrivateInfos`（`getLocation`、`chooseLocation`）。真机运行前需在小程序后台【开发管理 → 接口设置】申请开通"地理位置"接口，并在【设置 → 服务内容声明】中补充《用户隐私保护指引》并勾选"位置信息"
 - **基础库**：建议使用 3.0 以上基础库（云开发最低要求 2.2.3）
-- **数据权限**：若希望新上报点位先审核再公开，可将 `pages/report/report.js` 中写入的 `status: 1` 改为 `status: 0`，并在 `index`/`list` 页查询条件 `where({ status: 1 })` 基础上自行补充审核流程
-- **演示数据**：`cloudfunctions/initData/index.js` 中的 `SEED_TOILETS` 共 111 条——湖北（武汉汉阳城管官方名录 21 座、宜昌 / 襄阳等）与广东（东莞黄江官方归集表 12 座、广州 / 深圳 / 佛山 / 珠海等）为真实地址点位，其余省市为地标附近粗略点位；坐标为地标级精度，正式上线前可替换为精确点位
+- **审核流程**：用户上报点位 `auditStatus=pending`，管理员在云开发控制台将 `toiletAll` 对应记录改为 `auditStatus='pass'` 后即可对外展示；举报记录在 `toilet_report` 查看，处理后可手动将对应点位 `invalid` 置为 `true`
+- **数据权限**：云函数读写不受集合权限限制；前端只读浏览依赖集合「所有用户可读」权限，请按第 3 步配置
 
 ## 目录结构
 
 ```
-├── app.js / app.json / app.wxss     # 全局配置：云开发初始化、tabbar、定位权限、全局样式
+├── app.js / app.json / app.wxss     # 全局配置：云开发初始化、tabbar（找厕所/我的）、定位权限、全局样式
 ├── project.config.json              # 项目配置（已声明 cloudfunctionRoot）
-├── cloudfunctions/
-│   ├── submitComment/               # 提交评价（唯一性校验 + 评分聚合）
-│   ├── getOpenId/                   # 获取当前用户 openid
-│   └── initData/                    # 全国演示数据导入
+├── cloudfunctions/                  # 11 个云函数（见上表）
 ├── components/star/                 # 星级评分组件（展示 + 打分）
 ├── images/                          # tabbar 图标、地图标记、默认头像
 ├── pages/
-│   ├── index/                       # 首页地图
-│   ├── list/                        # 列表页
-│   ├── detail/                      # 详情页（评价）
-│   ├── report/                      # 上报页
-│   └── profile/                     # 我的页
-└── utils/util.js                    # 距离计算、时间格式化、设施标签、getOpenId
+│   ├── index/                       # 首页附近厕所（半径选择 + 红圈 + 圈内 marker + 详情弹窗）
+│   ├── report/                      # 上报公厕页
+│   ├── profile/                     # 我的页（次数配额 + 查询记录 + 上报/评价/收藏）
+│   ├── searchRecord/                # 查询记录页
+│   ├── list/                        # （旧版列表页，暂未引用）
+│   └── detail/                      # （旧版详情页，暂未引用）
+└── utils/util.js                    # 距离计算、时间格式化、openid 获取
 ```

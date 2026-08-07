@@ -1,7 +1,8 @@
 /**
  * 云函数 initData
- * 初始化演示数据：向 toilet 集合写入覆盖全国主要城市的公厕点位
- * 幂等：若已存在 source='seed' 的数据则跳过，避免重复导入
+ * 初始化演示数据：向 toiletAll 集合写入覆盖全国主要城市的公共厕所点位
+ * 字段适配新版数据结构：lat/lng、source='gov'、auditStatus='pass'（审核通过，直接对外展示）
+ * 幂等：若 toiletAll 已存在 source='gov' 的数据则跳过，避免重复导入
  * 调用方式：event.force = true 可强制重新导入
  *
  * 数据来源说明：
@@ -18,28 +19,30 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
-// 演示用便利店品牌池（附近买纸功能）
-const STORE_NAMES = ['美宜佳便利店', '天福便利店', '喜市多便利店', '7-11便利店', '罗森便利店', '全家便利店']
-
 /**
- * 为演示公厕补充「蹲位状态」与「附近便利店」信息（地标级精度）
- * @param {object} toilet 公厕数据（用于生成便利店坐标）
- * @param {number} index 序号
+ * 旧字段 -> toiletAll 新字段映射
  */
-function buildSeedPatch(toilet, index) {
-  // 蹲位状态：约 1/3 为紧张，其余充足
-  const seatStatus = index % 3 === 2 ? 'busy' : 'free'
-  const storeName = STORE_NAMES[index % STORE_NAMES.length]
+function toAllSchema(t) {
   return {
-    seatStatus,
-    nearStore: {
-      name: storeName,
-      address: toilet.address || '',
-      // 便利店坐标：在原公厕坐标基础上偏移 200~500 米
-      latitude: (toilet.latitude || 0) + 0.0015 + (index % 4) * 0.0008,
-      longitude: (toilet.longitude || 0) + 0.002,
-      distanceText: (200 + (index % 4) * 100) + 'm'
-    }
+    lat: t.latitude,
+    lng: t.longitude,
+    name: t.name,
+    address: t.address || '',
+    source: 'gov',
+    invalid: false,
+    hasPaper: !!t.hasToiletPaper,
+    isCharge: t.isFree === false,
+    isBarrierFree: !!t.hasAccessible,
+    hasBabyRoom: !!t.hasBabyCare,
+    isOpen24h: (t.openTime || '') === '全天开放' || (t.openTime || '').indexOf('24') > -1,
+    openTime: t.openTime || '全天开放',
+    feeType: t.isFree === false ? 'paid' : 'free',
+    feeDesc: '',
+    photoUrls: [],
+    auditStatus: 'pass',
+    rating: t.rating || 0,
+    ratingCount: t.ratingCount || 0,
+    createTime: db.serverDate()
   }
 }
 
@@ -183,12 +186,11 @@ const SEED_TOILETS = [
 
 /**
  * 确保基础集合存在（不存在则创建）
- * 云函数端可用 db.createCollection 创建集合，避免客户端直接读取时报 collection not exists
  * @returns {string[]} 本次新建的集合名列表
  */
 async function ensureCollections() {
   const created = []
-  for (const name of ['toilet', 'comment', 'user']) {
+  for (const name of ['toiletAll', 'toilet_comment', 'toilet_favorite', 'toilet_report', 'toilet_search_record', 'toilet_user_quota', 'user']) {
     try {
       await db.createCollection(name)
       created.push(name)
@@ -205,56 +207,29 @@ exports.main = async (event) => {
   // 自动创建基础集合（已存在则跳过），再执行导入
   const created = await ensureCollections()
 
-  // 幂等判断：已存在种子数据则跳过
-  const existRes = await db.collection('toilet').where({ source: 'seed' }).count()
+  // 幂等判断：toiletAll 已存在 gov 数据则跳过
+  const existRes = await db.collection('toiletAll').where({ source: 'gov' }).count()
   if (existRes.total > 0 && !force) {
-    // 已存在演示数据：增量补齐新字段（蹲位状态 / 附近便利店），无需强制重导
-    const missingRes = await db
-      .collection('toilet')
-      .where({ source: 'seed', seatStatus: _.exists(false) })
-      .limit(100)
-      .get()
-    if (missingRes.data.length) {
-      let patched = 0
-      for (const doc of missingRes.data) {
-        await db.collection('toilet').doc(doc._id).update({
-          data: buildSeedPatch(doc, patched)
-        })
-        patched += 1
-      }
-      return {
-        code: 3,
-        msg: '已补齐演示数据新字段（蹲位状态/附近便利店）',
-        patched
-      }
-    }
     return {
       code: 2,
-      msg: '已存在演示数据，跳过导入（如需强制重新导入请传 force=true）',
+      msg: '已存在导入数据，跳过导入（如需强制重新导入请传 force=true）',
       existed: existRes.total
     }
   }
 
-  // 批量写入（含蹲位状态与附近便利店信息）
+  // 批量写入 toiletAll（新版字段，审核状态 pass）
   let inserted = 0
   for (let i = 0; i < SEED_TOILETS.length; i++) {
     const toilet = SEED_TOILETS[i]
-    await db.collection('toilet').add({
-      data: {
-        ...toilet,
-        ...buildSeedPatch(toilet, i),
-        photos: [],
-        status: 1,
-        source: 'seed',
-        createTime: db.serverDate()
-      }
+    await db.collection('toiletAll').add({
+      data: toAllSchema(toilet)
     })
     inserted += 1
   }
 
   return {
     code: 0,
-    msg: '演示数据导入成功',
+    msg: '政府公开数据导入成功',
     inserted,
     createdCollections: created
   }

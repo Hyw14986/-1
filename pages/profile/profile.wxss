@@ -1,6 +1,9 @@
-/* pages/profile/profile.wxss - 我的页面样式（治愈马卡龙风） */
+/* pages/profile/profile.wxss - 我的页面（治愈马卡龙风） */
 .page {
+  min-height: 100vh;
   padding: 0 0 60rpx;
+  background: #f7faff;
+  box-sizing: border-box;
 }
 
 /* 返回主页按钮：白色药丸 + 柔和蓝调阴影 */
@@ -11,10 +14,10 @@
   padding: 12rpx 32rpx;
   background: #ffffff;
   border-radius: 44rpx;
-  color: #5b9be8;
+  color: #74b9ff;
   font-size: 26rpx;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.18);
+  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.18);
 }
 
 .back-home-icon {
@@ -33,8 +36,8 @@
   margin: 28rpx 28rpx 0;
   padding: 52rpx 40rpx;
   border-radius: 40rpx;
-  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
-  box-shadow: 0 16rpx 40rpx rgba(127, 181, 245, 0.3);
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  box-shadow: 0 16rpx 40rpx rgba(116, 185, 255, 0.3);
 }
 
 .avatar-btn {
@@ -96,23 +99,112 @@
   font-size: 26rpx;
   border-radius: 50rpx;
   background: #ffffff;
-  color: #5b9be8;
-  box-shadow: 0 8rpx 20rpx rgba(127, 181, 245, 0.28);
+  color: #74b9ff;
+  text-align: center;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.28);
 }
 
 .save-btn.hover {
   opacity: 0.85;
 }
 
-/* 区块卡片：使用 cute-card（大圆角 + 柔和阴影 + 四周留白） */
+/* 今日剩余查询次数卡片 */
+.quota-card {
+  margin: 28rpx 28rpx 0;
+  padding: 32rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #a8e6cf, #74b9ff);
+  box-shadow: 0 14rpx 36rpx rgba(116, 185, 255, 0.3);
+  color: #ffffff;
+}
+
+.quota-title {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.quota-num {
+  margin-top: 12rpx;
+  font-size: 30rpx;
+  opacity: 0.95;
+}
+
+.quota-count {
+  font-size: 64rpx;
+  font-weight: 800;
+  margin-right: 6rpx;
+}
+
+.quota-bar {
+  height: 20rpx;
+  margin-top: 20rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+
+.quota-fill {
+  height: 100%;
+  border-radius: 20rpx;
+  background: linear-gradient(90deg, #ffb8d1, #ff9fb2);
+  transition: width 0.3s;
+}
+
+.quota-tip {
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  opacity: 0.9;
+}
+
+/* 功能入口菜单 */
+.menu-card {
+  padding: 12rpx 32rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 0;
+  border-bottom: 2rpx solid #eef4fc;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item.hover {
+  opacity: 0.75;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.menu-icon {
+  margin-right: 18rpx;
+  font-size: 34rpx;
+}
+
+.menu-arrow {
+  font-size: 40rpx;
+  color: #b8bfcc;
+}
+
+/* 区块卡片 */
 .section-card {
-  margin: 0;
+  margin-top: 28rpx;
 }
 
 .section-title {
   font-size: 30rpx;
   font-weight: 600;
-  color: #3e4a5f;
+  color: #2c3e50;
   padding-top: 8rpx;
   margin-bottom: 8rpx;
 }
@@ -127,7 +219,7 @@
   margin-bottom: 28rpx;
 }
 
-/* 上报/评价条目 */
+/* 上报/评价/收藏条目 */
 .report-item {
   padding: 20rpx 0;
   border-bottom: 2rpx solid #eef4fc;
@@ -150,7 +242,7 @@
 .report-name {
   font-size: 28rpx;
   font-weight: 600;
-  color: #3e4a5f;
+  color: #2c3e50;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -161,15 +253,34 @@
 .report-status {
   flex-shrink: 0;
   font-size: 22rpx;
-  color: #5b9be8;
-  background: rgba(127, 181, 245, 0.16);
   border-radius: 26rpx;
   padding: 4rpx 14rpx;
 }
 
+.status-pending {
+  color: #e6a23c;
+  background: rgba(255, 193, 7, 0.16);
+}
+
+.status-pass {
+  color: #2e9e6b;
+  background: rgba(168, 230, 207, 0.45);
+}
+
+.status-reject {
+  color: #e05a6d;
+  background: rgba(255, 159, 178, 0.3);
+}
+
+.report-fav-score {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #ffc94d;
+}
+
 .report-meta {
   font-size: 22rpx;
-  color: #9aa5b8;
+  color: #7f8c8d;
   margin-top: 8rpx;
 }
 
@@ -177,22 +288,4 @@
   font-size: 26rpx;
   color: #6b7a93;
   margin-top: 10rpx;
-}
-
-/* 开发工具 */
-.dev-tip {
-  font-size: 24rpx;
-  color: #9aa5b8;
-  margin-bottom: 20rpx;
-}
-
-.dev-btn {
-  width: 100%;
-  padding: 14rpx 0;
-  font-size: 28rpx;
-  border-radius: 50rpx;
-}
-
-.dev-btn.hover {
-  opacity: 0.9;
 }

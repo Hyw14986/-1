@@ -27,7 +27,7 @@
       <view class="locate-result" wx:if="{{location}}">已选择：{{location.address}}</view>
       <input
         class="field-input"
-        placeholder="补充详细地址（选填）"
+        placeholder="补充详细地址（必填）"
         placeholder-class="ph"
         value="{{address}}"
         bindinput="onAddressInput"
@@ -53,21 +53,25 @@
       <view class="field-label">设施标签（多选）</view>
       <view class="tag-picker">
         <view
-          class="tag-option {{tags.hasAccessible ? 'active' : ''}}"
-          data-key="hasAccessible"
+          class="tag-option {{tags.isBarrierFree ? 'active' : ''}}"
+          data-key="isBarrierFree"
           bindtap="toggleTag" hover-class="hover"
         >♿ 无障碍</view>
         <view
-          class="tag-option {{tags.hasBabyCare ? 'active' : ''}}"
-          data-key="hasBabyCare"
+          class="tag-option {{tags.hasBabyRoom ? 'active' : ''}}"
+          data-key="hasBabyRoom"
           bindtap="toggleTag" hover-class="hover"
         >🍼 母婴室</view>
         <view
-          class="tag-option {{tags.hasToiletPaper ? 'active' : ''}}"
-          data-key="hasToiletPaper"
+          class="tag-option {{tags.hasPaper ? 'active' : ''}}"
+          data-key="hasPaper"
           bindtap="toggleTag" hover-class="hover"
         >🧻 有纸巾</view>
-
+        <view
+          class="tag-option {{tags.isOpen24h ? 'active' : ''}}"
+          data-key="isOpen24h"
+          bindtap="toggleTag" hover-class="hover"
+        >🌙 24小时开放</view>
       </view>
     </view>
 
@@ -120,5 +124,5 @@
     </view>
   </view>
 
-  <view class="tips">提交后点位将立即公开，供附近用户查看</view>
+  <view class="tips">提交后将进入审核，审核通过即可在地图展示（上报不消耗查询次数）</view>
 </view>

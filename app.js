@@ -19,6 +19,10 @@ App({
     // 用户当前定位（gcj02 坐标系），供各页面共享
     userLocation: null,
     // 当前用户 openid（由 getOpenId 云函数获取）
-    openid: ''
+    openid: '',
+    // 查询记录页「再次查询」回填的半径下标（首页 onShow 读取后清空）
+    pendingRadiusIndex: null,
+    // 我的页面跳转指定公厕 id（首页 onShow 读取后打开详情弹窗）
+    pendingToiletId: null
   }
 })

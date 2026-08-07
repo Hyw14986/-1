@@ -1,0 +1,120 @@
+/* pages/searchRecord/searchRecord.wxss - 查询记录页（治愈马卡龙风） */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 0 60rpx;
+  background: #f7faff;
+  box-sizing: border-box;
+}
+
+/* 头部 */
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 28rpx 0;
+}
+
+.head-title {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.clear-btn {
+  padding: 10rpx 26rpx;
+  border-radius: 40rpx;
+  background: #ffffff;
+  color: #e05a6d;
+  font-size: 24rpx;
+  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.16);
+}
+
+.clear-btn.hover {
+  opacity: 0.8;
+}
+
+/* 空状态 */
+.empty {
+  padding: 180rpx 0;
+  text-align: center;
+  color: #7f8c8d;
+}
+
+.empty-icon {
+  font-size: 140rpx;
+  margin-bottom: 28rpx;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.empty-sub {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #7f8c8d;
+}
+
+/* 记录卡片 */
+.record-card {
+  padding: 28rpx;
+}
+
+.record-main {
+  padding: 8rpx 0 16rpx;
+}
+
+.record-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10rpx 0;
+}
+
+.record-label {
+  font-size: 26rpx;
+  color: #7f8c8d;
+}
+
+.record-value {
+  font-size: 28rpx;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.record-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  border-top: 2rpx solid #eef4fc;
+  padding-top: 20rpx;
+}
+
+.again-btn {
+  padding: 12rpx 32rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 600;
+  margin-right: 20rpx;
+  box-shadow: 0 8rpx 18rpx rgba(116, 185, 255, 0.32);
+}
+
+.again-btn.hover {
+  opacity: 0.85;
+  transform: scale(0.96);
+}
+
+.del-btn {
+  padding: 12rpx 28rpx;
+  border-radius: 40rpx;
+  background: #f0f7ff;
+  color: #e05a6d;
+  font-size: 24rpx;
+}
+
+.del-btn.hover {
+  opacity: 0.8;
+}

@@ -4,35 +4,30 @@
     "pages/list/list",
     "pages/detail/detail",
     "pages/report/report",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/searchRecord/searchRecord"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "去哪儿拉",
-    "navigationBarBackgroundColor": "#fff8f3",
-    "backgroundColor": "#fff8f3"
+    "navigationBarTitleText": "附近厕所",
+    "navigationBarBackgroundColor": "#f7faff",
+    "backgroundColor": "#f7faff"
   },
   "tabBar": {
     "color": "#b8bfcc",
-    "selectedColor": "#7fb5f5",
+    "selectedColor": "#74b9ff",
     "backgroundColor": "#fffcf8",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "🏠 首页",
+        "text": "找厕所",
         "iconPath": "images/tab-home.png",
         "selectedIconPath": "images/tab-home-active.png"
       },
       {
-        "pagePath": "pages/report/report",
-        "text": "➕ 上报",
-        "iconPath": "images/tab-report.png",
-        "selectedIconPath": "images/tab-report-active.png"
-      },
-      {
         "pagePath": "pages/profile/profile",
-        "text": "👤 我的",
+        "text": "我的",
         "iconPath": "images/tab-profile.png",
         "selectedIconPath": "images/tab-profile-active.png"
       }
