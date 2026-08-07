@@ -12,6 +12,9 @@ const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 // 公厕多关键词（各数据源逐词查询后合并去重，显著提升召回率；高德 keywords 支持 | 一次传多词）
 const SEARCH_KEYWORDS = ['公共厕所', '公厕', '卫生间', '洗手间', '公共卫生间', '旅游厕所']
 const SEARCH_KEYWORD = SEARCH_KEYWORDS[0] // 单关键词兼容
+// 各数据源关键词数量：高德/百度设为主流查询（全 6 词）；腾讯配额紧张（每日易触发 status=121）仅查 1 个主词；
+// 天地图按天配额较宽松保持全 6 词。修改此处即可调整每个数据源的查询强度
+const SOURCE_KEYWORD_COUNT = { tencent: 1, amap: SEARCH_KEYWORDS.length, baidu: SEARCH_KEYWORDS.length, tianditu: SEARCH_KEYWORDS.length }
 
 // 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
 const AMAP_KEY = '5ad7207ca36306e6559d30ed02ef37bc'
@@ -546,10 +549,12 @@ Page({
       }
       // 多关键词轮询：腾讯 keyword 单次只支持一个词，逐词查询后按「同名 50 米」去重合并
       const all = []
+      // 腾讯配额紧张：仅查 1 个主词（公共厕所），降低无效 API 消耗；高德/百度为主流查询走全词
+      const keywords = SEARCH_KEYWORDS.slice(0, SOURCE_KEYWORD_COUNT.tencent)
       let anySuccess = false
       let lastErr = 0
       const runKeyword = (index) => {
-        if (index >= SEARCH_KEYWORDS.length) {
+        if (index >= keywords.length) {
           const list = this.dedupeToilets(all)
           if (list.length > 0 || anySuccess) {
             resolve({ ok: true, errCode: 0, list })
@@ -563,7 +568,7 @@ Page({
           // 重要：腾讯 place/v1/search 已废弃 location+radius，必须用 boundary=nearby(lat,lng,radius)，
           // 否则返回 status=348「boundary 参数不合法」，导致腾讯接口必败（实测验证）
           data: {
-            keyword: SEARCH_KEYWORDS[index],
+            keyword: keywords[index],
             boundary: 'nearby(' + latitude + ',' + longitude + ',' + radius + ')',
             page_size: 20,
             key: QQ_MAP_KEY
@@ -574,7 +579,7 @@ Page({
             if (body.status === 0) {
               anySuccess = true
               // 打印腾讯接口原始返回数据，便于调试
-              console.log('[index] 腾讯接口原始返回数据（keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+              console.log('[index] 腾讯接口原始返回数据（keyword=', keywords[index], '）', JSON.stringify(body))
               const list = Array.isArray(body.data) ? body.data : []
               all.push(...list.map((item) => ({
                 name: item.title || '公共厕所',
@@ -589,7 +594,7 @@ Page({
             const errCode = body.status
             lastErr = errCode
             // 打印完整返回体，方便定位 Key/配额/参数问题
-            console.error('[index] 腾讯 POI 查询失败（完整返回 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+            console.error('[index] 腾讯 POI 查询失败（完整返回 keyword=', keywords[index], '）', JSON.stringify(body))
             if (errCode === 111) console.error('[index] 腾讯Key授权AppID不匹配，请核对小程序AppID与Key绑定')
             if (errCode === 121) {
               poiQuotaExhausted = true
@@ -606,7 +611,7 @@ Page({
           },
           fail: (err) => {
             lastErr = -1
-            console.error('[index] 腾讯 POI 请求失败（完整错误 keyword=', SEARCH_KEYWORDS[index], '）', err)
+            console.error('[index] 腾讯 POI 请求失败（完整错误 keyword=', keywords[index], '）', err)
             runKeyword(index + 1)
           }
         })
@@ -739,10 +744,12 @@ Page({
       }
       // 多关键词轮询：百度 query 单次只支持一个词，逐词查询后按「同名 50 米」去重合并
       const all = []
+      // 百度为主流查询：按配置查全 6 词，提升召回
+      const keywords = SEARCH_KEYWORDS.slice(0, SOURCE_KEYWORD_COUNT.baidu)
       let anySuccess = false
       let lastErr = 0
       const runKeyword = (index) => {
-        if (index >= SEARCH_KEYWORDS.length) {
+        if (index >= keywords.length) {
           const list = this.dedupeToilets(all)
           if (list.length > 0 || anySuccess) {
             resolve({ ok: true, errCode: 0, list })
@@ -755,7 +762,7 @@ Page({
           url: BAIDU_SEARCH_URL,
           // 百度 place/v2/search：location 传 纬度,经度；radius 米；filter 按距离排序
           data: {
-            query: SEARCH_KEYWORDS[index],
+            query: keywords[index],
             location: latitude + ',' + longitude,
             radius: radius,
             output: 'json',
@@ -770,7 +777,7 @@ Page({
             if (String(body.status) === '0') {
               anySuccess = true
               // 打印百度接口原始返回数据，便于调试
-              console.log('[index] 百度接口原始返回数据（status=0 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+              console.log('[index] 百度接口原始返回数据（status=0 keyword=', keywords[index], '）', JSON.stringify(body))
               const results = Array.isArray(body.results) ? body.results : []
               all.push(...results.map((item) => {
                 const loc = item.location || {}
@@ -790,7 +797,7 @@ Page({
             const errCode = body.status
             lastErr = errCode
             // 打印完整返回体，方便定位 Key/配额/参数问题
-            console.error('[index] 百度 POI 查询失败（完整返回 keyword=', SEARCH_KEYWORDS[index], '）', JSON.stringify(body))
+            console.error('[index] 百度 POI 查询失败（完整返回 keyword=', keywords[index], '）', JSON.stringify(body))
             if (String(errCode) === '302' || String(errCode) === '402') {
               baiduQuotaExhausted = true
               baiduQuotaExhaustedDate = today
@@ -806,7 +813,7 @@ Page({
           },
           fail: (err) => {
             lastErr = -1
-            console.error('[index] 百度 POI 请求失败（完整错误 keyword=', SEARCH_KEYWORDS[index], '）', err)
+            console.error('[index] 百度 POI 请求失败（完整错误 keyword=', keywords[index], '）', err)
             runKeyword(index + 1)
           }
         })

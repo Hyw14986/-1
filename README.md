@@ -94,7 +94,7 @@
 - **天地图**：Key 类型必须为「服务端」，存放在云函数 `searchTiandituPoi/index.js` 顶部 `TIANDITU_KEY`（已填入 `efac1d7241be6075e3b3a653e0acdc69`）。小程序客户端直连会被天地图识别为浏览器端访问，使用服务端 Key 会报 403（code 301013 权限类型错误），因此必须经该云函数代理查询；在开发者工具中部署 `searchTiandituPoi` 后前端自动生效，未部署时静默跳过该源
   - 天地图坐标基准为 CGCS2000（≈WGS-84），云函数内置 `wgs84ToGcj02` 自动转 GCJ-02；周边搜索走 `v2/search` 接口（旧版 `/search` 已失效返回 404，必须用 v2）`queryType=3`（pointLonlat + queryRadius），按天配额有限，当日用尽自动跳过；云函数出网不受小程序 request 合法域名白名单限制
 - **OSM**：部署 `fetchOsmToilet` 云函数后自动生效，无需 Key；未部署时前端静默跳过
-- **多关键词**：四个地图源均按 `公共厕所 / 公厕 / 卫生间 / 洗手间 / 公共卫生间 / 旅游厕所` 多词逐词查询后合并去重（高德 `keywords` 用 `|` 一次传多词），显著提升召回率；各源遇到配额/限流类错误自动停止后续关键词，避免无效消耗
+- **多关键词**：四个地图源按 `公共厕所 / 公厕 / 卫生间 / 洗手间 / 公共卫生间 / 旅游厕所` 逐词查询后合并去重（高德 `keywords` 用 `|` 一次传多词）。**高德 / 百度设为主流查询**（全 6 词），腾讯配额紧张仅查 1 个主词，天地图全 6 词；可在 `pages/index/index.js` 顶部 `SOURCE_KEYWORD_COUNT` 调整每个数据源的查询强度，各源遇到配额/限流类错误自动停止后续关键词
 - **全源合规缓存**：任意地图服务商（tencent/amap/baidu/tianditu/osm）查询返回且处于红圈内的点位，都会经云函数 `saveTencentPoi`（历史命名，已支持全部来源）做 50 米同名去重后写入 `toiletAll`，跨用户共享、越用越多，减少后续 API 调用
 - **用户查找历史**：每次查询成功并扣减次数后，前端调用云函数 `saveSearchedToilets` 把本次圈内公厕记录到 `toilet_view_record` 集合（字段：openid、toiletId、name、lat/lng、source、createTime/lastSeenTime）；同一用户 + 同名 + 50 米内视为同一条，只更新时间不重复插入，单次最多记 50 条，便于后续「我的」页面展示个人查找历史
 
