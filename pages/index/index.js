@@ -18,7 +18,7 @@ const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 // 百度地图 Web 服务配置（第三备用数据源：腾讯/高德均失败或为空时启用）
 // 需在百度地图开放平台（https://lbsyun.baidu.com/）申请「服务端」类型 AK，
 // 并到微信公众平台把 https://api.map.baidu.com 加入 request 合法域名
-const BAIDU_AK = '请替换为你的百度地图服务端AK'
+const BAIDU_AK = 'JggVZQfYf3r0sklCquGHKUAWNfus2BbG'
 const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 
 // 定位失败兜底中心（广州珠江新城）
