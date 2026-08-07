@@ -11,6 +11,10 @@ const QQ_MAP_KEY = 'GEFBZ-6ZJK3-45U3Q-O4H6X-65A3K-NAFLU'
 const QQ_SEARCH_URL = 'https://apis.map.qq.com/ws/place/v1/search'
 const SEARCH_KEYWORD = '公共厕所'
 
+// 高德地图 Web 服务配置（备用数据源：腾讯失败/为空/额度耗尽时自动切换）
+const AMAP_KEY = '请替换为你的高德Web服务Key'
+const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
+
 // 定位失败兜底中心（广州珠江新城）
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 const LOCATE_TIMEOUT = 8000
@@ -19,6 +23,9 @@ const REQUEST_TIMEOUT = 8000
 // 腾讯 POI 当日额度耗尽标记（status=121）
 let poiQuotaExhausted = false
 let poiQuotaExhaustedDate = ''
+// 高德 POI 当日额度耗尽标记（infocode=10044）
+let amapQuotaExhausted = false
+let amapQuotaExhaustedDate = ''
 
 /**
  * 球面距离（haversine 公式，单位米）
@@ -306,19 +313,19 @@ Page({
       console.error('[index] getNearToilet 调用异常 errCode=', (err && err.errCode) || 'N/A', '| errMsg=', (err && err.errMsg) || (err && err.message) || 'N/A')
     }
 
-    // 2. 腾讯 place 接口（始终发起，带超时；失败不阻断整体查询，只轻提示）
-    const poiRes = await this.searchTencentPoi(latitude, longitude, selectedRadius)
-    const tencentOk = poiRes.ok
+    // 2. 周边 POI：腾讯优先，失败/为空/额度耗尽时自动切高德备用（失败不阻断整体查询，只轻提示）
+    const poiRes = await this.searchPoiWithFallback(latitude, longitude, selectedRadius)
+    const poiOk = poiRes.ok
     const poiList = poiRes.list || []
-    console.log('[index] 腾讯接口返回（ok=', tencentOk, 'errCode=', poiRes.errCode, '原始点位=', poiList.length, '）完整信息=', JSON.stringify(poiRes))
+    console.log('[index] 周边POI返回（provider=', poiRes.provider, 'ok=', poiOk, 'errCode=', poiRes.errCode, '原始点位=', poiList.length, '）完整信息=', JSON.stringify(poiRes))
 
     // 3. 球面距离二次过滤：只保留红圈内点位；非法/NaN 数值单独丢弃，防止误过滤全部有效点位
     let filtered = []
-    if (tencentOk && poiList.length) {
+    if (poiOk && poiList.length) {
       for (const p of poiList) {
         // 边界校验：非法坐标直接丢弃并记录，避免污染过滤结果
         if (!p || !isFinite(Number(p.lat)) || !isFinite(Number(p.lng)) || !isValidCoordinate(Number(p.lat), Number(p.lng))) {
-          console.warn('[index] 过滤丢弃非法坐标腾讯点位：', p && p.name, p && p.lat, p && p.lng)
+          console.warn('[index] 过滤丢弃非法坐标POI点位：', p && p.name, p && p.lat, p && p.lng)
           continue
         }
         const lat = Number(p.lat)
@@ -331,7 +338,7 @@ Page({
         if (dist <= selectedRadius) {
           filtered.push({ ...p, lat, lng })
         } else {
-          console.log('[index] 过滤丢弃腾讯点位：', p.name, '距离=', Math.round(dist), '米，超出半径', selectedRadius, '米')
+          console.log('[index] 过滤丢弃POI点位：', p.name, '距离=', Math.round(dist), '米，超出半径', selectedRadius, '米')
         }
       }
       console.log('[index] 距离过滤后最终有效点位数量=', filtered.length)
@@ -346,8 +353,8 @@ Page({
 
     if (!dbOk) {
       // 数据库云函数异常
-      if (tencentOk && filtered.length > 0) {
-        // 数据库异常但腾讯有数据：展示腾讯点位，本次不消耗次数
+      if (poiOk && filtered.length > 0) {
+        // 数据库异常但地图接口有数据：展示地图点位，本次不消耗次数
         toilets = filtered.slice()
         toastText = '数据库服务异常，仅展示地图服务商点位'
         shouldConsume = false
@@ -359,14 +366,16 @@ Page({
       }
     } else {
       // 数据库查询成功（正常消耗次数）
-      if (tencentOk && filtered.length > 0) {
-        // 情况1：腾讯正常返回 POI，合并数据库点位与腾讯点位
+      if (poiOk && filtered.length > 0) {
+        // 情况1：地图接口正常返回 POI，合并数据库点位与 POI 点位（仅腾讯来源回写缓存）
         toilets = near.concat(filtered)
-        this.saveTencentPois(filtered)
+        if (poiRes.provider === 'tencent') {
+          this.saveTencentPois(filtered)
+        }
       } else if (near.length > 0) {
         // 情况2：腾讯报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
         toilets = near.slice()
-        if (!tencentOk) {
+        if (!poiOk) {
           toastText = '地图服务商暂时异常，仅展示用户上报的厕所点位'
         } else if (poiRes.errCode === 121) {
           toastText = '今日官方公厕查询额度已用尽，仅展示用户上报的厕所点位'
@@ -375,7 +384,7 @@ Page({
         // 情况4：数据库无数据 && 腾讯无数据（或腾讯也失败）→ 空状态弹窗
         toilets = []
         showEmpty = true
-        if (!tencentOk) {
+        if (!poiOk) {
           toastText = '地图服务商暂时异常，仅展示用户上报的厕所点位'
         }
       }
@@ -489,7 +498,8 @@ Page({
                 name: item.title || '公共厕所',
                 address: item.address || '',
                 lat: item.location && item.location.lat,
-                lng: item.location && item.location.lng
+                lng: item.location && item.location.lng,
+                source: 'tencent'
               })).filter((p) => isValidCoordinate(p.lat, p.lng))
             })
             return
@@ -511,6 +521,104 @@ Page({
         }
       })
     })
+  },
+
+  /**
+   * 高德 POI 周边搜索（v3/place/around，备用数据源）
+   * 坐标：高德返回 GCJ-02（location 格式为 经度,纬度），与小程序地图一致
+   * 返回 { ok, list, errCode }：
+   *  - ok=true   查询成功
+   *  - ok=false  接口报错/网络异常/未配置 Key（完整错误已打印到控制台）
+   */
+  searchAmapPoi(latitude, longitude, radius) {
+    return new Promise((resolve) => {
+      const today = new Date().toDateString()
+      if (amapQuotaExhaustedDate !== today) {
+        amapQuotaExhausted = false
+        amapQuotaExhaustedDate = today
+      }
+      if (amapQuotaExhausted) {
+        console.log('[index] 高德 POI 当日额度已用尽，跳过高德查询')
+        resolve({ ok: false, list: [], errCode: 10044, quotaExhausted: true })
+        return
+      }
+      if (!AMAP_KEY || AMAP_KEY.indexOf('请替换') === 0) {
+        console.warn('[index] 未配置 AMAP_KEY，跳过高德查询')
+        resolve({ ok: false, list: [], errCode: -2 })
+        return
+      }
+      wx.request({
+        url: AMAP_SEARCH_URL,
+        // 高德 place/around：location 传 经度,纬度；keywords 周边关键词；radius 米
+        data: {
+          key: AMAP_KEY,
+          location: longitude + ',' + latitude,
+          keywords: SEARCH_KEYWORD,
+          radius: radius,
+          offset: 25,
+          page: 1,
+          extensions: 'base',
+          sortrule: 'distance'
+        },
+        timeout: REQUEST_TIMEOUT,
+        success: (res) => {
+          const body = res.data || {}
+          if (String(body.status) === '1') {
+            // 打印高德接口原始返回数据，便于调试
+            console.log('[index] 高德接口原始返回数据（status=1）', JSON.stringify(body))
+            const pois = Array.isArray(body.pois) ? body.pois : []
+            resolve({
+              ok: true,
+              errCode: 0,
+              list: pois.map((item) => {
+                const loc = String(item.location || '').split(',')
+                return {
+                  name: item.name || '公共厕所',
+                  address: item.address || '',
+                  lat: parseFloat(loc[1]),
+                  lng: parseFloat(loc[0]),
+                  source: 'amap'
+                }
+              }).filter((p) => isValidCoordinate(p.lat, p.lng))
+            })
+            return
+          }
+          const infocode = body.infocode || 'unknown'
+          // 打印完整返回体，方便定位 Key/配额/参数问题
+          console.error('[index] 高德 POI 查询失败（完整返回）', JSON.stringify(body))
+          if (infocode === '10044') {
+            amapQuotaExhausted = true
+            amapQuotaExhaustedDate = today
+            console.error('[index] 高德地图周边搜索当日配额已用尽（infocode=10044）')
+          }
+          if (infocode === '10045') console.error('[index] 高德 QPS 超限（infocode=10045）')
+          if (infocode === '10001') console.error('[index] 高德 Key 无效，请核对高德 Web 服务 Key')
+          resolve({ ok: false, list: [], errCode: infocode })
+        },
+        fail: (err) => {
+          console.error('[index] 高德 POI 请求失败（完整错误）', err)
+          resolve({ ok: false, list: [], errCode: -1 })
+        }
+      })
+    })
+  },
+
+  /**
+   * 周边 POI 双源降级：腾讯优先，失败/为空/额度耗尽时切高德
+   * 返回 { ok, list, errCode, provider }：provider = tencent | amap
+   */
+  async searchPoiWithFallback(latitude, longitude, radius) {
+    const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
+    if (tencentRes.ok && (tencentRes.list || []).length > 0) {
+      return { ...tencentRes, provider: 'tencent' }
+    }
+    // 腾讯失败/为空/额度耗尽 → 高德备用
+    const amapRes = await this.searchAmapPoi(latitude, longitude, radius)
+    if (amapRes.ok && (amapRes.list || []).length > 0) {
+      return { ...amapRes, provider: 'amap' }
+    }
+    // 双源均无数据：保留腾讯结果状态（ok 原样），附上高德错误码便于排查
+    return { ...tencentRes, provider: 'tencent', amapErrCode: amapRes.errCode }
   },
 
   /**
