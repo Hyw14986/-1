@@ -26,6 +26,8 @@ function toAllSchema(t) {
   return {
     lat: t.latitude,
     lng: t.longitude,
+    // 地理位置字段：配合 loc 2dsphere 索引供 geoNear 使用（见 getNearToilet 顶部注释）
+    loc: db.Geo.Point(t.longitude, t.latitude),
     name: t.name,
     address: t.address || '',
     source: 'gov',

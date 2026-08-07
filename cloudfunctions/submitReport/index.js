@@ -52,6 +52,8 @@ exports.main = async (event) => {
     data: {
       lat,
       lng,
+      // 地理位置字段：配合 loc 2dsphere 索引供 geoNear 使用（见 getNearToilet 顶部注释）
+      loc: db.Geo.Point(lng, lat),
       name,
       address: String((event && event.address) || ''),
       source: 'user',

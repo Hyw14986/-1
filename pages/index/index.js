@@ -230,7 +230,7 @@ Page({
     // 经纬度校验：无效直接提示开启定位权限，不发起任何请求
     if (!isValidCoordinate(latitude, longitude)) {
       console.error('[index] 经纬度无效，拒绝发起查询', latitude, longitude)
-      wx.showToast({ title: '获取定位失败，请开启位置权限', icon: 'none' })
+      wx.showToast({ title: '获取定位失败，请开启手机定位权限', icon: 'none' })
       return
     }
     if (remaining <= 0) {
@@ -270,7 +270,7 @@ Page({
    *  - 情况3：数据库云函数失败 && 腾讯也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数
    *  - 情况4：数据库无数据 && 腾讯无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」
    * 次数规则：只要自有数据库查询成功即消耗 1 次并写查询记录；仅数据库云函数本身异常才不消耗次数
-   * 注意：toiletAll 必须创建 lat/lng 的 2dsphere 地理位置索引（见 cloudfunctions/getNearToilet/index.js 顶部注释）
+   * 注意：toiletAll 必须建立 loc 字段 2dsphere 地理位置索引（写入时需带 loc: db.Geo.Point(lng, lat)，见 cloudfunctions/getNearToilet/index.js 顶部注释）；未建索引时 getNearToilet 已内置 JS 距离过滤降级，不会误判查询失败
    */
   async loadToiletData() {
     const { latitude, longitude, selectedRadius } = this.data
@@ -278,7 +278,7 @@ Page({
     // 0. geoNear 查询前校验经纬度
     if (!isValidCoordinate(latitude, longitude)) {
       console.error('[index] 经纬度无效，无法发起 geoNear 查询', latitude, longitude)
-      wx.showToast({ title: '获取定位失败，请开启位置权限', icon: 'none' })
+      wx.showToast({ title: '获取定位失败，请开启手机定位权限', icon: 'none' })
       this.setData({ loading: false })
       return
     }
@@ -295,13 +295,15 @@ Page({
       if (r.code === 0) {
         dbOk = true
         near = Array.isArray(r.list) ? r.list : []
-        console.log('[index] 自有数据库返回点位数量=', near.length, '| 点位=', near.map((t) => t.name + '(' + t.distance + 'm)').join(', '))
+        console.log('[index] 自有数据库返回点位数量=', near.length, '| 降级模式=', !!r.fallback, '| 点位=', near.map((t) => t.name + '(' + t.distance + 'm)').join(', '))
       } else {
-        // 常见原因：toiletAll 未创建 / 未建 2dsphere 索引 / 权限异常，完整返回打印到控制台
-        console.error('[index] getNearToilet 返回错误（完整返回），请检查 toiletAll 2dsphere 索引', JSON.stringify(r))
+        // 云函数正常调用但返回业务错误（入参缺失/集合不存在/索引缺失等），打印错误码与错误信息
+        console.error('[index] getNearToilet 返回错误 errCode=', r.code, '| errMsg=', r.msg, '| 完整返回=', JSON.stringify(r), '| 请检查 toiletAll.loc 2dsphere 索引')
       }
     } catch (err) {
-      console.error('[index] getNearToilet 调用异常（云函数未部署或网络异常，完整错误）', err)
+      // 调用异常（云函数未部署/网络异常）：打印完整错误对象 + 错误码/错误信息，方便定位问题
+      console.error('[index] getNearToilet 调用异常（完整错误对象）', err)
+      console.error('[index] getNearToilet 调用异常 errCode=', (err && err.errCode) || 'N/A', '| errMsg=', (err && err.errMsg) || (err && err.message) || 'N/A')
     }
 
     // 2. 腾讯 place 接口（始终发起，带超时；失败不阻断整体查询，只轻提示）
