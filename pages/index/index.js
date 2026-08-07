@@ -526,6 +526,8 @@ Page({
   /**
    * 高德 POI 周边搜索（v3/place/around，备用数据源）
    * 坐标：高德返回 GCJ-02（location 格式为 经度,纬度），与小程序地图一致
+   * 搜索策略：优先按分类 200300（公共设施;公共厕所）搜索（召回比单关键词更全），
+   *          分类无结果时回退多关键词搜索兜底（公共厕所|公厕|卫生间|洗手间）
    * 返回 { ok, list, errCode }：
    *  - ok=true   查询成功
    *  - ok=false  接口报错/网络异常/未配置 Key（完整错误已打印到控制台）
@@ -547,62 +549,78 @@ Page({
         resolve({ ok: false, list: [], errCode: -2 })
         return
       }
-      wx.request({
-        url: AMAP_SEARCH_URL,
-        // 高德 place/around：location 传 经度,纬度；keywords 周边关键词；radius 米
-        data: {
-          key: AMAP_KEY,
-          location: longitude + ',' + latitude,
-          keywords: SEARCH_KEYWORD,
-          radius: radius,
-          offset: 25,
-          page: 1,
-          extensions: 'base',
-          sortrule: 'distance'
-        },
-        timeout: REQUEST_TIMEOUT,
-        success: (res) => {
-          const body = res.data || {}
-          if (String(body.status) === '1') {
-            // 打印高德接口原始返回数据，便于调试
-            console.log('[index] 高德接口原始返回数据（status=1）', JSON.stringify(body))
-            const pois = Array.isArray(body.pois) ? body.pois : []
-            resolve({
-              ok: true,
-              errCode: 0,
-              list: pois.map((item) => {
-                const loc = String(item.location || '').split(',')
-                return {
-                  name: item.name || '公共厕所',
-                  address: item.address || '',
-                  lat: parseFloat(loc[1]),
-                  lng: parseFloat(loc[0]),
-                  source: 'amap'
-                }
-              }).filter((p) => isValidCoordinate(p.lat, p.lng))
-            })
-            return
-          }
-          const infocode = body.infocode || 'unknown'
-          // 打印完整返回体，方便定位 Key/配额/参数问题
-          console.error('[index] 高德 POI 查询失败（完整返回）', JSON.stringify(body))
-          if (infocode === '10044') {
-            amapQuotaExhausted = true
-            amapQuotaExhaustedDate = today
-            console.error('[index] 高德地图周边搜索当日配额已用尽（infocode=10044）')
-          }
-          if (infocode === '10045') console.error('[index] 高德 QPS 超限（infocode=10045）')
-          if (infocode === '10001') console.error('[index] 高德 Key 无效，请核对高德 Web 服务 Key')
-          resolve({ ok: false, list: [], errCode: infocode })
-        },
-        fail: (err) => {
-          console.error('[index] 高德 POI 请求失败（完整错误）', err)
-          resolve({ ok: false, list: [], errCode: -1 })
+      // 优先分类搜索：200300 = 公共设施;公共厕所，覆盖各种命名的公厕点位
+      this.amapRequest(latitude, longitude, radius, { types: '200300' }, (res) => {
+        if (res.ok && res.list.length > 0) {
+          resolve(res)
+          return
         }
+        // 分类搜索无结果：回退多关键词兜底，避免漏掉名称匹配但未标注分类的点位
+        this.amapRequest(latitude, longitude, radius, { keywords: '公共厕所|公厕|卫生间|洗手间' }, resolve)
       })
     })
   },
 
+  /**
+   * 高德 place/around 单次请求封装（不单独计数配额，由 searchAmapPoi 控制）
+   * 返回 { ok, list, errCode }，list 已映射 name/address/lat/lng/source 并过滤非法坐标
+   */
+  amapRequest(latitude, longitude, radius, extraParams, callback) {
+    wx.request({
+      url: AMAP_SEARCH_URL,
+      // 高德 place/around：location 传 经度,纬度；radius 米；extraParams 传 types 或 keywords
+      data: {
+        key: AMAP_KEY,
+        location: longitude + ',' + latitude,
+        radius: radius,
+        offset: 25,
+        page: 1,
+        extensions: 'base',
+        sortrule: 'distance',
+        ...extraParams
+      },
+      timeout: REQUEST_TIMEOUT,
+      success: (res) => {
+        const body = res.data || {}
+        if (String(body.status) === '1') {
+          // 打印高德接口原始返回数据，便于调试
+          console.log('[index] 高德接口原始返回数据（status=1 参数=', JSON.stringify(extraParams), '）', JSON.stringify(body))
+          const pois = Array.isArray(body.pois) ? body.pois : []
+          callback({
+            ok: true,
+            errCode: 0,
+            list: pois.map((item) => {
+              const loc = String(item.location || '').split(',')
+              return {
+                name: item.name || '公共厕所',
+                address: item.address || '',
+                lat: parseFloat(loc[1]),
+                lng: parseFloat(loc[0]),
+                source: 'amap'
+              }
+            }).filter((p) => isValidCoordinate(p.lat, p.lng))
+          })
+          return
+        }
+        const infocode = body.infocode || 'unknown'
+        const today = new Date().toDateString()
+        // 打印完整返回体，方便定位 Key/配额/参数问题
+        console.error('[index] 高德 POI 查询失败（完整返回 参数=', JSON.stringify(extraParams), '）', JSON.stringify(body))
+        if (infocode === '10044') {
+          amapQuotaExhausted = true
+          amapQuotaExhaustedDate = today
+          console.error('[index] 高德地图周边搜索当日配额已用尽（infocode=10044）')
+        }
+        if (infocode === '10045') console.error('[index] 高德 QPS 超限（infocode=10045）')
+        if (infocode === '10001') console.error('[index] 高德 Key 无效，请核对高德 Web 服务 Key')
+        callback({ ok: false, list: [], errCode: infocode })
+      },
+      fail: (err) => {
+        console.error('[index] 高德 POI 请求失败（完整错误 参数=', JSON.stringify(extraParams), '）', err)
+        callback({ ok: false, list: [], errCode: -1 })
+      }
+    })
+  },
   /**
    * 周边 POI 双源降级：腾讯优先，失败/为空/额度耗尽时切高德
    * 返回 { ok, list, errCode, provider }：provider = tencent | amap
