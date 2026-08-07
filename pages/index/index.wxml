@@ -71,6 +71,7 @@
         <text class="tag tag-source" wx:if="{{selectedMarker.source === 'gov'}}">政府导入</text>
         <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'user'}}">用户上报</text>
         <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'tencent'}}">腾讯POI</text>
+<text class="tag tag-source" wx:elif="{{selectedMarker.source === 'osm'}}">开放地图</text>
         <text class="tag" wx:if="{{selectedMarker.hasPaper}}">有纸</text>
         <text class="tag" wx:if="{{selectedMarker.isBarrierFree}}">无障碍</text>
       </view>
@@ -101,6 +102,7 @@
             <text class="tag" wx:if="{{item.source === 'gov'}}">政府导入</text>
             <text class="tag" wx:elif="{{item.source === 'user'}}">用户上报</text>
             <text class="tag" wx:elif="{{item.source === 'tencent'}}">腾讯POI</text>
+<text class="tag" wx:elif="{{item.source === 'osm'}}">开放地图</text>
             <text class="tag" wx:if="{{item.hasPaper}}">有纸</text>
             <text class="tag" wx:if="{{item.isBarrierFree}}">无障碍</text>
             <text class="tag" wx:if="{{item.hasBabyRoom}}">母婴室</text>
@@ -142,6 +144,7 @@
         <text class="tag tag-source" wx:if="{{selectedToilet.source === 'gov'}}">政府导入</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'user'}}">用户上报</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'tencent'}}">腾讯POI</text>
+<text class="tag tag-source" wx:elif="{{selectedToilet.source === 'osm'}}">开放地图</text>
         <text class="tag" wx:if="{{selectedToilet.hasPaper}}">🧻 有纸</text>
         <text class="tag" wx:if="{{selectedToilet.isBarrierFree}}">♿ 无障碍</text>
         <text class="tag" wx:if="{{selectedToilet.hasBabyRoom}}">🍼 母婴室</text>
