@@ -21,6 +21,10 @@ const AMAP_SEARCH_URL = 'https://restapi.amap.com/v3/place/around'
 const BAIDU_AK = 'JggVZQfYf3r0sklCquGHKUAWNfus2BbG'
 const BAIDU_SEARCH_URL = 'https://api.map.baidu.com/place/v2/search'
 
+// 多源合并模式：true=每次查询并行调用腾讯/高德/百度并合并点位（点位最多，各源当日额度耗尽自动跳过）
+// false=降级链模式（腾讯→高德→百度→OSM，任一成功即停止，接口调用更省）
+const MERGE_ALL_PROVIDERS = true
+
 // 定位失败兜底中心（广州珠江新城）
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 const LOCATE_TIMEOUT = 8000
@@ -387,8 +391,10 @@ Page({
       if (poiOk && filtered.length > 0) {
         // 情况1：地图接口正常返回 POI，合并数据库点位与 POI 点位（仅腾讯来源回写缓存）
         toilets = near.concat(filtered)
-        if (poiRes.provider === 'tencent') {
-          this.saveTencentPois(filtered)
+        // 仅把腾讯来源的圈内点位回写缓存（合并模式下 filtered 混有其他服务商点位）
+        const tencentFiltered = filtered.filter((p) => p.source === 'tencent')
+        if (tencentFiltered.length > 0) {
+          this.saveTencentPois(tencentFiltered)
         }
       } else if (near.length > 0) {
         // 情况2：腾讯报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
@@ -752,6 +758,46 @@ Page({
    * 返回 { ok, list, errCode, provider }：provider = tencent | amap | baidu | osm
    */
   async searchPoiWithFallback(latitude, longitude, radius) {
+    // ===== 合并模式：并行查询腾讯/高德/百度，三源点位合并（点位最多）=====
+    if (MERGE_ALL_PROVIDERS) {
+      const [tencentRes, amapRes, baiduRes] = await Promise.all([
+        this.searchTencentPoi(latitude, longitude, radius),
+        this.searchAmapPoi(latitude, longitude, radius),
+        this.searchBaiduPoi(latitude, longitude, radius)
+      ])
+      const sources = [
+        { name: 'tencent', res: tencentRes },
+        { name: 'amap', res: amapRes },
+        { name: 'baidu', res: baiduRes }
+      ]
+      let merged = []
+      const okSources = []
+      const errCodes = {}
+      for (const s of sources) {
+        if (s.res.ok && (s.res.list || []).length > 0) {
+          merged = merged.concat(s.res.list)
+          okSources.push(s.name)
+        } else if (s.res.ok) {
+          console.log('[index] ' + s.name + ' 返回空点位，继续合并其他来源')
+        } else {
+          console.warn('[index] ' + s.name + ' 查询失败 errCode=', s.res.errCode)
+          errCodes[s.name + 'ErrCode'] = s.res.errCode
+        }
+      }
+      if (merged.length === 0) {
+        // 三源全部为空/失败 → OSM 云函数兜底（尽力而为，失败不影响主流程）
+        const osmRes = await this.fetchOsmToilet(latitude, longitude, radius)
+        if (osmRes.ok && (osmRes.list || []).length > 0) {
+          return { ...osmRes, provider: 'osm' }
+        }
+        // 全部无数据：ok=false 让上层按服务商异常处理（不阻断数据库点位渲染）
+        return { ok: false, list: [], provider: 'tencent+amap+baidu', errCode: -1, ...errCodes, osmErrCode: osmRes.errCode }
+      }
+      console.log('[index] 合并模式点位 provider=', okSources.join('+'), '原始点位=', merged.length)
+      return { ok: true, list: merged, errCode: 0, provider: okSources.join('+'), merged: true, ...errCodes }
+    }
+
+    // ===== 降级模式：任一服务商成功即停止，接口调用更省 =====
     const tencentRes = await this.searchTencentPoi(latitude, longitude, radius)
     if (tencentRes.ok && (tencentRes.list || []).length > 0) {
       return { ...tencentRes, provider: 'tencent' }

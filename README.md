@@ -86,7 +86,7 @@
 - 同时在小程序后台【开发管理 → 开发设置 → 服务器域名】的 request 合法域名中添加：`https://apis.map.qq.com`
 
 ### 7.5 配置高德 / 百度地图 Key（备用数据源，可选）
-周边 POI 查询为多源降级链：**腾讯 → 高德 → 百度 → OSM 兜底**，任一源失败/为空自动切换下一源，不影响整体查询与次数消耗。
+周边 POI 查询默认为**多源合并模式**（`MERGE_ALL_PROVIDERS=true`）：每次「开始寻找」并行调用腾讯 / 高德 / 百度并合并去重点位（点位最多），各源当日额度耗尽自动跳过；改为 `false` 则退化为降级链模式（腾讯→高德→百度→OSM，任一成功即停止，更省接口配额）。任一源失败/为空都不影响整体查询与次数消耗。
 
 - **高德**：`pages/index/index.js` 顶部 `AMAP_KEY` 已填入 Key（`5ad7207ca36306e6559d30ed02ef37bc`）。额度不足时到 [高德开放平台](https://console.amap.com/) 申请「Web服务」Key 并替换；request 合法域名需添加 `https://restapi.amap.com`
 - **百度**：`pages/index/index.js` 顶部 `BAIDU_AK` 当前为占位符，需到 [百度地图开放平台](https://lbsyun.baidu.com/) 控制台 → 应用管理 → 创建应用，类型选「服务端」，获取 AK 后填入；同时在小程序后台 request 合法域名添加 `https://api.map.baidu.com`
