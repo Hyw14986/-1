@@ -121,20 +121,24 @@ async function batchInsert(records, existing, concurrency) {
   return { inserted, skipped, failed }
 }
 
-exports.main = async () => {
+exports.main = async (event = {}) => {
   const start = Date.now()
+  // 支持分批导入：云端测试参数可传 { start: 0, limit: 8000 }，超时后可分片续导（幂等，重复执行不产生重复数据）
+  const startIdx = Math.max(0, Number(event.start) || 0)
+  const limit = Math.max(0, Number(event.limit) || 0)
+  const batch = limit > 0 ? TOILETS.slice(startIdx, startIdx + limit) : TOILETS
   // 按来源分组统计
   const bySource = {}
-  for (const r of TOILETS) bySource[r.source] = (bySource[r.source] || 0) + 1
-  console.log('[importCityToilets] 待导入', TOILETS.length, '条', JSON.stringify(bySource))
+  for (const r of batch) bySource[r.source] = (bySource[r.source] || 0) + 1
+  console.log('[importCityToilets] 待导入', batch.length, '条（区间', startIdx, '-', startIdx + batch.length, '/', TOILETS.length, '）', JSON.stringify(bySource))
   const existing = await loadAllExisting()
   console.log('[importCityToilets] 库内现有记录', existing.length, '条，开始去重导入')
-  const { inserted, skipped, failed } = await batchInsert(TOILETS, existing, 8)
+  const { inserted, skipped, failed } = await batchInsert(batch, existing, 8)
   const used = Date.now() - start
   return {
     code: 0,
     msg: `导入完成：新增 ${inserted}，跳过 ${skipped}（已存在/非法），失败 ${failed}，耗时 ${used}ms`,
-    total: TOILETS.length,
+    total: batch.length,
     inserted,
     skipped,
     failed
