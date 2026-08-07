@@ -123,7 +123,7 @@
     <view class="empty-modal" catchtap="noop">
       <view class="empty-modal-icon">🚻</view>
       <view class="empty-modal-title">附近暂未找到公厕</view>
-      <view class="empty-modal-sub">试试扩大查询半径，或者上报新厕所</view>
+      <view class="empty-modal-sub">试试扩大半径或上报新点位</view>
       <view class="empty-modal-actions">
         <view class="empty-modal-btn empty-primary" hover-class="hover" bindtap="expandRadius">🔍 扩大查询半径</view>
         <view class="empty-modal-btn" hover-class="hover" bindtap="goReportFromEmpty">📮 上报厕所</view>

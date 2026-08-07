@@ -251,13 +251,15 @@ Page({
   },
 
   /**
-   * 加载圈内公厕（完整查询流程）：
-   * 0. geoNear 前校验经纬度有效（定位为空直接提示，不发请求）
-   * 1. getNearToilet 查 toiletAll 自有库
-   *    注意：toiletAll 必须创建 lat/lng 的 2dsphere 地理位置索引（见 cloudfunctions/getNearToilet/index.js 顶部注释），否则 geoNear 返回错误
-   * 2. 自有库 ≤2 条时降级调用腾讯 place/v1/search，并做球面距离二次过滤（丢弃点位打印距离）
-   * 3. 分支：①库有数据+腾讯失败→仅展示本地库；②库空+腾讯有数据→正常渲染；③两边无数据→空状态弹窗；④接口异常→不扣次数
-   * 4. 整套查询成功才消耗 1 次次数并写查询记录
+   * 加载圈内公厕（完整查询流程，容错重构）：
+   * 执行顺序：① getNearToilet 读自有库 → ② 腾讯 place 接口（带超时）
+   * 分支：
+   *  - 情况1：腾讯正常返回 POI → 合并过滤数据库点位与腾讯点位
+   *  - 情况2：腾讯报错/超时/返回空 → 不判定整体失败，保留数据库点位继续渲染，toast「地图服务商暂时异常，仅展示用户上报的厕所点位」
+   *  - 情况3：数据库云函数失败 && 腾讯也失败 → 弹窗「查询失败，本次未消耗次数，请稍后重试」，不扣次数
+   *  - 情况4：数据库无数据 && 腾讯无数据 → 空状态弹窗「附近暂未找到公厕，试试扩大半径或上报新点位」
+   * 次数规则：只要自有数据库查询成功即消耗 1 次并写查询记录；仅数据库云函数本身异常才不消耗次数
+   * 注意：toiletAll 必须创建 lat/lng 的 2dsphere 地理位置索引（见 cloudfunctions/getNearToilet/index.js 顶部注释）
    */
   async loadToiletData() {
     const { latitude, longitude, selectedRadius } = this.data
@@ -282,7 +284,7 @@ Page({
       if (r.code === 0) {
         dbOk = true
         near = Array.isArray(r.list) ? r.list : []
-        console.log('[index] 自有数据库返回列表长度=', near.length, '| 点位=', near.map((t) => t.name + '(' + t.distance + 'm)').join(', '))
+        console.log('[index] 自有数据库返回点位数量=', near.length, '| 点位=', near.map((t) => t.name + '(' + t.distance + 'm)').join(', '))
       } else {
         // 常见原因：toiletAll 未创建 / 未建 2dsphere 索引 / 权限异常，完整返回打印到控制台
         console.error('[index] getNearToilet 返回错误（完整返回），请检查 toiletAll 2dsphere 索引', JSON.stringify(r))
@@ -291,63 +293,92 @@ Page({
       console.error('[index] getNearToilet 调用异常（云函数未部署或网络异常，完整错误）', err)
     }
 
-    // 2. 降级：自有库 ≤2 条时调用腾讯 place/v1/search
-    let tencentTried = false
-    let tencentOk = true
-    let poiList = []
-    if (near.length <= 2) {
-      tencentTried = true
-      const poiRes = await this.searchTencentPoi(latitude, longitude, selectedRadius)
-      tencentOk = poiRes.ok
-      poiList = poiRes.list || []
-      console.log('[index] 腾讯接口原始返回点位数量=', poiList.length, '| ok=', tencentOk)
-    }
+    // 2. 腾讯 place 接口（始终发起，带超时；失败不阻断整体查询，只轻提示）
+    const poiRes = await this.searchTencentPoi(latitude, longitude, selectedRadius)
+    const tencentOk = poiRes.ok
+    const poiList = poiRes.list || []
+    console.log('[index] 腾讯接口返回（ok=', tencentOk, 'errCode=', poiRes.errCode, '原始点位=', poiList.length, '）完整信息=', JSON.stringify(poiRes))
 
-    // 3. 球面距离二次过滤：只保留红圈内点位，被丢弃点位打印距离
+    // 3. 球面距离二次过滤：只保留红圈内点位；非法/NaN 数值单独丢弃，防止误过滤全部有效点位
     let filtered = []
     if (tencentOk && poiList.length) {
       for (const p of poiList) {
-        const dist = getDistance(latitude, longitude, p.lat, p.lng)
+        // 边界校验：非法坐标直接丢弃并记录，避免污染过滤结果
+        if (!p || !isFinite(Number(p.lat)) || !isFinite(Number(p.lng)) || !isValidCoordinate(Number(p.lat), Number(p.lng))) {
+          console.warn('[index] 过滤丢弃非法坐标腾讯点位：', p && p.name, p && p.lat, p && p.lng)
+          continue
+        }
+        const lat = Number(p.lat)
+        const lng = Number(p.lng)
+        const dist = getDistance(latitude, longitude, lat, lng)
+        if (!isFinite(dist)) {
+          console.warn('[index] 过滤丢弃距离计算异常点位：', p.name, '距离=', dist)
+          continue
+        }
         if (dist <= selectedRadius) {
-          filtered.push(p)
+          filtered.push({ ...p, lat, lng })
         } else {
           console.log('[index] 过滤丢弃腾讯点位：', p.name, '距离=', Math.round(dist), '米，超出半径', selectedRadius, '米')
         }
       }
-      console.log('[index] 球面距离过滤后圈内腾讯点位=', filtered.length)
+      console.log('[index] 距离过滤后最终有效点位数量=', filtered.length)
     }
 
-    // 4. 分支判定（细化）
-    const hasDb = dbOk && near.length > 0
-    const hasTencent = tencentOk && filtered.length > 0
+    // 4. 分支处理（容错）
     let toilets = []
     let toastText = ''
     let queryFail = false
+    let showEmpty = false
+    let shouldConsume = true
 
     if (!dbOk) {
-      // ④ 自有库接口异常（云函数异常/索引缺失/网络错误）
-      queryFail = true
-      toastText = '查询失败，本次未消耗次数，请稍后重试'
-    } else if (tencentTried && !tencentOk && !hasDb) {
-      // ④ 自有库为空且腾讯接口异常
-      queryFail = true
-      toastText = '查询失败，本次未消耗次数，请稍后重试'
-    } else if (tencentTried && !tencentOk && hasDb) {
-      // ① 自有库有数据，腾讯接口失败：仅展示本地库数据
-      toilets = near.slice()
-      toastText = '地图接口请求异常，仅展示本地库数据'
+      // 数据库云函数异常
+      if (tencentOk && filtered.length > 0) {
+        // 数据库异常但腾讯有数据：展示腾讯点位，本次不消耗次数
+        toilets = filtered.slice()
+        toastText = '数据库服务异常，仅展示地图服务商点位'
+        shouldConsume = false
+      } else {
+        // 情况3：数据库云函数失败 && 腾讯也失败 → 弹窗，不扣次数
+        queryFail = true
+        toastText = '查询失败，本次未消耗次数，请稍后重试'
+        shouldConsume = false
+      }
     } else {
-      // ②/正常：自有库数据 + 腾讯过滤后点位 合并渲染（腾讯返回空不判定失败，优先使用自有库数据）
-      toilets = near.concat(filtered)
-      if (filtered.length) this.saveTencentPois(filtered)
+      // 数据库查询成功（正常消耗次数）
+      if (tencentOk && filtered.length > 0) {
+        // 情况1：腾讯正常返回 POI，合并数据库点位与腾讯点位
+        toilets = near.concat(filtered)
+        this.saveTencentPois(filtered)
+      } else if (near.length > 0) {
+        // 情况2：腾讯报错/超时/返回空，保留数据库点位继续渲染（轻提示，不阻断）
+        toilets = near.slice()
+        if (!tencentOk) {
+          toastText = '地图服务商暂时异常，仅展示用户上报的厕所点位'
+        } else if (poiRes.errCode === 121) {
+          toastText = '今日官方公厕查询额度已用尽，仅展示用户上报的厕所点位'
+        }
+      } else {
+        // 情况4：数据库无数据 && 腾讯无数据（或腾讯也失败）→ 空状态弹窗
+        toilets = []
+        showEmpty = true
+        if (!tencentOk) {
+          toastText = '地图服务商暂时异常，仅展示用户上报的厕所点位'
+        }
+      }
     }
 
     if (queryFail) {
-      // 接口异常：不扣次数、不生成查询记录
+      // 情况3：弹窗提示，不扣次数、不生成查询记录
       this.setData({ allToilets: [] })
       this.renderToilets([])
-      wx.showToast({ title: toastText, icon: 'none' })
-      console.error('[index] 整套查询失败（未扣次数）', toastText)
+      console.error('[index] 整套查询失败（本次不消耗次数）', toastText)
+      wx.showModal({
+        title: '查询失败',
+        content: toastText,
+        showCancel: false,
+        confirmText: '知道了'
+      })
       return
     }
 
@@ -359,36 +390,40 @@ Page({
       wx.showToast({ title: toastText, icon: 'none' })
     }
 
-    // 5. 查询成功：消耗次数 → 写查询记录
-    try {
-      const quotaRes = await wx.cloud.callFunction({
-        name: 'quotaOperate',
-        data: { action: 'consume' }
-      })
-      const q = quotaRes.result || {}
-      if (q.code === 3) {
-        // 查询已完成但次数配额已用尽（如多端同时使用）
-        console.warn('[index] 查询完成但次数配额已用尽（完整返回）', JSON.stringify(q))
-        this.setData({ remaining: 0 })
-        wx.showToast({ title: '今日查询次数已用完，每日0点将会重置次数', icon: 'none' })
-        return
+    // 5. 次数消耗：数据库云函数正常即消耗 1 次并写查询记录；仅数据库异常不消耗
+    if (shouldConsume) {
+      try {
+        const quotaRes = await wx.cloud.callFunction({
+          name: 'quotaOperate',
+          data: { action: 'consume' }
+        })
+        const q = quotaRes.result || {}
+        if (q.code === 3) {
+          // 查询已完成但次数配额已用尽（如多端同时使用）
+          console.warn('[index] 查询完成但次数配额已用尽（完整返回）', JSON.stringify(q))
+          this.setData({ remaining: 0 })
+          wx.showToast({ title: '今日查询次数已用完，每日0点将会重置次数', icon: 'none' })
+          return
+        }
+        if (q.code !== 0) {
+          console.error('[index] 消耗次数返回错误（完整返回）', JSON.stringify(q))
+          wx.showToast({ title: q.msg || '次数扣减失败，请稍后重试', icon: 'none' })
+          return
+        }
+        this.setData({ remaining: q.remaining })
+        console.log('[index] 查询成功，已消耗 1 次，剩余', q.remaining, '/', q.dailyLimit)
+        this.addSearchRecord(toilets.length)
+      } catch (err) {
+        // 次数扣减失败：数据已展示，但未扣次数、不写查询记录
+        console.error('[index] 消耗查询次数异常（查询已完成但未扣次数，完整错误）', err)
+        wx.showToast({ title: '查询已完成，次数同步失败，请检查网络', icon: 'none' })
       }
-      if (q.code !== 0) {
-        console.error('[index] 消耗次数返回错误（完整返回）', JSON.stringify(q))
-        wx.showToast({ title: q.msg || '次数扣减失败，请稍后重试', icon: 'none' })
-        return
-      }
-      this.setData({ remaining: q.remaining })
-      console.log('[index] 查询成功，已消耗 1 次，剩余', q.remaining, '/', q.dailyLimit)
-      this.addSearchRecord(toilets.length)
-    } catch (err) {
-      // 次数扣减失败：数据已展示，但未扣次数、不写查询记录
-      console.error('[index] 消耗查询次数异常（查询已完成但未扣次数，完整错误）', err)
-      wx.showToast({ title: '查询已完成，次数同步失败，请检查网络', icon: 'none' })
+    } else {
+      console.log('[index] 数据库云函数异常，本次不消耗查询次数')
     }
 
-    // 6. ③ 两边都无数据：空状态弹窗（扩大半径 / 上报厕所）
-    if (toilets.length === 0) {
+    // 6. 情况4：空状态弹窗（含扩大半径 / 上报厕所快捷按钮）
+    if (showEmpty) {
       this.showEmptyModal()
     }
   },
@@ -484,9 +519,19 @@ Page({
   dedupeToilets(list) {
     const result = []
     for (const item of list) {
-      const dup = result.some((t) =>
-        t.name === item.name && getDistance(t.lat, t.lng, item.lat, item.lng) <= 50
-      )
+      // 非法坐标点位直接跳过，避免距离计算 NaN 影响去重
+      if (!item || !isValidCoordinate(item.lat, item.lng)) {
+        console.warn('[index] 去重跳过非法坐标点位：', item && item.name)
+        continue
+      }
+      let dup = false
+      for (const t of result) {
+        const dist = getDistance(t.lat, t.lng, item.lat, item.lng)
+        if (isFinite(dist) && t.name === item.name && dist <= 50) {
+          dup = true
+          break
+        }
+      }
       if (!dup) result.push(item)
     }
     return result
@@ -499,7 +544,16 @@ Page({
     const markers = []
     const { latitude, longitude, selectedRadius, filters } = this.data
     toilets.forEach((item, index) => {
+      // 边界校验：非法/NaN 坐标或距离不参与渲染，防止误过滤全部有效点位
+      if (!isValidCoordinate(item.lat, item.lng)) {
+        console.warn('[index] 丢弃非法坐标点位：', item.name, item.lat, item.lng)
+        return
+      }
       const dist = getDistance(latitude, longitude, item.lat, item.lng)
+      if (!isFinite(dist)) {
+        console.warn('[index] 丢弃距离计算异常点位：', item.name, '距离=', dist)
+        return
+      }
       if (dist > selectedRadius) {
         console.log('[index] 丢弃圈外点位：', item.name, '距离=', Math.round(dist), '米')
         return
