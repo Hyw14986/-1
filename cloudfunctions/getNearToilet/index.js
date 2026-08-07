@@ -17,6 +17,13 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
+const _ = db.command
+
+// 展示规则：invalid 不为 true（缺字段视为有效）且 auditStatus 为 'pass' 或字段缺失（兼容手动导入/旧数据缺字段；pending 待审核 / reject 驳回不展示）
+const visibleQuery = _.and([
+  { invalid: _.neq(true) },
+  _.or([{ auditStatus: 'pass' }, { auditStatus: _.exists(false) }])
+])
 
 // haversine 球面距离（米），供 JS 降级方案使用；入参非法返回 NaN，由 isFinite 兜底
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -68,7 +75,7 @@ exports.main = async (event) => {
         distanceField: 'distance',
         maxDistance: radius,
         spherical: true,
-        query: { invalid: false, auditStatus: 'pass' }
+        query: visibleQuery
       })
       .limit(100)
       .end()
@@ -87,7 +94,7 @@ exports.main = async (event) => {
   try {
     const res = await db
       .collection('toiletAll')
-      .where({ invalid: false, auditStatus: 'pass' })
+      .where(visibleQuery)
       .limit(1000)
       .get()
     const list = (res.data || [])
