@@ -174,10 +174,14 @@ Page({
         wx.showModal({
           title: '上报成功',
           content: '已提交审核，审核通过后将在附近厕所地图展示，感谢你的贡献！',
-          confirmText: '返回首页',
-          showCancel: false,
-          success: () => {
-            wx.switchTab({ url: '/pages/index/index' })
+          confirmText: '查看我的上报',
+          cancelText: '返回首页',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              wx.switchTab({ url: '/pages/profile/profile' })
+            } else {
+              wx.switchTab({ url: '/pages/index/index' })
+            }
           }
         })
       } else if (result.code === 2) {

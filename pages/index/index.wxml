@@ -1,4 +1,4 @@
-<!-- pages/index/index.wxml - 附近厕所主页面：半径选择 + 开始寻找 + 红色查询圈 + 圈内 marker + 底部统计/列表 + 详情弹窗 -->
+<!-- pages/index/index.wxml - 附近厕所主页面：半径选择(实时预览红圈) + 开始寻找 + 圈内 marker + 气泡卡片 + 底部统计/列表 + 详情弹窗 + 空状态弹窗 -->
 <view class="page">
 
   <!-- 顶部：标题 + 半径下拉 + 开始寻找 -->
@@ -9,9 +9,12 @@
         <view class="radius-select">半径: {{selectedRadius}}米 ▾</view>
       </picker>
       <text class="radius-text">查询范围:{{selectedRadius}}米</text>
-      <view class="start-btn {{loading ? 'disabled' : ''}}" hover-class="hover" bindtap="startSearch">开始寻找</view>
+      <view class="start-btn {{loading ? 'loading' : ''}}" hover-class="hover" bindtap="startSearch">{{loading ? '寻找中…' : '开始寻找'}}</view>
     </view>
-    <view class="quota-text">今日剩余查询次数：{{remaining}} /{{dailyLimit}}</view>
+    <!-- 剩余次数：≤5 橙色，0 红色，点击弹说明 -->
+    <view class="quota-text quota-{{remaining === 0 ? 'zero' : (remaining <= 5 ? 'warn' : 'normal')}}" bindtap="onQuotaTap">
+      今日剩余查询次数：{{remaining}} /{{dailyLimit}}
+    </view>
   </view>
 
   <!-- 定位失败提示条（可关闭，不遮挡地图） -->
@@ -25,12 +28,13 @@
     </view>
   </view>
 
-  <!-- 顶部筛选栏（仅对已获取圈内数据生效，不消耗查询次数） -->
+  <!-- 顶部筛选栏（仅对已获取圈内数据生效，不消耗查询次数）+ 一键重置 -->
   <view class="filter-bar">
     <view class="filter-chip {{filters.hasPaper ? 'active' : ''}}" data-key="hasPaper" bindtap="toggleFilter">🧻 有纸</view>
     <view class="filter-chip {{filters.barrierFree ? 'active' : ''}}" data-key="barrierFree" bindtap="toggleFilter">♿ 无障碍</view>
     <view class="filter-chip {{filters.babyRoom ? 'active' : ''}}" data-key="babyRoom" bindtap="toggleFilter">🍼 母婴室</view>
     <view class="filter-chip {{filters.open24h ? 'active' : ''}}" data-key="open24h" bindtap="toggleFilter">🌙 24小时</view>
+    <view class="filter-chip filter-reset" wx:if="{{filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h}}" bindtap="clearFilter">✕ 重置</view>
   </view>
 
   <!-- 地图卡片 -->
@@ -44,6 +48,7 @@
       circles="{{circles}}"
       show-location="{{locationReady}}"
       bindmarkertap="onMarkerTap"
+      bindtap="onMapTap"
     ></map>
 
     <!-- 未查询提示 -->
@@ -52,14 +57,40 @@
     <view class="map-tip" wx:if="{{loading}}">正在寻找附近的厕所…</view>
     <!-- 查询结果为空 -->
     <view class="map-tip map-tip-warn" wx:if="{{searched && !loading && !totalCount}}">附近暂未找到公厕，试试扩大半径或上报新点位</view>
+
+    <!-- 地图右下角定位按钮 -->
+    <view class="locate-fab" hover-class="hover" bindtap="relocate">📍</view>
+
+    <!-- marker 简易气泡卡片 -->
+    <view class="bubble-card" wx:if="{{markerBubble && selectedMarker}}" catchtap="noop">
+      <view class="bubble-head">
+        <view class="bubble-name">{{selectedMarker.name}}</view>
+        <view class="bubble-close" hover-class="hover" catchtap="onMapTap">✕</view>
+      </view>
+      <view class="bubble-tags">
+        <text class="tag tag-source" wx:if="{{selectedMarker.source === 'gov'}}">政府导入</text>
+        <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'user'}}">用户上报</text>
+        <text class="tag tag-source" wx:elif="{{selectedMarker.source === 'tencent'}}">腾讯POI</text>
+        <text class="tag" wx:if="{{selectedMarker.hasPaper}}">有纸</text>
+        <text class="tag" wx:if="{{selectedMarker.isBarrierFree}}">无障碍</text>
+      </view>
+      <view class="bubble-meta">⭐ {{selectedMarker.rating || '暂无'}} · 距您{{selectedMarker.distanceText}}</view>
+      <view class="bubble-actions">
+        <view class="bubble-btn bubble-primary" hover-class="hover" catchtap="viewDetailFromBubble">查看详情</view>
+        <view class="bubble-btn" hover-class="hover" catchtap="navFromBubble">🧭 导航</view>
+      </view>
+    </view>
   </view>
 
-  <!-- 底部卡片：统计 + 展开 -->
+  <!-- 底部卡片：统计 + 展开（0 个厕所时展开按钮置灰） -->
   <view class="bottom-card cute-card" wx:if="{{searched}}">
     <view class="bottom-head">
       <text class="bottom-count">在您附近找到 {{totalCount}} 个厕所</text>
-      <view class="expand-btn" hover-class="hover" bindtap="toggleList">{{showList ? '收起 ▴' : '展开 ▾'}}</view>
+      <view class="expand-btn {{totalCount === 0 ? 'disabled' : ''}}" hover-class="hover" bindtap="toggleList">{{showList ? '收起 ▴' : '展开 ▾'}}</view>
     </view>
+
+    <!-- 筛选无匹配提示 -->
+    <view class="filter-empty-tip" wx:if="{{filterEmpty}}">没有符合条件的公厕，试试重置筛选</view>
 
     <!-- 展开列表：按距离由近到远排序 -->
     <scroll-view class="toilet-list" scroll-y wx:if="{{showList}}">
@@ -85,6 +116,19 @@
   <view class="empty-state" wx:if="{{!searched}}">
     <text class="empty-icon">🚻</text>
     <text class="empty-text">选择查询范围，点击「开始寻找」查看附近公厕</text>
+  </view>
+
+  <!-- 0 结果空状态弹窗 -->
+  <view class="empty-modal-mask" wx:if="{{emptyModal}}" catchtap="closeEmptyModal">
+    <view class="empty-modal" catchtap="noop">
+      <view class="empty-modal-icon">🚻</view>
+      <view class="empty-modal-title">附近暂未找到公厕</view>
+      <view class="empty-modal-sub">试试扩大查询半径，或者上报新厕所</view>
+      <view class="empty-modal-actions">
+        <view class="empty-modal-btn empty-primary" hover-class="hover" bindtap="expandRadius">🔍 扩大查询半径</view>
+        <view class="empty-modal-btn" hover-class="hover" bindtap="goReportFromEmpty">📮 上报厕所</view>
+      </view>
+    </view>
   </view>
 
   <!-- 详情弹窗 -->

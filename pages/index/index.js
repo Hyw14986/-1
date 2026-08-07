@@ -1,7 +1,7 @@
 // pages/index/index.js - 附近厕所主页面
-// 核心交互：选择半径 → 点击【开始寻找】→ 渲染红色查询圈 → 加载圈内公厕
-// 次数规则：整套查询全部成功后才消耗 1 次查询次数并写查询记录；任一步失败不扣次数、不生成查询记录
-// 错误处理：所有云函数/地图接口异常均 console.error 打印完整错误对象，便于调试
+// 核心交互：选择半径（实时预览红圈）→ 点击【开始寻找】→ 渲染红圈 → 加载圈内公厕 → 整套查询成功后才消耗次数并写记录
+// 查询分支：①库有数据+腾讯失败→仅展示本地库；②库空+腾讯有数据→正常渲染腾讯POI；③两边无数据→空状态弹窗；④接口异常→不扣次数提示重试
+// 错误处理：所有云函数/地图接口异常均 console.error 打印完整错误对象；球面距离过滤被丢弃点位打印距离，便于排查误过滤
 // 数据源：toiletAll 自有库（gov/user/tencent 缓存）+ 腾讯 POI 降级补充
 const app = getApp()
 const util = require('../../utils/util.js')
@@ -20,7 +20,10 @@ const REQUEST_TIMEOUT = 8000
 let poiQuotaExhausted = false
 let poiQuotaExhaustedDate = ''
 
-// 球面距离（米）
+/**
+ * 球面距离（haversine 公式，单位米）
+ * 已验证：同点=0m；纬度差 1° ≈ 111.2km；北京→上海 ≈ 1067km，精度可靠，可用于圈内过滤
+ */
 function getDistance(lat1, lng1, lat2, lng2) {
   const rad = (d) => (d * Math.PI) / 180
   const R = 6371000
@@ -58,13 +61,15 @@ Page({
     searched: false,
     loading: false,
     emptyText: '',
-    // 红色查询圈（点击开始寻找后才渲染）
+    // 红色查询圈（点击开始寻找后渲染；切换半径实时预览尺寸）
     circles: [],
     // 公厕数据（仅圈内点位）
     allToilets: [],
     toilets: [],
     markers: [],
     totalCount: 0,
+    // 筛选无匹配提示
+    filterEmpty: false,
     // 今日剩余查询次数
     remaining: 20,
     dailyLimit: 20,
@@ -72,6 +77,11 @@ Page({
     showList: false,
     // 顶部筛选（本地过滤，不耗次数）
     filters: { hasPaper: false, barrierFree: false, babyRoom: false, open24h: false },
+    // marker 简易气泡卡片
+    markerBubble: false,
+    selectedMarker: null,
+    // 0 结果空状态弹窗
+    emptyModal: false,
     // 详情弹窗
     selectedToilet: null,
     comments: [],
@@ -169,19 +179,31 @@ Page({
   },
 
   /**
-   * 选择查询半径：只更新界面，不自动查询
+   * 选择查询半径：实时预览红圈尺寸，不触发查询、不渲染 marker
    */
   onRadiusChange(e) {
     const radiusIndex = Number(e.detail.value)
     const selectedRadius = this.data.radiusOptions[radiusIndex]
-    this.setData({ radiusIndex, selectedRadius })
-    console.log('[index] 切换查询半径', selectedRadius, '米（未触发查询）')
+    const { latitude, longitude } = this.data
+    this.setData({
+      radiusIndex,
+      selectedRadius,
+      circles: [{
+        latitude,
+        longitude,
+        radius: selectedRadius,
+        color: '#FF6B6B',
+        fillColor: '#FF6B6B26',
+        strokeWidth: 3
+      }]
+    })
+    console.log('[index] 切换查询半径', selectedRadius, '米（实时预览红圈，未触发查询）')
   },
 
   /**
    * 点击【开始寻找】：
    * 1. 校验定位就绪、经纬度有效、剩余次数 > 0
-   * 2. 渲染红色查询圈
+   * 2. 渲染红色查询圈，按钮进入 loading 状态（防重复点击）
    * 3. 执行 loadToiletData 完整查询（geoNear + 腾讯降级）
    * 4. 整套查询成功后才消耗 1 次查询次数并写查询记录；失败不扣次数、不写记录
    */
@@ -233,9 +255,9 @@ Page({
    * 0. geoNear 前校验经纬度有效（定位为空直接提示，不发请求）
    * 1. getNearToilet 查 toiletAll 自有库
    *    注意：toiletAll 必须创建 lat/lng 的 2dsphere 地理位置索引（见 cloudfunctions/getNearToilet/index.js 顶部注释），否则 geoNear 返回错误
-   * 2. 自有库 ≤2 条时降级调用腾讯 place/v1/search，并做球面距离二次过滤
-   * 3. 整套查询成功（自有库成功 且 腾讯成功或按规则跳过）才消耗 1 次次数并写查询记录
-   *    任一步失败：不扣次数、不生成查询记录，控制台打印完整错误
+   * 2. 自有库 ≤2 条时降级调用腾讯 place/v1/search，并做球面距离二次过滤（丢弃点位打印距离）
+   * 3. 分支：①库有数据+腾讯失败→仅展示本地库；②库空+腾讯有数据→正常渲染；③两边无数据→空状态弹窗；④接口异常→不扣次数
+   * 4. 整套查询成功才消耗 1 次次数并写查询记录
    */
   async loadToiletData() {
     const { latitude, longitude, selectedRadius } = this.data
@@ -260,7 +282,7 @@ Page({
       if (r.code === 0) {
         dbOk = true
         near = Array.isArray(r.list) ? r.list : []
-        console.log('[index] 自有库圈内点位=', near.length)
+        console.log('[index] 自有数据库返回列表长度=', near.length, '| 点位=', near.map((t) => t.name + '(' + t.distance + 'm)').join(', '))
       } else {
         // 常见原因：toiletAll 未创建 / 未建 2dsphere 索引 / 权限异常，完整返回打印到控制台
         console.error('[index] getNearToilet 返回错误（完整返回），请检查 toiletAll 2dsphere 索引', JSON.stringify(r))
@@ -269,48 +291,75 @@ Page({
       console.error('[index] getNearToilet 调用异常（云函数未部署或网络异常，完整错误）', err)
     }
 
-    let toilets = near.slice()
-    let tencentOk = true
-    let tencentTried = false
-
     // 2. 降级：自有库 ≤2 条时调用腾讯 place/v1/search
+    let tencentTried = false
+    let tencentOk = true
+    let poiList = []
     if (near.length <= 2) {
       tencentTried = true
       const poiRes = await this.searchTencentPoi(latitude, longitude, selectedRadius)
       tencentOk = poiRes.ok
-      const poiList = poiRes.list || []
-      console.log('[index] 腾讯返回原始点位=', poiList.length, 'ok=', tencentOk)
-      // 球面距离二次过滤：只保留红圈内点位
-      const filtered = poiList.filter((p) => getDistance(latitude, longitude, p.lat, p.lng) <= selectedRadius)
-      console.log('[index] 球面距离过滤后圈内腾讯点位=', filtered.length)
-      if (filtered.length && tencentOk) {
-        // 缓存腾讯 POI 到 toiletAll（不阻塞渲染）
-        this.saveTencentPois(filtered)
-        toilets = toilets.concat(filtered)
-      }
+      poiList = poiRes.list || []
+      console.log('[index] 腾讯接口原始返回点位数量=', poiList.length, '| ok=', tencentOk)
     }
 
-    // 3. 判定整套查询是否成功
-    const querySuccess = dbOk && tencentOk
-
-    // 圈内点位去重合并（同名 50 米内去重）
-    toilets = this.dedupeToilets(toilets)
-
-    if (!querySuccess) {
-      // 查询失败：不扣次数、不生成查询记录，仅展示已获得的点位
-      this.renderToilets(toilets)
-      if (!dbOk && tencentOk) {
-        wx.showToast({ title: '自有数据查询异常，仅展示腾讯点位，本次未消耗次数', icon: 'none' })
-      } else if (dbOk && !tencentOk) {
-        wx.showToast({ title: '官方公厕查询失败，仅展示自有数据，本次未消耗次数', icon: 'none' })
-      } else {
-        wx.showToast({ title: '查询失败，本次未消耗次数，请稍后重试', icon: 'none' })
+    // 3. 球面距离二次过滤：只保留红圈内点位，被丢弃点位打印距离
+    let filtered = []
+    if (tencentOk && poiList.length) {
+      for (const p of poiList) {
+        const dist = getDistance(latitude, longitude, p.lat, p.lng)
+        if (dist <= selectedRadius) {
+          filtered.push(p)
+        } else {
+          console.log('[index] 过滤丢弃腾讯点位：', p.name, '距离=', Math.round(dist), '米，超出半径', selectedRadius, '米')
+        }
       }
+      console.log('[index] 球面距离过滤后圈内腾讯点位=', filtered.length)
+    }
+
+    // 4. 分支判定（细化）
+    const hasDb = dbOk && near.length > 0
+    const hasTencent = tencentOk && filtered.length > 0
+    let toilets = []
+    let toastText = ''
+    let queryFail = false
+
+    if (!dbOk) {
+      // ④ 自有库接口异常（云函数异常/索引缺失/网络错误）
+      queryFail = true
+      toastText = '查询失败，本次未消耗次数，请稍后重试'
+    } else if (tencentTried && !tencentOk && !hasDb) {
+      // ④ 自有库为空且腾讯接口异常
+      queryFail = true
+      toastText = '查询失败，本次未消耗次数，请稍后重试'
+    } else if (tencentTried && !tencentOk && hasDb) {
+      // ① 自有库有数据，腾讯接口失败：仅展示本地库数据
+      toilets = near.slice()
+      toastText = '地图接口请求异常，仅展示本地库数据'
+    } else {
+      // ②/正常：自有库数据 + 腾讯过滤后点位 合并渲染（腾讯返回空不判定失败，优先使用自有库数据）
+      toilets = near.concat(filtered)
+      if (filtered.length) this.saveTencentPois(filtered)
+    }
+
+    if (queryFail) {
+      // 接口异常：不扣次数、不生成查询记录
+      this.setData({ allToilets: [] })
+      this.renderToilets([])
+      wx.showToast({ title: toastText, icon: 'none' })
+      console.error('[index] 整套查询失败（未扣次数）', toastText)
       return
     }
 
-    // 4. 查询成功：渲染 marker → 消耗 1 次次数 → 写查询记录
+    // 圈内点位去重合并（同名 50 米内去重），保存全量集（筛选基于它）
+    toilets = this.dedupeToilets(toilets)
+    this.setData({ allToilets: toilets })
     this.renderToilets(toilets)
+    if (toastText) {
+      wx.showToast({ title: toastText, icon: 'none' })
+    }
+
+    // 5. 查询成功：消耗次数 → 写查询记录
     try {
       const quotaRes = await wx.cloud.callFunction({
         name: 'quotaOperate',
@@ -336,6 +385,11 @@ Page({
       // 次数扣减失败：数据已展示，但未扣次数、不写查询记录
       console.error('[index] 消耗查询次数异常（查询已完成但未扣次数，完整错误）', err)
       wx.showToast({ title: '查询已完成，次数同步失败，请检查网络', icon: 'none' })
+    }
+
+    // 6. ③ 两边都无数据：空状态弹窗（扩大半径 / 上报厕所）
+    if (toilets.length === 0) {
+      this.showEmptyModal()
     }
   },
 
@@ -375,6 +429,8 @@ Page({
         success: (res) => {
           const body = res.data || {}
           if (body.status === 0) {
+            // 打印腾讯接口原始返回数据，便于调试
+            console.log('[index] 腾讯接口原始返回数据（status=0）', JSON.stringify(body))
             const list = Array.isArray(body.data) ? body.data : []
             resolve({
               ok: true,
@@ -441,7 +497,7 @@ Page({
    */
   renderToilets(toilets) {
     const markers = []
-    const { latitude, longitude, selectedRadius } = this.data
+    const { latitude, longitude, selectedRadius, filters } = this.data
     toilets.forEach((item, index) => {
       const dist = getDistance(latitude, longitude, item.lat, item.lng)
       if (dist > selectedRadius) {
@@ -468,8 +524,11 @@ Page({
         }
       })
     })
-    console.log('[index] 渲染 marker 数量=', markers.length, '（圈内=', toilets.length, '）')
-    this.setData({ allToilets: toilets, toilets, markers, totalCount: markers.length, loading: false })
+    // 筛选无匹配提示：有筛选条件且原数据非空但结果为空
+    const hasFilter = !!(filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h)
+    const filterEmpty = hasFilter && this.data.allToilets.length > 0 && toilets.length === 0
+    console.log('[index] 渲染 marker 数量=', markers.length, '（圈内=', toilets.length, '）filterEmpty=', filterEmpty)
+    this.setData({ toilets, markers, totalCount: markers.length, loading: false, filterEmpty })
   },
 
   /**
@@ -497,6 +556,7 @@ Page({
     this.applyFilter()
   },
 
+  // 一键重置筛选
   clearFilter() {
     this.setData({ filters: { hasPaper: false, barrierFree: false, babyRoom: false, open24h: false } })
     this.applyFilter()
@@ -514,13 +574,14 @@ Page({
     this.renderToilets(toilets)
   },
 
-  // 展开/收起底部列表
+  // 展开/收起底部列表（0 个厕所时不可展开）
   toggleList() {
+    if (this.data.totalCount === 0) return
     this.setData({ showList: !this.data.showList })
   },
 
   /**
-   * 点击 marker：打开详情弹窗（基础信息、标签、平均分、评价列表）
+   * 点击 marker：优先弹出简易气泡卡片（含查看详情按钮）
    */
   onMarkerTap(e) {
     const marker = this.data.markers.find((m) => m.id === e.detail.markerId)
@@ -529,14 +590,119 @@ Page({
       (t) => t.lat === marker.latitude && t.lng === marker.longitude
     )
     if (!toilet) return
-    this.openDetail(toilet)
+    // 记录 marker 点击时间，防止 map 的 bindtap 同时触发导致气泡刚开就关
+    this._lastMarkerTap = Date.now()
+    const distanceText = util.formatDistance(getDistance(this.data.latitude, this.data.longitude, toilet.lat, toilet.lng))
+    this.setData({
+      markerBubble: true,
+      selectedMarker: { ...toilet, distanceText }
+    })
   },
 
-  // 列表条目点击：定位到对应公厕并打开详情
+  // 点击地图空白：关闭简易气泡（marker 点击后 300ms 内的 tap 忽略）
+  onMapTap() {
+    if (this._lastMarkerTap && Date.now() - this._lastMarkerTap < 300) return
+    if (this.data.markerBubble) {
+      this.setData({ markerBubble: false })
+    }
+  },
+
+  // 气泡卡片「查看详情」
+  viewDetailFromBubble() {
+    const toilet = this.data.selectedMarker
+    this.setData({ markerBubble: false })
+    if (toilet) this.openDetail(toilet)
+  },
+
+  // 气泡卡片「一键导航」
+  navFromBubble() {
+    const toilet = this.data.selectedMarker
+    this.setData({ markerBubble: false })
+    if (!toilet) return
+    wx.openLocation({
+      latitude: toilet.lat,
+      longitude: toilet.lng,
+      name: toilet.name,
+      address: toilet.address || '',
+      scale: 18,
+      fail: (err) => {
+        console.error('[index] 打开地图导航失败（完整错误）', err)
+        wx.showToast({ title: '打开地图失败，请检查定位权限', icon: 'none' })
+      }
+    })
+  },
+
+  // 列表条目点击：打开详情弹窗
   onListItemTap(e) {
     const index = Number(e.currentTarget.dataset.index)
     const toilet = this.data.toilets[index]
     if (toilet) this.openDetail(toilet)
+  },
+
+  // 地图右下角定位按钮：回到用户定位中心点
+  relocate() {
+    if (app.globalData.userLocation) {
+      const { latitude, longitude } = app.globalData.userLocation
+      this.setData({ latitude, longitude, locationReady: true, loadingDone: true })
+      console.log('[index] 回到我的位置', latitude, longitude)
+      wx.showToast({ title: '已回到我的位置', icon: 'none' })
+    } else {
+      console.log('[index] 无定位缓存，重新获取定位')
+      app.globalData.userLocation = null
+      this.ensureLocation()
+      wx.showToast({ title: '正在重新定位…', icon: 'none' })
+    }
+  },
+
+  // 空状态弹窗：扩大查询半径（自动切换下一档，不自动查询）
+  expandRadius() {
+    const { radiusIndex, radiusOptions, latitude, longitude } = this.data
+    if (radiusIndex >= radiusOptions.length - 1) {
+      wx.showToast({ title: '已是最大查询半径', icon: 'none' })
+      return
+    }
+    const nextIndex = radiusIndex + 1
+    const selectedRadius = radiusOptions[nextIndex]
+    this.setData({
+      radiusIndex: nextIndex,
+      selectedRadius,
+      emptyModal: false,
+      circles: [{
+        latitude,
+        longitude,
+        radius: selectedRadius,
+        color: '#FF6B6B',
+        fillColor: '#FF6B6B26',
+        strokeWidth: 3
+      }]
+    })
+    wx.showToast({ title: '已切换至 ' + selectedRadius + ' 米，点击开始寻找', icon: 'none' })
+  },
+
+  // 空状态弹窗：去上报
+  goReportFromEmpty() {
+    this.setData({ emptyModal: false })
+    wx.navigateTo({ url: '/pages/report/report' })
+  },
+
+  // 关闭空状态弹窗
+  closeEmptyModal() {
+    this.setData({ emptyModal: false })
+  },
+
+  // 展示 0 结果空状态弹窗
+  showEmptyModal() {
+    this.setData({ emptyModal: true })
+  },
+
+  // 点击剩余次数文字：弹出说明
+  onQuotaTap() {
+    wx.showModal({
+      title: '查询次数说明',
+      content: '每人每天最多可查询 20 次，每日 0 点自动重置。',
+      showCancel: false,
+      confirmText: '知道了'
+    })
   },
 
   openDetail(toilet) {
@@ -657,7 +823,7 @@ Page({
     this.setData({ commentContent: e.detail.value })
   },
 
-  // 提交评价
+  // 提交评价（成功后实时刷新当前厕所评分与评价列表）
   submitComment() {
     const toilet = this.data.selectedToilet
     const { commentScore, commentContent, submittingComment } = this.data
@@ -676,7 +842,9 @@ Page({
       this.setData({ submittingComment: false })
       if (r.code === 0) {
         wx.showToast({ title: '评价成功', icon: 'success' })
-        this.closeDetail()
+        // 实时刷新当前厕所评分与评价列表（保留弹窗展示）
+        this.refreshToiletScore(toilet._id)
+        this.loadComments(toilet._id)
       } else {
         console.error('[index] submitComment 返回错误（完整返回）', JSON.stringify(r))
         wx.showToast({ title: r.msg || '评价失败', icon: 'none' })
@@ -686,6 +854,42 @@ Page({
       this.setData({ submittingComment: false })
       wx.showToast({ title: '提交评价失败，请检查网络后重试', icon: 'none' })
     })
+  },
+
+  /**
+   * 提交评价后实时刷新厕所评分（详情弹窗 + 列表数据）
+   */
+  refreshToiletScore(toiletId) {
+    if (!toiletId) return
+    const db = wx.cloud.database()
+    db.collection('toiletAll')
+      .doc(toiletId)
+      .get()
+      .then((res) => {
+        const t = res.data
+        if (!t) return
+        const rating = t.rating || 0
+        const ratingCount = t.ratingCount || 0
+        // 详情弹窗
+        if (this.data.selectedToilet && this.data.selectedToilet._id === toiletId) {
+          this.setData({
+            'selectedToilet.rating': rating,
+            'selectedToilet.ratingCount': ratingCount
+          })
+        }
+        // 列表数据
+        const toilets = this.data.toilets.map((item) =>
+          item._id === toiletId ? { ...item, rating, ratingCount } : item
+        )
+        const allToilets = this.data.allToilets.map((item) =>
+          item._id === toiletId ? { ...item, rating, ratingCount } : item
+        )
+        this.setData({ toilets, allToilets })
+        console.log('[index] 公厕评分已刷新', toiletId, rating, ratingCount)
+      })
+      .catch((err) => {
+        console.error('[index] 刷新公厕评分失败（完整错误）', err)
+      })
   },
 
   // 举报

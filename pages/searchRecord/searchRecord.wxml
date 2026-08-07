@@ -15,6 +15,11 @@
 
   <!-- 记录列表 -->
   <view class="record-card cute-card" wx:for="{{records}}" wx:key="_id">
+    <!-- 0 结果记录：灰色图标标记 -->
+    <view class="record-head {{item.searchCount === 0 ? 'zero' : ''}}">
+      <text class="record-icon">{{item.icon}}</text>
+      <text class="record-head-text">{{item.searchCount === 0 ? '本次未找到公厕' : '查询完成'}}</text>
+    </view>
     <view class="record-main">
       <view class="record-row">
         <text class="record-label">查询半径</text>

@@ -499,3 +499,242 @@
   opacity: 0.85;
   transform: scale(0.94);
 }
+/* ---------- 开始寻找 loading 状态 ---------- */
+.start-btn.loading {
+  opacity: 0.7;
+  pointer-events: none;
+  animation: btnPulse 1s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+}
+
+/* ---------- 剩余次数颜色（≤5 橙 / 0 红） ---------- */
+.quota-text.normal {
+  color: #ff9fb2;
+}
+
+.quota-text.warn {
+  color: #ffa94d;
+}
+
+.quota-text.zero {
+  color: #e05a6d;
+  font-weight: 700;
+}
+
+/* ---------- 筛选重置 ---------- */
+.filter-reset {
+  color: #e05a6d;
+  border-color: rgba(224, 90, 109, 0.4);
+  background: rgba(255, 159, 178, 0.12);
+}
+
+/* ---------- 地图定位按钮 ---------- */
+.locate-fab {
+  position: absolute;
+  right: 24rpx;
+  bottom: 24rpx;
+  z-index: 30;
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  border: 2rpx solid rgba(116, 185, 255, 0.4);
+  color: #74b9ff;
+  font-size: 38rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 24rpx rgba(116, 185, 255, 0.3);
+}
+
+.locate-fab.hover {
+  opacity: 0.8;
+  transform: scale(0.94);
+}
+
+/* ---------- marker 简易气泡卡片 ---------- */
+.bubble-card {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 120rpx;
+  z-index: 35;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28rpx;
+  padding: 24rpx;
+  box-shadow: 0 16rpx 40rpx rgba(116, 185, 255, 0.3);
+}
+
+.bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bubble-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #2c3e50;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 16rpx;
+}
+
+.bubble-close {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: rgba(116, 185, 255, 0.15);
+  color: #74b9ff;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubble-close.hover {
+  opacity: 0.8;
+}
+
+.bubble-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.bubble-meta {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #7f8c8d;
+}
+
+.bubble-actions {
+  display: flex;
+  margin-top: 20rpx;
+}
+
+.bubble-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: #74b9ff;
+  background: #f0f7ff;
+  border-radius: 44rpx;
+  padding: 14rpx 0;
+  margin-right: 16rpx;
+}
+
+.bubble-btn:last-child {
+  margin-right: 0;
+}
+
+.bubble-btn.hover {
+  opacity: 0.85;
+}
+
+.bubble-primary {
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 8rpx 18rpx rgba(116, 185, 255, 0.32);
+}
+
+/* ---------- 展开按钮置灰 ---------- */
+.expand-btn.disabled {
+  color: #b8bfcc;
+  background: #f2f4f8;
+  pointer-events: none;
+}
+
+/* ---------- 筛选无匹配提示 ---------- */
+.filter-empty-tip {
+  margin-top: 16rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 169, 77, 0.14);
+  color: #ffa94d;
+  font-size: 24rpx;
+  text-align: center;
+}
+
+/* ---------- 0 结果空状态弹窗 ---------- */
+.empty-modal-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 80;
+  background: rgba(44, 62, 80, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-modal {
+  width: 600rpx;
+  background: #ffffff;
+  border-radius: 36rpx;
+  padding: 48rpx 40rpx 40rpx;
+  box-shadow: 0 20rpx 60rpx rgba(116, 185, 255, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-modal-icon {
+  font-size: 120rpx;
+}
+
+.empty-modal-title {
+  margin-top: 20rpx;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.empty-modal-sub {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #7f8c8d;
+  text-align: center;
+}
+
+.empty-modal-actions {
+  display: flex;
+  width: 100%;
+  margin-top: 40rpx;
+}
+
+.empty-modal-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 28rpx;
+  color: #74b9ff;
+  background: #f0f7ff;
+  border-radius: 50rpx;
+  padding: 18rpx 0;
+  margin-right: 20rpx;
+}
+
+.empty-modal-btn:last-child {
+  margin-right: 0;
+}
+
+.empty-modal-btn.hover {
+  opacity: 0.85;
+  transform: scale(0.97);
+}
+
+.empty-primary {
+  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(116, 185, 255, 0.35);
+}

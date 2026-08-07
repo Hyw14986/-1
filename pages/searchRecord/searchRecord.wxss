@@ -118,3 +118,26 @@
 .del-btn.hover {
   opacity: 0.8;
 }
+/* 记录头部（结果图标） */
+.record-head {
+  display: flex;
+  align-items: center;
+  padding: 4rpx 0 12rpx;
+  border-bottom: 2rpx solid #eef4fc;
+  margin-bottom: 12rpx;
+}
+
+.record-head.zero {
+  opacity: 0.6;
+}
+
+.record-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.record-head-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2c3e50;
+}

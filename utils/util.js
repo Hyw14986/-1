@@ -101,6 +101,28 @@ async function fetchAllRecords(query, pageSize = 20) {
 }
 
 /**
+ * 友好时间格式化：今天 HH:mm / 昨天 HH:mm / 今年 M月D日 HH:mm / 跨年 YYYY年M月D日 HH:mm
+ * @param {Date|string|number} input 时间
+ * @returns {string} 友好时间文案
+ */
+function formatFriendlyTime(input) {
+  if (!input) return ''
+  const date = input instanceof Date ? input : new Date(input)
+  if (isNaN(date.getTime())) return ''
+  const pad = (n) => (n < 10 ? '0' + n : '' + n)
+  const now = new Date()
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+  const hm = pad(date.getHours()) + ':' + pad(date.getMinutes())
+  if (startOfDay === startOfToday) return '今天 ' + hm
+  if (startOfDay === startOfToday - 86400000) return '昨天 ' + hm
+  if (date.getFullYear() === now.getFullYear()) {
+    return (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + hm
+  }
+  return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' + hm
+}
+
+/**
  * 获取当前用户 openid（调用 getOpenId 云函数，带全局缓存）
  * @returns {Promise<string>} openid
  */
@@ -130,6 +152,7 @@ module.exports = {
   getDistance,
   formatDistance,
   formatTime,
+  formatFriendlyTime,
   getFacilityTags,
   getOpenId,
   fetchAllRecords,

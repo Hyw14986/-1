@@ -1,6 +1,6 @@
 // pages/searchRecord/searchRecord.js - 查询记录页
-// 展示用户每次点击「开始寻找」的历史记录：查询时间、半径、找到厕所数量
-// 支持：再次查询（回填半径回首页，不消耗次数，需再点开始寻找）、单条删除、一键清空
+// 展示用户每次点击「开始寻找」的历史记录：查询时间（友好格式）、半径、找到厕所数量（0 结果特殊图标）
+// 支持：再次查询（确认弹窗提示会消耗次数，回填半径回首页，需再点开始寻找）、单条删除、一键清空
 const app = getApp()
 const util = require('../../utils/util.js')
 
@@ -28,27 +28,39 @@ Page({
         const r = res.result || {}
         const records = (r.list || []).map((item) => ({
           ...item,
-          timeText: util.formatTime(item.searchTime),
-          radiusText: item.searchRadius + '米'
+          timeText: util.formatFriendlyTime(item.searchTime),
+          radiusText: item.searchRadius + '米',
+          // 0 结果记录使用不同图标标记
+          icon: Number(item.searchCount) > 0 ? '🔍' : '🚫'
         }))
         this.setData({ records, loading: false })
         console.log('[searchRecord] 查询记录条数=', records.length)
       })
       .catch((err) => {
-        console.error('加载查询记录失败', err)
+        console.error('[searchRecord] 加载查询记录失败（完整错误）', err)
         this.setData({ loading: false })
         wx.showToast({ title: '加载失败，请稍后重试', icon: 'none' })
       })
   },
 
   /**
-   * 再次查询：回填该次查询半径并返回地图页（不自动扣次数，需点击开始寻找）
+   * 再次查询：先弹确认弹窗（提示会消耗 1 次次数），确认后回填半径返回地图页
    */
   againSearch(e) {
     const radius = Number(e.currentTarget.dataset.radius)
-    const index = RADIUS_OPTIONS.indexOf(radius)
-    app.globalData.pendingRadiusIndex = index >= 0 ? index : 1
-    wx.switchTab({ url: '/pages/index/index' })
+    wx.showModal({
+      title: '再次查询',
+      content: '将按 ' + radius + ' 米半径再次查询，会消耗 1 次今日查询次数，是否继续？',
+      confirmText: '继续',
+      cancelText: '取消',
+      confirmColor: '#74b9ff',
+      success: (res) => {
+        if (!res.confirm) return
+        const index = RADIUS_OPTIONS.indexOf(radius)
+        app.globalData.pendingRadiusIndex = index >= 0 ? index : 1
+        wx.switchTab({ url: '/pages/index/index' })
+      }
+    })
   },
 
   /**
