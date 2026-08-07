@@ -106,7 +106,6 @@ Page({
     // 页面加载：仅定位 + 读取今日剩余次数，不自动查询、无红圈、无 marker
     this.ensureLocation()
     this.fetchQuota()
-
   },
 
   onShow() {
