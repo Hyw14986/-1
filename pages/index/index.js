@@ -189,7 +189,6 @@ Page({
     // 数据库已收录厕所总量 + 一键显示全部模式
     dbTotal: 0,
     showAllMode: false,
-    includePoints: [],
     // 底部列表展开
     showList: false,
     // 顶部筛选（本地过滤，不耗次数）
@@ -206,6 +205,29 @@ Page({
     commentContent: '',
     submittingComment: false,
     favorited: false
+  },
+
+  onReady() {
+    // 地图上下文：视野缩放（includePoints API）用它触发，避免 wxml include-points 空数组导致腾讯地图 SDK fitBounds 崩溃
+    this.mapCtx = wx.createMapContext('map', this)
+  },
+
+  /**
+   * 用 MapContext.includePoints 缩放视野覆盖点位（比 wxml include-points 属性更稳：
+   * 属性方式传空数组/异常数组会触发地图 SDK fitBounds 读取 points[0].lat 崩溃）
+   */
+  fitMapPoints(points) {
+    if (!this.mapCtx || !Array.isArray(points) || points.length === 0) return
+    const valid = points.filter((p) => p && isValidCoordinate(p.latitude, p.longitude))
+    if (valid.length === 0) return
+    console.log('[index] 调整地图视野覆盖点位', valid.length, '个')
+    try {
+      this.mapCtx.includePoints({ points: valid, padding: [60, 60, 60, 60] }).catch((e) => {
+        console.error('[index] includePoints 视野调整失败（完整错误）', e)
+      })
+    } catch (err) {
+      console.error('[index] includePoints 视野调整异常（完整错误）', err)
+    }
   },
 
   onLoad() {
@@ -1250,9 +1272,9 @@ Page({
           display: 'BYCLICK'
         }
       }))
-      // include-points 视野覆盖：全量传入容易卡顿，均匀抽样最多 99 个点 + 用户位置，足以框住全部点位范围
-      const sample = sorted.filter((_, i) => i % Math.max(1, Math.ceil(sorted.length / 99)) === 0).slice(0, 99)
-      const includePoints = [{ latitude, longitude }].concat(sample.map((t) => ({ latitude: t.lat, longitude: t.lng })))
+      // 视野覆盖：均匀抽样最多 30 个点 + 用户位置，用 MapContext.includePoints 缩放到覆盖全量点位
+      const sample = sorted.filter((_, i) => i % Math.max(1, Math.ceil(sorted.length / 29)) === 0).slice(0, 29)
+      const fitPoints = [{ latitude, longitude }].concat(sample.map((t) => ({ latitude: t.lat, longitude: t.lng })))
       console.log('[index] 一键显示全部厕所 total=', r.total, '展示点位=', markers.length, '截断=', r.truncated)
       this.setData({
         dbTotal: r.total,
@@ -1264,9 +1286,9 @@ Page({
         toilets: sorted,
         markers,
         totalCount: markers.length,
-        filterEmpty: false,
-        includePoints
+        filterEmpty: false
       })
+      this.fitMapPoints(fitPoints)
       wx.showToast({ title: '已显示全部厕所（共 ' + r.total + ' 座，地图展示 ' + markers.length + ' 个点位）', icon: 'none' })
       // 若已有筛选条件，继续对全量点位生效
       if (filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h) {
@@ -1292,9 +1314,10 @@ Page({
       showList: false,
       markerBubble: false,
       selectedToilet: null,
-      filterEmpty: false,
-      includePoints: []
+      filterEmpty: false
     })
+    // 视野回到用户位置（单点 fit，等价于重新居中）
+    this.fitMapPoints([{ latitude: this.data.latitude, longitude: this.data.longitude }])
     wx.showToast({ title: '已退出全部厕所模式', icon: 'none' })
   },
 
@@ -1367,7 +1390,7 @@ Page({
   relocate() {
     if (app.globalData.userLocation) {
       const { latitude, longitude } = app.globalData.userLocation
-      this.setData({ latitude, longitude, locationReady: true, loadingDone: true, includePoints: [] })
+      this.setData({ latitude, longitude, locationReady: true, loadingDone: true })
       console.log('[index] 回到我的位置', latitude, longitude)
       wx.showToast({ title: '已回到我的位置', icon: 'none' })
     } else {

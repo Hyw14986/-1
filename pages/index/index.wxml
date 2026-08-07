@@ -45,13 +45,13 @@
   <!-- 地图卡片 -->
   <view class="map-card">
     <map
+      id="map"
       class="map"
       latitude="{{latitude}}"
       longitude="{{longitude}}"
       scale="15"
       markers="{{markers}}"
       circles="{{circles}}"
-      include-points="{{includePoints}}"
       show-location="{{locationReady}}"
       bindmarkertap="onMarkerTap"
       bindtap="onMapTap"
