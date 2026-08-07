@@ -19,11 +19,11 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
 
-// 展示规则：invalid 不为 true（缺字段视为有效）且 auditStatus 为 'pass' 或字段缺失（兼容手动导入/旧数据缺字段；pending 待审核 / reject 驳回不展示）
-const visibleQuery = _.and([
-  { invalid: _.neq(true) },
-  _.or([{ auditStatus: 'pass' }, { auditStatus: _.exists(false) }])
-])
+// 可见性判断：pending 待审核 / reject 驳回不展示；auditStatus 缺失视为有效（兼容手动导入/旧数据缺字段）
+function isVisible(item) {
+  const s = item && item.auditStatus
+  return s !== 'pending' && s !== 'reject'
+}
 
 // haversine 球面距离（米），供 JS 降级方案使用；入参非法返回 NaN，由 isFinite 兜底
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -75,11 +75,11 @@ exports.main = async (event) => {
         distanceField: 'distance',
         maxDistance: radius,
         spherical: true,
-        query: visibleQuery
+        query: { invalid: false }
       })
       .limit(100)
       .end()
-    const list = (res.list || []).map(mapItem)
+    const list = (res.list || []).filter(isVisible).map(mapItem)
     console.log('[getNearToilet] geoNear 命中', list.length, '条')
     return { code: 0, msg: 'ok', fallback: false, list, total: list.length }
   } catch (err) {
@@ -94,10 +94,11 @@ exports.main = async (event) => {
   try {
     const res = await db
       .collection('toiletAll')
-      .where(visibleQuery)
+      .where({ invalid: _.neq(true) })
       .limit(1000)
       .get()
     const list = (res.data || [])
+      .filter(isVisible)
       .map((item) => ({
         ...item,
         distance: getDistance(latitude, longitude, Number(item.lat), Number(item.lng))
