@@ -15,24 +15,23 @@ App({
       traceUser: true
     })
 
-    // 【临时迁移钩子·可删除】自动触发 fixToiletLoc 云函数，
-    // 把 toiletAll 中缺失 loc 字段的存量记录补成 db.Geo.Point(lng, lat)，
-    // 保证 geoNear 能命中存量数据、不再每次降级。
-    // 幂等：补完后 { loc: _.exists(false) } 无命中，重复执行无副作用。
-    this.migrateToiletLoc()
+    // 【业务约束】toiletAll 允许为空（无自建数据属正常场景），客户端一律不自动触发 fixToiletLoc。
+    // loc 迁移仅在云开发网页控制台对 fixToiletLoc 手动执行云端测试完成，禁止恢复以下自动调用：
+    // this.migrateToiletLoc()
   },
 
-  // 一次性数据修复：调用 fixToiletLoc 云函数并打印结果（仅开发者工具调试用，上线前删除）
-  migrateToiletLoc() {
-    wx.cloud.callFunction({ name: 'fixToiletLoc' })
-      .then((res) => {
-        const r = res.result || {}
-        console.log('[migrateToiletLoc] fixToiletLoc 返回 code=', r.code, '| 统计=', JSON.stringify(r.summary), '| 无法补全=', (r.unfillableList || []).length, '条')
-      })
-      .catch((err) => {
-        console.error('[migrateToiletLoc] fixToiletLoc 调用失败（可能未部署，可忽略）', err)
-      })
-  },
+  // 【已停用·仅保留参考】手动数据修复：调用 fixToiletLoc 云函数补全 loc 字段。
+  // 后续录入厕所数据后，请到云开发网页控制台 → 云函数 → fixToiletLoc → 云端测试手动执行。
+  // migrateToiletLoc() {
+  //   wx.cloud.callFunction({ name: 'fixToiletLoc' })
+  //     .then((res) => {
+  //       const r = res.result || {}
+  //       console.log('[migrateToiletLoc] fixToiletLoc 返回 code=', r.code, '| 统计=', JSON.stringify(r.summary), '| 无法补全=', (r.unfillableList || []).length, '条')
+  //     })
+  //     .catch((err) => {
+  //       console.error('[migrateToiletLoc] fixToiletLoc 调用失败（可能未部署，可忽略）', err)
+  //     })
+  // },
   globalData: {
     // 用户当前定位（gcj02 坐标系），供各页面共享
     userLocation: null,
