@@ -1,0 +1,159 @@
+<!-- pages/rank/rank.wxml - 公厕天梯榜（苹果白简约风格，SVG 图标） -->
+<view class="page">
+  <!-- 顶部横幅 -->
+  <view class="hero wx-wow animated fadeInDown">
+    <view class="hero-title">
+      <image class="hero-title-icon" src="/images/icons/toilet.svg" />
+      <text>公厕天梯榜</text>
+    </view>
+    <view class="hero-sub">全网人气 × 全国综合，一起蹲出排名</view>
+    <view class="hero-bubble b1"></view>
+    <view class="hero-bubble b2"></view>
+    <view class="hero-bubble b3"></view>
+  </view>
+
+  <!-- 榜单切换 -->
+  <view class="tabs wx-wow animated fadeInUp">
+    <view class="tab {{tab === 'hot' ? 'tab-on' : ''}}" data-tab="hot" bindtap="switchTab" hover-class="hover">
+      <image class="tab-ico" src="{{tab === 'hot' ? '/images/icons/trophy-on.svg' : '/images/icons/trophy.svg'}}" />
+      <text>全网人气</text>
+    </view>
+    <view class="tab {{tab === 'nation' ? 'tab-on' : ''}}" data-tab="nation" bindtap="switchTab" hover-class="hover">
+      <image class="tab-ico" src="{{tab === 'nation' ? '/images/icons/rank-on.svg' : '/images/icons/rank.svg'}}" />
+      <text>全国综合</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="state">
+    <van-loading type="spinner" size="64rpx" color="#007AFF"></van-loading>
+    <view class="state-text">正在蹲排行榜…</view>
+  </view>
+
+  <!-- 加载失败 -->
+  <van-empty wx:elif="{{error}}" image="" custom-class="rank-empty">
+    <view slot="image">
+      <image class="state-icon" src="/images/icons/warn.svg" />
+    </view>
+    <view slot="description" class="state-text">{{error}}</view>
+    <view class="retry-btn" bindtap="loadRank" hover-class="hover">再试一次</view>
+  </van-empty>
+
+  <!-- 数据为空 -->
+  <van-empty wx:elif="{{!display.length}}" image="" custom-class="rank-empty">
+    <view slot="image">
+      <image class="state-icon" src="/images/icons/empty.svg" />
+    </view>
+    <view slot="description" class="state-text">{{tab === 'hot' ? '人气厕所正在路上～下拉刷新看看' : '全国公厕正在赶来的路上～下拉刷新看看'}}</view>
+  </van-empty>
+
+  <!-- 榜单内容 -->
+  <block wx:else>
+    <!-- 领奖台 Top3 -->
+    <view class="podium" wx:if="{{top.length >= 3}}">
+      <view class="podium-col" data-index="1" bindtap="openPopup" hover-class="hover">
+        <image class="podium-medal" src="/images/icons/medal2.svg" />
+        <view class="podium-name">{{top[1].name}}</view>
+        <view class="podium-block second">{{top[1].score}}</view>
+      </view>
+      <view class="podium-col champion-col" data-index="0" bindtap="openPopup" hover-class="hover">
+        <image class="podium-crown" src="/images/icons/crown.svg" />
+        <image class="podium-medal" src="/images/icons/medal1.svg" />
+        <view class="podium-name champion">{{top[0].name}}</view>
+        <view class="podium-block first">{{top[0].score}}</view>
+      </view>
+      <view class="podium-col" data-index="2" bindtap="openPopup" hover-class="hover">
+        <image class="podium-medal" src="/images/icons/medal3.svg" />
+        <view class="podium-name">{{top[2].name}}</view>
+        <view class="podium-block third">{{top[2].score}}</view>
+      </view>
+    </view>
+
+    <!-- 榜单列表 -->
+    <view class="rank-list wx-wow animated fadeInUp">
+      <view
+        class="rank-card"
+        wx:for="{{rest}}"
+        wx:key="_id"
+        data-index="{{rankOffset - 1 + index}}"
+        bindtap="openPopup"
+        hover-class="hover"
+      >
+        <view class="rank-no {{rankOffset + index <= 3 ? 'top3' : ''}}">
+          <image wx:if="{{rankOffset + index === 1}}" class="rank-medal" src="/images/icons/medal1.svg" />
+          <image wx:elif="{{rankOffset + index === 2}}" class="rank-medal" src="/images/icons/medal2.svg" />
+          <image wx:elif="{{rankOffset + index === 3}}" class="rank-medal" src="/images/icons/medal3.svg" />
+          <text wx:else>{{rankOffset + index}}</text>
+        </view>
+        <view class="rank-main">
+          <view class="rank-name-row">
+            <text class="rank-name">{{item.name}}</text>
+            <image class="rank-photo-badge" wx:if="{{item.photoUrls && item.photoUrls.length}}" src="/images/icons/photo.svg" />
+          </view>
+          <view class="rank-meta">
+            <text wx:if="{{item.city}}">{{item.city}}</text>
+            <text wx:if="{{item.ratingCount}}"> · {{item.ratingCount}}人评</text>
+            <text wx:if="{{item.likes}}"> · {{item.likes}}人点赞</text>
+          </view>
+          <view class="rank-desc" wx:if="{{item.hotDesc}}">{{item.hotDesc}}</view>
+          <view class="rank-tags" wx:if="{{item.tags.length}}">
+            <text class="rank-tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+          </view>
+        </view>
+        <image class="rank-thumb" wx:if="{{item.photoUrls && item.photoUrls.length}}" src="{{item.photoUrls[0]}}" mode="aspectFill" lazy-load />
+        <view class="rank-score">
+          <text class="rank-score-num">{{item.score}}</text>
+          <text class="rank-score-unit">分</text>
+        </view>
+      </view>
+    </view>
+    <view class="list-end">{{tab === 'nation' ? '—— 全国 50 强蹲完啦，更多好厕所还在路上 ——' : '—— 蹲到底啦，更多人气厕所还在路上 ——'}}</view>
+  </block>
+
+  <!-- 详情弹窗 -->
+  <view class="mask" wx:if="{{popup}}" bindtap="closePopup">
+    <view class="sheet" catchtap="noop">
+      <view class="sheet-handle"></view>
+      <view class="sheet-title">{{popup.name}}</view>
+      <view class="sheet-meta" wx:if="{{popup.city || popup.district || popup.address}}">{{popup.city}} {{popup.district}} {{popup.address}}</view>
+      <view class="sheet-score-row">
+        <text class="sheet-score-big">{{popup.score}}</text>
+        <text class="sheet-score-unit">分</text>
+        <text class="sheet-count" wx:if="{{popup.ratingCount}}">{{popup.ratingCount}} 人评分</text>
+        <view class="sheet-likes" wx:if="{{popup.likes}}">
+          <image class="sheet-like-ico" src="/images/icons/like-on.svg" />
+          <text>{{popup.likes}} 人点赞</text>
+        </view>
+      </view>
+      <!-- 实拍图 -->
+      <view class="sheet-photos" wx:if="{{popup.photoUrls && popup.photoUrls.length}}">
+        <image class="sheet-photo" wx:for="{{popup.photoUrls}}" wx:for-item="photo" wx:key="*this" src="{{photo}}" mode="aspectFill" />
+      </view>
+      <view class="sheet-photo-empty" wx:elif="{{tab === 'nation'}}">
+        <image class="sheet-photo-empty-ico" src="/images/icons/photo.svg" />
+        <text>暂无实拍图，更多精彩等你现场解锁</text>
+      </view>
+      <view class="sheet-desc" wx:if="{{popup.hotDesc}}">
+        <text class="sheet-desc-label">上榜理由</text>
+        <text class="sheet-desc-text">{{popup.hotDesc}}</text>
+      </view>
+      <view class="sheet-tags" wx:if="{{popup.tags.length}}">
+        <text class="sheet-tag" wx:for="{{popup.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+      </view>
+      <view class="sheet-reviews" wx:if="{{popup.reviews.length}}">
+        <view class="sheet-review-title">
+          <image class="sheet-ico" src="/images/icons/note.svg" />
+          <text>网络评价摘录</text>
+        </view>
+        <view class="sheet-review" wx:for="{{popup.reviews}}" wx:for-item="review" wx:key="*this">“{{review}}”</view>
+      </view>
+      <view class="sheet-btns">
+        <view class="sheet-btn ghost" bindtap="closePopup" hover-class="hover">先看看</view>
+        <view class="sheet-btn primary" bindtap="goNavigate" hover-class="hover">
+          <image class="btn-ico" src="/images/icons/nav-white.svg" />
+          <text>一键前往</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

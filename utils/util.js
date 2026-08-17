@@ -19,7 +19,8 @@ function getDistance(lat1, lng1, lat2, lng2) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)))
+  // 返回未取整的米数（保留小数精度），展示层再用 formatDistance 精确到小数点后两位
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
 /**
@@ -29,8 +30,9 @@ function getDistance(lat1, lng1, lat2, lng2) {
  */
 function formatDistance(meters) {
   if (meters === null || meters === undefined || isNaN(meters)) return ''
-  if (meters < 1000) return meters + 'm'
-  return (meters / 1000).toFixed(1) + 'km'
+  const m = Number(meters)
+  if (m < 1000) return m.toFixed(2) + 'm'
+  return (m / 1000).toFixed(2) + 'km'
 }
 
 /**

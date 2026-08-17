@@ -1,0 +1,56 @@
+<!-- pages/feedback/feedback.wxml - 我要反馈（苹果白简约风格，业务绑定零改动） -->
+<view class="page">
+  <!-- 头部 -->
+  <view class="head-row">
+    <view class="head-title">
+      <image class="head-ico" src="/images/icons/note.svg" />
+      <text>我要反馈</text>
+    </view>
+    <view class="head-sub">帮助管理员改进公厕信息</view>
+  </view>
+
+  <!-- 厕所信息卡 -->
+  <view class="card cute-card toilet-card">
+    <view class="toilet-name">
+      <image class="toilet-ico" src="/images/icons/toilet.svg" />
+      <text>{{name}}</text>
+    </view>
+    <view class="toilet-addr" wx:if="{{address}}">
+      <image class="addr-ico" src="/images/icons/pin.svg" />
+      <text>{{address}}</text>
+    </view>
+  </view>
+
+  <!-- 反馈类型 -->
+  <view class="card cute-card form-group">
+    <view class="field-label">反馈类型</view>
+    <view class="tag-picker">
+      <view
+        class="tag-option {{type === item ? 'active' : ''}}"
+        wx:for="{{types}}"
+        wx:key="*this"
+        data-type="{{item}}"
+        bindtap="selectType" hover-class="hover"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 反馈内容 -->
+  <view class="card cute-card form-group">
+    <view class="field-label">详细描述 <text class="required">*</text></view>
+    <textarea
+      class="note-input"
+      placeholder="例如：厕所已关闭、位置不准确、设施损坏、卫生较差…"
+      placeholder-class="ph"
+      value="{{content}}"
+      bindinput="onContentInput"
+      maxlength="200"
+    ></textarea>
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" hover-class="hover" bindtap="submit">
+    {{submitting ? '提交中...' : '提交反馈'}}
+  </view>
+  <view class="tips">您的反馈会帮助其他用户和管理员改进公厕信息</view>
+</view>

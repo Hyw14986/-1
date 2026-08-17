@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "公厕天梯榜",
+  "navigationBarTextStyle": "black",
+  "navigationBarBackgroundColor": "#f7faff",
+  "backgroundColor": "#f7faff",
+  "enablePullDownRefresh": true
+}

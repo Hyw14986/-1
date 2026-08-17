@@ -1,0 +1,659 @@
+/* pages/rank/rank.wxss - 公厕天梯榜「苹果白」简约版（业务绑定零改动，无渐变） */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx 80rpx;
+  background: #f5f5f7;
+}
+
+/* 顶部横幅 */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 32rpx;
+  padding: 30rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.hero-title {
+  display: flex;
+  align-items: center;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.hero-title-icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: 14rpx;
+}
+
+.hero-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.hero-bubble {
+  position: absolute;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.08);
+  animation: floatY 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  pointer-events: none;
+}
+
+.hero-bubble.b1 { top: 20rpx; right: 140rpx; }
+.hero-bubble.b2 { top: 88rpx; right: 36rpx; width: 28rpx; height: 28rpx; animation-delay: 0.7s; }
+.hero-bubble.b3 { bottom: 20rpx; right: 200rpx; width: 30rpx; height: 30rpx; animation-delay: 1.4s; }
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+/* 榜单切换 */
+.tabs {
+  display: flex;
+  margin-top: 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 50rpx;
+  padding: 6rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 0;
+  border-radius: 44rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #6e6e73;
+  transition: background 0.25s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s ease-out;
+}
+
+.tab-ico {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
+}
+
+.tab-on .tab-ico {
+  filter: brightness(0) invert(1);
+}
+
+.tab-on {
+  background: #007aff;
+  color: #ffffff;
+  box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.26);
+}
+
+/* 状态 */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.state-icon {
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.state-text {
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: #aeaeb2;
+  text-align: center;
+}
+
+.retry-btn {
+  margin-top: 32rpx;
+  padding: 16rpx 56rpx;
+  border-radius: 50rpx;
+  background: #007aff;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(0, 122, 255, 0.26);
+}
+
+/* 领奖台 */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 30rpx;
+}
+
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33.33%;
+  padding: 0 10rpx;
+}
+
+.podium-medal {
+  width: 72rpx;
+  height: 72rpx;
+  margin-bottom: 8rpx;
+}
+
+.podium-crown {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 4rpx;
+}
+
+.podium-name {
+  width: 100%;
+  text-align: center;
+  font-size: 24rpx;
+  color: #3a3a3c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-name.champion {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+}
+
+.podium-block {
+  width: 100%;
+  margin-top: 12rpx;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 20rpx 20rpx 0 0;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.08);
+}
+
+.podium-block.first {
+  background: #f5c518;
+}
+
+.podium-block.second {
+  background: #b8b8bc;
+}
+
+.podium-block.third {
+  background: #cd7f32;
+}
+
+/* 榜单列表 */
+.rank-list {
+  margin-top: 24rpx;
+}
+
+.rank-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 28rpx;
+  padding: 26rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.rank-no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  margin-right: 20rpx;
+  border-radius: 50%;
+  background: #f2f2f7;
+  color: #6e6e73;
+  font-size: 32rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rank-no.top3 {
+  background: transparent;
+}
+
+.rank-medal {
+  width: 68rpx;
+  height: 68rpx;
+}
+
+.rank-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.rank-meta {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #6e6e73;
+}
+
+.rank-desc {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #3a3a3c;
+  line-height: 1.5;
+}
+
+.rank-tags {
+  margin-top: 10rpx;
+}
+
+.rank-tag {
+  display: inline-block;
+  margin-right: 10rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 22rpx;
+  background: #f2f2f7;
+  color: #3a3a3c;
+  font-size: 20rpx;
+}
+
+.rank-score {
+  margin-left: 16rpx;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rank-score-num {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #007aff;
+}
+
+.rank-score-unit {
+  font-size: 22rpx;
+  color: #6e6e73;
+  margin-left: 4rpx;
+}
+
+.list-end {
+  padding: 30rpx 0 10rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #aeaeb2;
+}
+
+/* 详情弹窗 */
+.mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 24rpx 32rpx 60rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 -12rpx 40rpx rgba(0, 0, 0, 0.14);
+  animation: sheetUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(60%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.sheet-handle {
+  width: 72rpx;
+  height: 8rpx;
+  border-radius: 8rpx;
+  background: #e5e5ea;
+  margin: 0 auto 24rpx;
+}
+
+.sheet-title {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+}
+
+.sheet-meta {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.sheet-score-row {
+  display: flex;
+  align-items: baseline;
+  margin-top: 18rpx;
+}
+
+.sheet-score-big {
+  font-size: 60rpx;
+  font-weight: 800;
+  color: #007aff;
+}
+
+.sheet-score-unit {
+  font-size: 26rpx;
+  color: #6e6e73;
+  margin-left: 6rpx;
+}
+
+.sheet-count {
+  margin-left: 20rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.sheet-desc {
+  margin-top: 20rpx;
+  background: #f2f2f7;
+  border-radius: 20rpx;
+  padding: 18rpx 22rpx;
+}
+
+.sheet-desc-label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #3a3a3c;
+}
+
+.sheet-desc-text {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+  line-height: 1.6;
+}
+
+.sheet-tags {
+  margin-top: 16rpx;
+}
+
+.sheet-tag {
+  display: inline-block;
+  margin-right: 10rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 24rpx;
+  background: #f2f2f7;
+  color: #3a3a3c;
+  font-size: 22rpx;
+}
+
+.sheet-reviews {
+  margin-top: 24rpx;
+}
+
+.sheet-review-title {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.sheet-ico {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
+}
+
+.sheet-review {
+  margin-top: 14rpx;
+  padding: 16rpx 20rpx;
+  background: #f2f2f7;
+  border-radius: 18rpx;
+  font-size: 24rpx;
+  color: #3a3a3c;
+  line-height: 1.6;
+}
+
+.sheet-btns {
+  display: flex;
+  margin-top: 32rpx;
+}
+
+.sheet-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.sheet-btn.ghost {
+  background: #f2f2f7;
+  color: #3a3a3c;
+  margin-right: 18rpx;
+}
+
+.sheet-btn.primary {
+  background: #007aff;
+  color: #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(0, 122, 255, 0.28);
+}
+
+.btn-ico {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+}
+/* Vant empty 组件适配 */
+.rank-empty {
+  padding: 80rpx 0 20rpx;
+}
+
+/* 列表名称行 + 有图标记 */
+.rank-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.rank-photo-badge {
+  width: 28rpx;
+  height: 28rpx;
+  margin-left: 10rpx;
+  flex-shrink: 0;
+}
+
+/* 详情弹窗：点赞数 */
+.sheet-likes {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 20rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 26rpx;
+  background: #fff4e6;
+  color: #ff9500;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.sheet-like-ico {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 8rpx;
+}
+
+/* 详情弹窗：实拍图 */
+.sheet-photos {
+  margin-top: 24rpx;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.sheet-photo {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 20rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+  background: #f2f2f7;
+  border: 1rpx solid #efeff4;
+}
+
+.sheet-photo-empty {
+  margin-top: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 0;
+  border-radius: 20rpx;
+  background: #f2f2f7;
+  color: #aeaeb2;
+  font-size: 24rpx;
+}
+
+.sheet-photo-empty-ico {
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 10rpx;
+}
+
+.rank-thumb {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 20rpx;
+  margin-left: 18rpx;
+  background: #f2f2f7;
+  border: 1rpx solid #efeff4;
+  flex-shrink: 0;
+}
+
+
+
+/* 视觉升级覆盖：排行榜渐变 Hero + 玻璃卡片 */
+.page {
+  background: transparent;
+}
+
+.hero {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  color: #ffffff;
+  border: 1rpx solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 18rpx 48rpx rgba(52, 120, 246, 0.28);
+}
+
+.hero-title {
+  color: #ffffff;
+}
+
+.hero-title-icon {
+  filter: brightness(0) invert(1);
+}
+
+.hero-sub {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.hero-bubble {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.tabs {
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14rpx 40rpx rgba(47, 87, 150, 0.12);
+  backdrop-filter: blur(18rpx);
+}
+
+.tab-on .tab-ico {
+  filter: brightness(0) invert(1);
+}
+
+.tab-on {
+  background: linear-gradient(135deg, #4facfe 0%, #7b6cf6 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(52, 120, 246, 0.28);
+}
+
+.rank-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.92);
+  border-radius: 32rpx;
+  box-shadow: 0 14rpx 40rpx rgba(47, 87, 150, 0.1);
+  backdrop-filter: blur(16rpx);
+}
+
+.podium-block.first {
+  background: linear-gradient(180deg, #ffe08a 0%, #f5b800 100%);
+  box-shadow: 0 12rpx 30rpx rgba(245, 184, 0, 0.32);
+}
+
+.podium-block.second {
+  background: linear-gradient(180deg, #f2f2f7 0%, #b8b8bc 100%);
+  box-shadow: 0 12rpx 30rpx rgba(120, 120, 124, 0.22);
+}
+
+.podium-block.third {
+  background: linear-gradient(180deg, #eab98a 0%, #b96f3c 100%);
+  box-shadow: 0 12rpx 30rpx rgba(185, 111, 60, 0.24);
+}
+
+.sheet {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+.sheet-btn.primary {
+  background: linear-gradient(135deg, #4facfe, #3478f6);
+  color: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(52, 120, 246, 0.28);
+}
+
+.rank-score-num,
+.sheet-score-big {
+  color: #3478f6;
+}
+
+
+
+/* ============================================================
+   排行榜结构重排：领奖台卡片化 + 列表留白优化
+   ============================================================ */
+.podium {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  border-radius: 34rpx;
+  padding: 28rpx 18rpx 22rpx;
+  box-shadow: 0 14rpx 40rpx rgba(47, 87, 150, 0.1);
+  backdrop-filter: blur(16rpx);
+}
+
+.rank-list {
+  margin-top: 20rpx;
+}
+
+.rank-card {
+  border-radius: 30rpx;
+  padding: 24rpx 24rpx;
+}

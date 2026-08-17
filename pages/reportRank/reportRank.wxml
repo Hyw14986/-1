@@ -1,0 +1,91 @@
+<!-- pages/reportRank/reportRank.wxml - 憋神功德无量榜（苹果白简约风格，SVG 图标） -->
+<view class="page">
+  <!-- 顶部横幅 -->
+  <view class="hero">
+    <view class="hero-title">
+      <image class="hero-title-icon" src="/images/icons/merit.svg" />
+      <text>憋神功德无量榜</text>
+    </view>
+    <view class="hero-sub">表彰为如厕大业默默奉献的热心人</view>
+    <view class="hero-bubble b1"></view>
+    <view class="hero-bubble b2"></view>
+    <view class="hero-bubble b3"></view>
+  </view>
+
+  <!-- 规则说明 -->
+  <view class="rule-card">
+    <view class="rule-item"><image class="rule-ico" src="/images/icons/write.svg" /><text>上报 1 座厕所并通过审核</text></view>
+    <view class="rule-item"><image class="rule-ico" src="/images/icons/coin.svg" /><text>上报公厕，造福大众</text></view>
+    <view class="rule-item"><image class="rule-ico" src="/images/icons/bolt.svg" /><text>排名靠前的热心人将获得荣誉展示</text></view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="state">
+    <van-loading type="spinner" size="64rpx" color="#007AFF"></van-loading>
+    <view class="state-text">正在膜拜各位大神…</view>
+  </view>
+
+  <!-- 加载失败 -->
+  <van-empty wx:elif="{{error}}" image="" custom-class="rank-empty">
+    <view slot="image">
+      <image class="state-icon" src="/images/icons/warn.svg" />
+    </view>
+    <view slot="description" class="state-text">{{error}}</view>
+    <view class="retry-btn" bindtap="loadRank" hover-class="hover">再试一次</view>
+  </van-empty>
+
+  <!-- 空状态 -->
+  <van-empty wx:elif="{{!list.length}}" image="" custom-class="rank-empty">
+    <view slot="image">
+      <image class="state-icon" src="/images/icons/empty.svg" />
+    </view>
+    <view slot="description" class="state-text">还没有人上榜，快去上报第一座公厕，争做厕所菩萨！</view>
+  </van-empty>
+
+  <!-- 榜单 -->
+  <block wx:else>
+    <!-- 领奖台 Top3 -->
+    <view class="podium" wx:if="{{top.length >= 3}}">
+      <view class="podium-col" data-index="1">
+        <image class="podium-medal" src="/images/icons/medal2.svg" />
+        <view class="podium-name">{{top[1].openid}}</view>
+        <view class="podium-title">{{top[1].title}}</view>
+        <view class="podium-block second">{{top[1].count}}座</view>
+      </view>
+      <view class="podium-col champion-col">
+        <image class="podium-crown" src="/images/icons/crown.svg" />
+        <image class="podium-medal" src="/images/icons/medal1.svg" />
+        <view class="podium-name champion">{{top[0].openid}}</view>
+        <view class="podium-title">{{top[0].title}}</view>
+        <view class="podium-block first">{{top[0].count}}座</view>
+      </view>
+      <view class="podium-col" data-index="2">
+        <image class="podium-medal" src="/images/icons/medal3.svg" />
+        <view class="podium-name">{{top[2].openid}}</view>
+        <view class="podium-title">{{top[2].title}}</view>
+        <view class="podium-block third">{{top[2].count}}座</view>
+      </view>
+    </view>
+
+    <!-- 榜单列表 -->
+    <view class="rank-list">
+      <view class="rank-card" wx:for="{{rest}}" wx:key="openid">
+        <view class="rank-no {{rankOffset + index <= 3 ? 'top3' : ''}}">
+          <image wx:if="{{rankOffset + index === 1}}" class="rank-medal" src="/images/icons/medal1.svg" />
+          <image wx:elif="{{rankOffset + index === 2}}" class="rank-medal" src="/images/icons/medal2.svg" />
+          <image wx:elif="{{rankOffset + index === 3}}" class="rank-medal" src="/images/icons/medal3.svg" />
+          <text wx:else>{{rankOffset + index}}</text>
+        </view>
+        <view class="rank-main">
+          <view class="rank-name">{{item.openid}}</view>
+          <view class="rank-title">{{item.title}}</view>
+        </view>
+        <view class="rank-side">
+          <view class="rank-count"><image class="side-ico" src="/images/icons/write.svg" /><text>{{item.count}} 座</text></view>
+          <view class="rank-points"><image class="side-ico" src="/images/icons/coin.svg" /><text>{{item.points}} 分</text></view>
+        </view>
+      </view>
+    </view>
+    <view class="list-end">—— 功德无量，善哉善哉 ——</view>
+  </block>
+</view>

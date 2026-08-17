@@ -1,0 +1,45 @@
+<!-- pages/devMessage/devMessage.wxml - 对开发者说悄悄话（苹果白简约风格） -->
+<view class="page">
+  <!-- 头部 -->
+  <view class="head-card">
+    <view class="head-icon"><image class="head-ico" src="/images/icons/send.svg" /></view>
+    <view class="head-text">
+      <view class="head-title">对开发者说悄悄话</view>
+      <view class="head-sub">开发者已备好小板凳和瓜子，就等你掏心窝子</view>
+    </view>
+  </view>
+
+  <!-- 想说什么 -->
+  <view class="card cute-card form-group">
+    <view class="field-label">你想说什么？</view>
+    <view class="tag-picker">
+      <view
+        class="tag-option {{type === item ? 'active' : ''}}"
+        wx:for="{{types}}"
+        wx:key="*this"
+        data-type="{{item}}"
+        bindtap="selectType" hover-class="hover"
+      >{{item}}</view>
+    </view>
+  </view>
+
+  <!-- 内容 -->
+  <view class="card cute-card form-group">
+    <view class="field-label">悄悄话内容 <text class="required">*</text></view>
+    <textarea
+      class="note-input"
+      placeholder="例如：希望加个夜间模式 / 上次导航把我带进小巷子了 / 开发者你辛苦了！"
+      placeholder-class="ph"
+      value="{{content}}"
+      bindinput="onContentInput"
+      maxlength="300"
+    ></textarea>
+    <view class="count-hint">{{content.length}}/300，字不够还可以再啰嗦点</view>
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" hover-class="hover" bindtap="submit">
+    {{submitting ? '飞送中…' : '送出悄悄话'}}
+  </view>
+  <view class="tips">每一条留言开发者都会认真看，感恩的心.jpg</view>
+</view>

@@ -1,14 +1,17 @@
-<!-- pages/list/list.wxml - 厕所列表页 -->
+<!-- pages/list/list.wxml - 厕所列表页（苹果白简约风格，SVG 图标） -->
 <view class="page">
-  <!-- 顶部标题区：与首页品牌区同款 -->
-  <view class="header">
+  <!-- 顶部 Hero -->
+  <view class="hero">
     <image class="logo" src="/images/logo-toilet.png" mode="aspectFit" />
     <view class="welcome">
       <view class="welcome-title">附近公厕</view>
       <view class="welcome-sub">按距离由近到远，帮你找最近的好去处</view>
     </view>
+    <view class="bubble l1"></view>
+    <view class="bubble l2"></view>
   </view>
-  <view class="toast-tip" wx:if="{{toilets.length}}">共 {{toilets.length}} 个公共厕所</view>
+
+  <view class="toast-tip" wx:if="{{toilets.length}}">共找到 {{toilets.length}} 个公共厕所</view>
 
   <view class="list" wx:if="{{!loading}}">
     <view
@@ -19,7 +22,7 @@
       bindtap="goDetail"
     >
       <view class="card-main">
-        <image class="toilet-ico" src="/images/marker.png" mode="aspectFit" />
+        <image class="toilet-ico" src="/images/icons/toilet.svg" mode="aspectFit" />
         <view class="card-body">
       <view class="card-top">
         <view class="toilet-name">{{item.name}}</view>
@@ -34,36 +37,49 @@
         <text class="tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
       </view>
       <view class="card-address" wx:if="{{item.address}}">
-        <text class="addr-icon">📍</text>
+        <image class="addr-icon" src="/images/icons/pin.svg" />
         <text>{{item.address}}</text>
       </view>
       <view class="card-actions">
         <view class="action-btn" catchtap="goDetail" data-id="{{item._id}}">查看详情</view>
-        <view class="action-btn action-primary" catchtap="navToToilet" data-id="{{item._id}}">🧭 导航</view>
+        <view class="action-btn action-primary" catchtap="navToToilet" data-id="{{item._id}}">
+          <image class="btn-ico" src="/images/icons/nav-white.svg" />
+          <text>导航</text>
+        </view>
       </view>
         </view>
       </view>
     </view>
 
-    <view class="empty" wx:if="{{!toilets.length && !loadError}}">
-      <view class="empty-icon">🚽</view>
-      <view>附近暂时没有公厕，点击下方按钮上报一个吧</view>
+    <van-empty wx:if="{{!toilets.length && !loadError}}" image="" custom-class="list-empty">
+      <view slot="image">
+        <image class="empty-icon" src="/images/icons/toilet.svg" />
+      </view>
+      <view slot="description" class="empty-desc">附近暂时没有公厕，点击下方按钮上报一个吧</view>
       <view class="empty-btn btn-primary" bindtap="goMap">返回首页</view>
-    </view>
+    </van-empty>
 
-    <view class="empty" wx:if="{{loadError}}">
-      <view class="empty-icon">⚠️</view>
-      <view>{{loadError}}</view>
+    <van-empty wx:if="{{loadError}}" image="" custom-class="list-empty">
+      <view slot="image">
+        <image class="empty-icon" src="/images/icons/warn.svg" />
+      </view>
+      <view slot="description" class="empty-desc">{{loadError}}</view>
       <view class="empty-btn btn-primary" bindtap="reload">重新加载</view>
-    </view>
+    </van-empty>
   </view>
 
-  <view class="empty" wx:if="{{loading}}">
-    <view>加载中...</view>
+  <view class="skeleton-list" wx:if="{{loading}}">
+    <view class="skeleton-card" wx:for="{{[1,2,3]}}" wx:key="*this">
+      <van-skeleton avatar title row="2" animate custom-class="skeleton-inner"></van-skeleton>
+    </view>
+    <view class="loading-row">
+      <van-loading type="spinner" size="32rpx" color="#007AFF"></van-loading>
+      <text class="loading-text">加载中…</text>
+    </view>
   </view>
 
   <!-- 悬浮加号：随时上报新公厕 -->
   <view class="fab-add" hover-class="fab-hover" bindtap="goReport">
-    <text class="fab-plus">＋</text>
+    <image class="fab-plus" src="/images/icons/plus-white.svg" />
   </view>
 </view>

@@ -1,6 +1,6 @@
 // pages/profile/profile.js - 我的页面
-// 模块：用户资料、今日剩余查询次数、查询记录、我上报的厕所（审核状态）、我的评价、我的收藏、关于小程序
-// 次数配额/查询记录/收藏等全部走云函数，前端不直写数据库
+// 模块：用户资料、查询记录、我上报的厕所（审核状态）、我的评价、我的收藏、关于小程序
+// 查询记录/收藏等全部走云函数，前端不直写数据库
 const app = getApp()
 const db = wx.cloud.database()
 const util = require('../../utils/util.js')
@@ -12,21 +12,35 @@ Page({
     nicknameInput: '',
     avatarUrl: '',
     avatarTempPath: '',
-    // 今日剩余查询次数
-    remaining: 20,
-    dailyLimit: 20,
     // 我的上报
     myToilets: [],
     // 我的评价
     myComments: [],
     // 我的收藏
     favorites: [],
+    // 我的打卡
+    checkinCount: 0,
+    checkinList: [],
+    showCheckins: false,
+    showMyToilets: false,
+    showMyComments: false,
+    showFavorites: false,
     loading: true,
-    defaultAvatar: '/images/default-avatar.png'
+    defaultAvatar: '/images/default-avatar.png',
+    // 关于/打赏弹窗
+    aboutVisible: false,
+    rewardVisible: false,
+    rewardQr: '/images/reward-qr.jpg',
+    rewardQrBroken: false
   },
 
   onShow() {
+    // 自定义 tabBar：同步选中态（我的=1）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 1 })
+    }
     this.initPage()
+    this.loadCheckins()
   },
 
   /**
@@ -37,16 +51,40 @@ Page({
   },
 
   /**
+   * 公厕排行榜（全网人气 + 全国综合）
+   * 【个人主体审核】纯展示榜单数据，页面无任何提交/上传/评价入口
+   */
+  goRank() {
+    wx.navigateTo({ url: '/pages/rank/rank' })
+  },
+
+  /**
+   * 厕所打卡（纯本地打卡工具，无网络、无 UGC）
+   */
+  goCheckin() {
+    wx.navigateTo({ url: '/pages/checkin/checkin' })
+  },
+
+  /**
+   * 给开发者留言（对开发者说悄悄话）
+   */
+  goDevMessage() {
+    // 【个人主体审核】给开发者留言已停用
+    return
+    wx.navigateTo({ url: '/pages/devMessage/devMessage' })
+  },
+
+  /**
    * 初始化：获取 openid、次数配额与各模块数据
    */
   async initPage() {
     try {
       const openid = await util.getOpenId()
       this.openid = openid
-      this.fetchQuota()
       this.loadUser()
-      this.loadMyToilets()
-      this.loadMyComments()
+      // 【个人主体审核】我的上报/我的评价模块已停用
+      // this.loadMyToilets()
+      // this.loadMyComments()
       this.loadFavorites()
     } catch (err) {
       console.error('初始化我的页面失败', err)
@@ -54,20 +92,14 @@ Page({
     }
   },
 
+
   /**
-   * 今日剩余查询次数（quotaOperate get，不消耗）
+   * 憋神功德无量榜（用户上报排行榜）
    */
-  fetchQuota() {
-    wx.cloud
-      .callFunction({ name: 'quotaOperate', data: { action: 'get' } })
-      .then((res) => {
-        const r = res.result || {}
-        if (r.code === 0) {
-          this.setData({ remaining: r.remaining, dailyLimit: r.dailyLimit })
-          console.log('[profile] 今日剩余查询次数', r.remaining, '/', r.dailyLimit)
-        }
-      })
-      .catch((err) => console.error('[profile] 获取剩余次数失败（完整错误）', err))
+  goReportRank() {
+    // 【个人主体审核】上报功德榜已停用
+    return
+    wx.navigateTo({ url: '/pages/reportRank/reportRank' })
   },
 
   /**
@@ -112,6 +144,11 @@ Page({
     const nickname = this.data.nicknameInput.trim()
     if (!nickname) {
       wx.showToast({ title: '请填写昵称', icon: 'none' })
+      return
+    }
+    // 昵称仅允许中英文与数字，其他字符（空格/符号/emoji）一律拒绝
+    if (!/^[\u4e00-\u9fa5A-Za-z0-9]+$/.test(nickname)) {
+      wx.showToast({ title: '昵称仅支持中文、英文和数字', icon: 'none' })
       return
     }
     wx.showLoading({ title: '保存中', mask: true })
@@ -164,6 +201,10 @@ Page({
     return '待审核'
   },
 
+
+  /**
+   * 进入查询记录页
+   */
   /**
    * 加载我的上报（toiletAll 中本人上报，按时间倒序，展示审核状态）
    */
@@ -178,6 +219,7 @@ Page({
       const myToilets = res.data.map((item) => ({
         ...item,
         auditText: this.auditText(item.auditStatus),
+        rejectReason: item.rejectReason || '',
         timeText: util.formatTime(item.createTime)
       }))
       this.setData({ myToilets })
@@ -239,6 +281,45 @@ Page({
   },
 
   /**
+   * 加载我的打卡（本地缓存，不写云端）
+   */
+  loadCheckins() {
+    try {
+      const list = wx.getStorageSync('my_checkins_v1') || []
+      const arr = Array.isArray(list) ? list : []
+      const normalized = arr.map((item) => Object.assign({}, item, {
+        timeText: util.formatTime(item.createTime)
+      }))
+      this.setData({ checkinList: normalized, checkinCount: normalized.length })
+    } catch (err) {
+      console.warn('[profile] 加载打卡记录失败（不影响主流程）', err)
+    }
+  },
+
+  /**
+   * 展开/收起 我的上报/我的评价/我的收藏 区块
+   */
+  toggleSection(e) {
+    const key = e.currentTarget.dataset.key
+    if (!key || typeof this.data[key] !== 'boolean') return
+    this.setData({ [key]: !this.data[key] })
+  },
+
+  /**
+   * 宫格快捷入口：展开对应区块并滚动定位
+   */
+  goSection(e) {
+    const key = e.currentTarget.dataset.key
+    const id = e.currentTarget.dataset.id
+    if (key && typeof this.data[key] === 'boolean' && !this.data[key]) {
+      this.setData({ [key]: true })
+    }
+    if (id) {
+      wx.pageScrollTo({ selector: '#' + id, duration: 300 })
+    }
+  },
+
+  /**
    * 打开公厕详情：回首页并唤起详情弹窗
    */
   openToilet(e) {
@@ -248,23 +329,87 @@ Page({
     wx.switchTab({ url: '/pages/index/index' })
   },
 
-  /**
-   * 进入查询记录页
-   */
   goSearchRecord() {
     wx.navigateTo({ url: '/pages/searchRecord/searchRecord' })
   },
 
   /**
-   * 关于小程序
+   * 关于小程序（趣味版自绘弹窗，纯展示不涉及业务数据）
    */
   showAbout() {
-    wx.showModal({
-      title: '关于小程序',
-      content:
-        '去哪儿拉 - 便民找厕所小程序\n\n数据来源：政府公开导入 + 用户上报 + 腾讯地图周边查询缓存。\n\n每人每日可查询 20 次，每日 0 点自动重置。',
-      showCancel: false,
-      confirmText: '知道了'
+    this.setData({ aboutVisible: true })
+  },
+
+  closeAbout() {
+    this.setData({ aboutVisible: false })
+  },
+
+  /**
+   * 打赏支持：展示微信赞赏码（images/reward-qr.jpg，请替换为开发者自己的赞赏码）
+   * 说明：无支付资质时不接入 wx.requestPayment，采用「赞赏码」扫码方式，纯展示不产生交易数据
+   */
+  showReward() {
+    // 【个人主体审核】打赏/赞赏码入口已隐藏，避免个人主体支付类功能误判
+    return
+  },
+
+  closeReward() {
+    this.setData({ rewardVisible: false })
+  },
+
+  // 弹窗卡片内部点击：阻止冒泡关闭
+  noop() {},
+
+  // 赞赏码加载失败：提示替换占位图
+  onRewardQrError() {
+    this.setData({ rewardQrBroken: true })
+    console.warn('[profile] 赞赏码图片加载失败，请检查 images/reward-qr.jpg 是否存在')
+  },
+
+  /**
+   * 保存赞赏码到相册（getImageInfo 拿到本地可用路径后写入相册）
+   * 相册权限被拒时引导去设置开启
+   */
+  saveRewardQr() {
+    if (this.data.rewardQrBroken) {
+      wx.showToast({ title: '赞赏码图片未配置，请联系开发者', icon: 'none' })
+      return
+    }
+    wx.getImageInfo({
+      src: this.data.rewardQr,
+      success: (info) => {
+        wx.saveImageToPhotosAlbum({
+          filePath: info.path,
+          success: () => {
+            wx.showToast({ title: '已保存，去微信扫一扫识别吧', icon: 'none' })
+          },
+          fail: (err) => {
+            const msg = (err && err.errMsg) || ''
+            if (msg.indexOf('auth deny') >= 0 || msg.indexOf('authorize') >= 0) {
+              wx.showModal({
+                title: '需要相册权限',
+                content: '保存赞赏码需要相册权限，去设置里开启后就能保存啦',
+                confirmText: '去设置',
+                cancelText: '取消',
+                success: (r) => {
+                  if (r.confirm) wx.openSetting()
+                }
+              })
+            } else {
+              wx.showToast({ title: '保存失败，长按图片也能识别', icon: 'none' })
+            }
+          }
+        })
+      },
+      fail: () => {
+        wx.showToast({ title: '赞赏码加载失败，长按图片试试', icon: 'none' })
+      }
     })
+  },
+
+  // 更多功能占位：点击提示开发中，后续功能上线后再替换跳转
+  comingSoon(e) {
+    const name = (e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.name) || '新功能'
+    wx.showToast({ title: name + ' 正在开发中，敬请期待～', icon: 'none' })
   }
 })

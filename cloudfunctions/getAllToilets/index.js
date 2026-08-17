@@ -1,6 +1,6 @@
 /**
  * 云函数 getAllToilets
- * 用途：首页「一键显示全部厕所」——读取 toiletAll 全部有效公厕点位 + 返回数据库已收录总量
+ * 用途：首页「一键显示最近 100 个厕所」——读取 toiletAll 有效公厕点位（按 createTime 倒序，最新入库优先）+ 返回数据库已收录总量
  * 可见性口径与 getNearToilet 一致：invalid != true 且 auditStatus 非 pending/reject（缺失视为有效）
  * 入参：
  *   countOnly: true  仅返回总量（页面加载时轻量统计，不做分页查询）
@@ -36,7 +36,8 @@ function mapItem(item) {
     isOpen24h: !!item.isOpen24h,
     openTime: item.openTime || '',
     rating: item.rating || 0,
-    ratingCount: item.ratingCount || 0
+    ratingCount: item.ratingCount || 0,
+    photoUrls: item.photoUrls || []
   }
 }
 
@@ -56,9 +57,10 @@ exports.main = async (event = {}) => {
     // 分页拉取全部有效点位（云函数 get 单次上限 1000 条），再按可见性过滤
     while (rows.length < MAX) {
       const res = await db.collection('toiletAll').where(where)
+        .orderBy('createTime', 'desc')
         .field({
           name: true, address: true, lat: true, lng: true, source: true,
-          rating: true, ratingCount: true, hasPaper: true, isCharge: true,
+          rating: true, ratingCount: true, photoUrls: true, hasPaper: true, isCharge: true,
           isBarrierFree: true, hasBabyRoom: true, isOpen24h: true, openTime: true
         })
         .skip(skip).limit(pageSize).get()

@@ -30,8 +30,9 @@ Page({
    */
   async initPage() {
     await this.loadToilet()
-    this.loadComments()
-    this.loadMyComment()
+    // 【个人主体审核】不再读取/展示用户评价
+    // this.loadComments()
+    // this.loadMyComment()
   },
 
   /**
@@ -81,6 +82,8 @@ Page({
    * 加载评价列表（按时间倒序）
    */
   async loadComments() {
+    // 【个人主体审核】评价列表已停用
+    return
     try {
       const res = await db
         .collection('comment')
@@ -188,6 +191,8 @@ Page({
    * 云函数内校验：同一 openid + 同一 toiletId 只能评价一次
    */
   async submitComment() {
+    // 【个人主体审核】提交评价已停用，禁止调用 submitComment 云函数
+    return
     if (this.data.submitting) return
     const rating = this.data.commentRating
     if (!rating || rating < 1) {

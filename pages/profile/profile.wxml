@@ -1,117 +1,194 @@
-<!-- pages/profile/profile.wxml - 我的页面 -->
-<view class="page">
+<!-- pages/profile/profile.wxml - 我的页面（苹果白简约风格，SVG 图标，业务绑定零改动） -->
+<view class="page profile-page">
   <!-- 返回主页 -->
   <view class="back-home" bindtap="goHome" hover-class="hover">
-    <text class="back-home-icon">🏠</text>
+    <image class="back-home-icon" src="/images/icons/home.svg" />
     <text>返回主页</text>
   </view>
 
   <!-- 用户信息卡 -->
-  <view class="user-card">
-    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-      <image class="avatar" src="{{avatarTempPath || avatarUrl || defaultAvatar}}" mode="aspectFill" />
-      <view class="avatar-tip">点击更换头像</view>
-    </button>
-    <view class="user-info">
-      <input
-        class="nickname-input"
-        type="nickname"
-        placeholder="点击填写昵称"
-        placeholder-class="ph"
-        value="{{nicknameInput}}"
-        bindinput="onNicknameInput"
-        maxlength="20"
+  <view class="user-card wx-wow animated fadeInUp">
+    <view class="user-card-main">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image class="avatar" src="{{avatarTempPath || avatarUrl || defaultAvatar}}" mode="aspectFill" />
+        <view class="avatar-tip">点击换头像</view>
+      </button>
+      <view class="user-info">
+        <input
+          class="nickname-input"
+          type="nickname"
+          placeholder="点击填写昵称"
+          placeholder-class="ph"
+          value="{{nicknameInput}}"
+          bindinput="onNicknameInput"
+          maxlength="20"
+        />
+        <view class="save-btn" hover-class="hover" bindtap="saveProfile">保存资料</view>
+      </view>
+    </view>
+    <view class="ububble u1"></view>
+    <view class="ububble u2"></view>
+  </view>
+
+  <!-- 我的功能（整合宫格） -->
+  <view class="card grid-card wx-wow animated fadeInUp">
+    <view class="card-head">
+      <image class="card-head-ico" src="/images/icons/dots.svg" />
+      <text>我的功能</text>
+    </view>
+    <view class="grid-row">
+      <view class="grid-item" hover-class="hover" bindtap="goRank">
+        <view class="grid-icon gi-gold"><image class="grid-ico" src="/images/icons/trophy.svg" /></view>
+        <view class="grid-name">公厕排行榜</view>
+      </view>
+
+      <view class="grid-item" hover-class="hover" bindtap="goSearchRecord">
+        <view class="grid-icon gi-mint"><image class="grid-ico" src="/images/icons/doc.svg" /></view>
+        <view class="grid-name">查询记录</view>
+      </view>
+
+      <view class="grid-item" hover-class="hover" bindtap="goSection" data-key="showFavorites" data-id="section-favorites">
+        <view class="grid-icon gi-sky"><image class="grid-ico" src="/images/icons/heart-on.svg" /></view>
+        <view class="grid-name">我的收藏</view>
+      </view>
+
+      <view class="grid-item" hover-class="hover" bindtap="goHome">
+        <view class="grid-icon gi-sky"><image class="grid-ico" src="/images/icons/toilet.svg" /></view>
+        <view class="grid-name">找厕所</view>
+      </view>
+
+
+      <view class="grid-item" hover-class="hover" bindtap="showAbout">
+        <view class="grid-icon gi-purple"><image class="grid-ico" src="/images/icons/bulb.svg" /></view>
+        <view class="grid-name">关于小程序</view>
+      </view>
+    </view>
+  </view>
+  <view class="card section-card wx-wow animated fadeInUp" id="section-favorites">
+    <view class="section-head" hover-class="hover" bindtap="toggleSection" data-key="showFavorites">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/heart-on.svg" />
+      <text>我的收藏（{{favorites.length}}）</text>
+    </view>
+      <image class="section-arrow {{showFavorites ? 'open' : ''}}" src="/images/icons/chevron-down.svg" />
+    </view>
+    <view class="section-body" wx:if="{{showFavorites}}">
+      <view class="empty" wx:if="{{!loading && !favorites.length}}">
+        <image class="empty-icon" src="/images/icons/heart.svg" />
+        <view>还没有收藏～看到好公厕就收藏起来吧！</view>
+      </view>
+      <view
+        class="report-item"
+        wx:for="{{favorites}}"
+        wx:key="_id"
+        data-id="{{item._id}}"
+        bindtap="openToilet" hover-class="hover"
+      >
+        <view class="report-head">
+          <view class="report-name">{{item.name}}</view>
+          <view class="report-fav-score">
+            <image class="mini-star" src="/images/icons/star-on.svg" />
+            <text>{{item.rating || '暂无'}} · {{item.ratingCount || 0}}人评</text>
+          </view>
+        </view>
+        <view class="report-meta">{{item.address}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card section-card wx-wow animated fadeInUp" id="section-checkins">
+    <view class="section-head" hover-class="hover" bindtap="toggleSection" data-key="showCheckins">
+      <view class="section-title">
+        <image class="section-ico" src="/images/icons/check-gray.svg" />
+        <text>我的打卡</text>
+      </view>
+      <image class="section-arrow {{showCheckins ? 'open' : ''}}" src="/images/icons/chevron-down.svg" />
+    </view>
+    <view class="section-body" wx:if="{{showCheckins}}">
+      <view class="checkin-summary">我已打卡：{{checkinCount}}座公厕</view>
+      <view class="checkin-list">
+        <view class="checkin-item" wx:for="{{checkinList}}" wx:key="_id" hover-class="hover" data-id="{{item._id}}" bindtap="openToilet">
+          <view class="checkin-item-icon">
+            <image class="checkin-item-ico" src="/images/icons/toilet.svg" />
+          </view>
+          <view class="checkin-item-main">
+            <view class="checkin-item-name">{{item.name}}</view>
+            <view class="checkin-item-meta">{{item.address}} · {{item.timeText}}</view>
+          </view>
+        </view>
+        <view class="checkin-empty" wx:if="{{!checkinList.length}}">还没有打卡记录，去公厕详情点击“打卡到此一游”吧</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 更多功能（开发中占位） -->
+  <view class="card coming-card wx-wow animated fadeInUp">
+    <view class="card-head coming-head">
+      <image class="card-head-ico" src="/images/icons/dots.svg" />
+      <text>更多功能</text>
+      <view class="coming-badge">开发中</view>
+    </view>
+    <view class="coming-grid">
+      <view class="coming-item" hover-class="hover" bindtap="comingSoon" data-name="找水地图">
+        <view class="coming-icon ci-mint"><image class="coming-ico" src="/images/icons/pin.svg" /></view>
+        <view class="coming-name">找水地图</view>
+        <view class="coming-tag">开发中</view>
+      </view>
+      <view class="coming-item" hover-class="hover" bindtap="comingSoon" data-name="路线规划">
+        <view class="coming-icon ci-sky"><image class="coming-ico" src="/images/icons/nav.svg" /></view>
+        <view class="coming-name">路线规划</view>
+        <view class="coming-tag">开发中</view>
+      </view>
+      <view class="coming-item" hover-class="hover" bindtap="comingSoon" data-name="更多惊喜">
+        <view class="coming-icon ci-gold"><image class="coming-ico" src="/images/icons/bulb.svg" /></view>
+        <view class="coming-name">更多惊喜</view>
+        <view class="coming-tag">开发中</view>
+      </view>
+    </view>
+    <view class="coming-footer">更多贴心功能正在路上，敬请期待～</view>
+  </view>
+  <!-- 关于小程序弹窗 -->
+  <view class="modal-mask" wx:if="{{aboutVisible}}" catchtap="closeAbout">
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-close" hover-class="hover" catchtap="closeAbout"><image class="modal-close-ico" src="/images/icons/close.svg" /></view>
+      <view class="modal-title">关于「找厕所不迷路」</view>
+      <view class="about-lead">给膀胱一张地图，也给生活一点从容。</view>
+      <view class="about-body">
+        <view class="about-line">我们相信，真正的自由不是想去哪就去哪，而是想去厕所时，下一间就在附近。</view>
+        <view class="about-line">这个小程序像一个安静的导航精灵，不催你、不吵你，只在关键时刻递来一个方向。</view>
+      </view>
+      <view class="about-facts">
+        <view class="about-fact"><image class="fact-ico" src="/images/icons/db.svg" /><text>数据来自公开公厕数据库，像在城市的褶皱里收集安全感</text></view>
+        <view class="about-fact"><image class="fact-ico" src="/images/icons/bolt.svg" /><text>每日查询上限 20 次，0 点自动重置；筛选与查看详情不消耗次数</text></view>
+        <view class="about-fact"><image class="fact-ico" src="/images/icons/check-gray.svg" /><text>不负责替你憋，只负责帮你找到出口</text></view>
+      </view>
+      <view class="about-footer">愿每一次着急出门，都有答案在转角。</view>
+      <view class="modal-btn modal-btn-primary" hover-class="hover" bindtap="closeAbout">知道啦</view>
+    </view>
+  </view>
+
+  <!-- 打赏弹窗 -->
+  <view class="modal-mask" wx:if="{{false}}" catchtap="closeReward">
+    <view class="modal-card" catchtap="noop">
+      <view class="modal-close" hover-class="hover" catchtap="closeReward"><image class="modal-close-ico" src="/images/icons/close.svg" /></view>
+      <view class="reward-title">
+        <image class="reward-title-ico" src="/images/icons/heart-on.svg" />
+        <text>请开发者喝杯奶茶</text>
+      </view>
+      <view class="reward-sub">如果它帮你「救过急」，欢迎赏一杯，心意到就行～</view>
+      <image
+        class="reward-qr"
+        src="{{rewardQr}}"
+        mode="aspectFit"
+        show-menu-by-longpress="{{true}}"
+        binderror="onRewardQrError"
       />
-      <view class="save-btn" hover-class="hover" bindtap="saveProfile">保存资料</view>
-    </view>
-  </view>
-
-  <!-- 今日剩余查询次数 -->
-  <view class="quota-card">
-    <view class="quota-title">🔋 今日剩余查询次数</view>
-    <view class="quota-num"><text class="quota-count">{{remaining}}</text> / {{dailyLimit}}</view>
-    <view class="quota-bar">
-      <view class="quota-fill" style="width: {{remaining / dailyLimit * 100}}%"></view>
-    </view>
-    <view class="quota-tip">「开始寻找」查询成功后消耗 1 次，失败不扣次数，每日 0 点自动重置</view>
-  </view>
-
-  <!-- 功能入口 -->
-  <view class="cute-card menu-card">
-    <view class="menu-item" hover-class="hover" bindtap="goSearchRecord">
-      <view class="menu-left"><text class="menu-icon">📋</text><text>查询记录</text></view>
-      <view class="menu-arrow">›</view>
-    </view>
-    <view class="menu-item" hover-class="hover" bindtap="showAbout">
-      <view class="menu-left"><text class="menu-icon">💡</text><text>关于小程序</text></view>
-      <view class="menu-arrow">›</view>
-    </view>
-  </view>
-
-  <!-- 我的上报 -->
-  <view class="cute-card section-card">
-    <view class="section-title">📮 我上报的厕所（{{myToilets.length}}）</view>
-    <view class="empty" wx:if="{{!loading && !myToilets.length}}">
-      <view class="empty-icon">🚽</view>
-      <view>还没有上报过～快去发现第一座公厕吧！</view>
-    </view>
-    <view
-      class="report-item"
-      wx:for="{{myToilets}}"
-      wx:key="_id"
-      data-id="{{item._id}}"
-      bindtap="openToilet" hover-class="hover"
-    >
-      <view class="report-head">
-        <view class="report-name">{{item.name}}</view>
-        <view class="report-status {{item.auditStatus === 'pass' ? 'status-pass' : (item.auditStatus === 'reject' ? 'status-reject' : 'status-pending')}}">{{item.auditText}}</view>
+      <view class="reward-tip" wx:if="{{!rewardQrBroken}}">长按图片可识别赞赏码，或保存后用微信扫一扫</view>
+      <view class="reward-tip reward-tip-warn" wx:else>赞赏码占位图未替换，请开发者上传自己的赞赏码到 images/reward-qr.jpg</view>
+      <view class="reward-actions">
+        <view class="modal-btn modal-btn-ghost" hover-class="hover" catchtap="closeReward">下次再说</view>
+        <view class="modal-btn modal-btn-primary" hover-class="hover" catchtap="saveRewardQr">保存赞赏码</view>
       </view>
-      <view class="report-meta">{{item.address}} · {{item.timeText}}</view>
-    </view>
-  </view>
-
-  <!-- 我的评价 -->
-  <view class="cute-card section-card">
-    <view class="section-title">💬 我的评价（{{myComments.length}}）</view>
-    <view class="empty" wx:if="{{!loading && !myComments.length}}">
-      <view class="empty-icon">⭐</view>
-      <view>还没有评价过～去给好公厕点个赞吧！</view>
-    </view>
-    <view
-      class="report-item"
-      wx:for="{{myComments}}"
-      wx:key="_id"
-      data-id="{{item.toiletId}}"
-      bindtap="openToilet" hover-class="hover"
-    >
-      <view class="report-head">
-        <view class="report-name">{{item.toiletName}}</view>
-        <star-rating value="{{item.score}}" size="22" disabled="{{true}}" />
-      </view>
-      <view class="report-content" wx:if="{{item.content}}">{{item.content}}</view>
-      <view class="report-meta">{{item.timeText}}</view>
-    </view>
-  </view>
-
-  <!-- 我的收藏 -->
-  <view class="cute-card section-card">
-    <view class="section-title">❤️ 我的收藏（{{favorites.length}}）</view>
-    <view class="empty" wx:if="{{!loading && !favorites.length}}">
-      <view class="empty-icon">🤍</view>
-      <view>还没有收藏～看到好公厕就收藏起来吧！</view>
-    </view>
-    <view
-      class="report-item"
-      wx:for="{{favorites}}"
-      wx:key="_id"
-      data-id="{{item._id}}"
-      bindtap="openToilet" hover-class="hover"
-    >
-      <view class="report-head">
-        <view class="report-name">{{item.name}}</view>
-        <view class="report-fav-score">⭐ {{item.rating || '暂无'}} · {{item.ratingCount || 0}}人评</view>
-      </view>
-      <view class="report-meta">{{item.address}}</view>
     </view>
   </view>
 </view>

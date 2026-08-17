@@ -23,6 +23,13 @@ function getDistance(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+/** 评分钳制：0-5，保留 1 位小数，非法值归 0 */
+function clampScore(v) {
+  const n = Number(v)
+  if (!isFinite(n)) return 0
+  return Math.min(5, Math.max(0, Math.round(n * 10) / 10))
+}
+
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext()
   if (!OPENID) return { code: 1, msg: '获取用户身份失败' }
@@ -47,6 +54,7 @@ exports.main = async (event) => {
   }
 
   const feeType = ['free', 'paid', 'other'].indexOf(event && event.feeType) > -1 ? event.feeType : 'free'
+  const seatType = ['squat', 'sitting', 'both', 'other'].indexOf(event && event.seatType) > -1 ? event.seatType : ''
 
   const addRes = await db.collection('toiletAll').add({
     data: {
@@ -63,10 +71,27 @@ exports.main = async (event) => {
       isBarrierFree: !!(event && event.isBarrierFree),
       hasBabyRoom: !!(event && event.hasBabyRoom),
       isOpen24h: !!(event && event.isOpen24h),
-      openTime: String((event && event.openTime) || ''),
+      // 坑位类型：squat 蹲便 / sitting 坐便 / both 都有 / other 其他（自定义说明存 seatTypeOther）
+      seatType,
+      seatTypeOther: seatType === 'other' ? String((event && event.seatTypeOther) || '').trim() : '',
+      // 设施标签「其他」自定义说明（前端 tags.other 选中时提交）
+      otherTagText: String((event && event.otherTagText) || '').trim(),
+      // 体验评分：卫生环境 / 如厕体验 / 空气质量 / 综合（0-5）
+      hygieneScore: clampScore(event && event.hygieneScore),
+      comfortScore: clampScore(event && event.comfortScore),
+      airScore: clampScore(event && event.airScore),
+      totalScore: clampScore(event && event.totalScore),
+      // 附加设施：洗手液 / 烘手器 / 空调
+      hasSoap: !!(event && event.hasSoap),
+      hasDryer: !!(event && event.hasDryer),
+      hasAC: !!(event && event.hasAC),
+      // 是否对外开放：默认对外开放（全天开放）；选择不对公众开放时标记对应文案
+      openTime: (event && event.isPublic === false) ? '不对公众开放' : String((event && event.openTime) || '') || '全天开放',
       feeType,
       feeDesc: feeType === 'other' ? String((event && event.feeDesc) || '') : '',
       photoUrls: Array.isArray(event && event.photoUrls) ? event.photoUrls : [],
+      // 上报者想对大家说的话（选填）
+      note: String((event && event.note) || '').trim(),
       auditStatus: 'pending',
       rating: 0,
       ratingCount: 0,

@@ -1,0 +1,58 @@
+<!-- pages/checkin/checkin.wxml - 厕所打卡（纯本地工具，无 emoji） -->
+<view class="checkin-page">
+  <view class="checkin-hero">
+    <view class="hero-icon-wrap">
+      <image class="hero-icon" src="/images/icons/toilet.svg" />
+    </view>
+    <view class="hero-body">
+      <view class="hero-title">厕所打卡</view>
+      <view class="hero-sub">记录每一次顺利如厕，看看你的坚持</view>
+    </view>
+  </view>
+
+  <view class="checkin-main-card">
+    <view class="date-line">{{todayLabel}}</view>
+
+    <view class="status-row">
+      <view class="status-icon-wrap">
+        <image class="status-icon" src="/images/icons/check.svg" />
+      </view>
+      <view class="status-text">{{todayChecked ? '今天已打卡' : '今天还没打卡'}}</view>
+    </view>
+
+    <view class="stats-row">
+      <view class="stat-item">
+        <view class="stat-num">{{streak}}</view>
+        <view class="stat-label">连续天数</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-num">{{totalCount}}</view>
+        <view class="stat-label">累计打卡</view>
+      </view>
+    </view>
+
+    <view class="checkin-btn {{todayChecked ? 'checked' : ''}}" hover-class="hover" bindtap="checkin">
+      <image class="checkin-btn-ico" src="/images/icons/check.svg" />
+      <text>{{todayChecked ? '今日已打卡' : '立即打卡'}}</text>
+    </view>
+  </view>
+
+  <view class="history-card">
+    <view class="history-head">
+      <image class="history-ico" src="/images/icons/calendar.svg" />
+      <text>最近 7 天</text>
+    </view>
+    <view class="history-list">
+      <view class="history-item" wx:for="{{recentDates}}" wx:key="*this">
+        <view class="history-dot"></view>
+        <text>{{item}}</text>
+      </view>
+      <view class="history-empty" wx:if="{{!recentDates.length}}">还没有打卡记录，从今天开始吧</view>
+    </view>
+  </view>
+
+  <view class="back-home" hover-class="hover" bindtap="goHome">
+    <image class="back-home-icon" src="/images/icons/home.svg" />
+    <text>返回主页</text>
+  </view>
+</view>

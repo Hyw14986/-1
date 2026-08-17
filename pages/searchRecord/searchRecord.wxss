@@ -1,143 +1,228 @@
-/* pages/searchRecord/searchRecord.wxss - 查询记录页（治愈马卡龙风） */
+/* pages/searchRecord/searchRecord.wxss - 查询记录页「苹果白」简约版（业务绑定零改动，无渐变） */
 .page {
   min-height: 100vh;
-  padding: 24rpx 0 60rpx;
-  background: #f7faff;
   box-sizing: border-box;
+  padding: 24rpx 24rpx 80rpx;
+  background: #f5f5f7;
 }
 
-/* 头部 */
 .head-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8rpx 28rpx 0;
+  margin-bottom: 24rpx;
 }
 
 .head-title {
-  font-size: 38rpx;
-  font-weight: 700;
-  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+}
+
+.head-ico {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 14rpx;
 }
 
 .clear-btn {
-  padding: 10rpx 26rpx;
+  display: flex;
+  align-items: center;
+  padding: 10rpx 24rpx;
   border-radius: 40rpx;
   background: #ffffff;
-  color: #e05a6d;
+  border: 1rpx solid #efeff4;
+  color: #6e6e73;
   font-size: 24rpx;
-  box-shadow: 0 6rpx 16rpx rgba(116, 185, 255, 0.16);
+  font-weight: 600;
+  box-shadow: 0 4rpx 14rpx rgba(0, 0, 0, 0.04);
 }
 
-.clear-btn.hover {
-  opacity: 0.8;
+.btn-sm-ico {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 8rpx;
 }
 
 /* 空状态 */
 .empty {
-  padding: 180rpx 0;
-  text-align: center;
-  color: #7f8c8d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
 }
 
 .empty-icon {
-  font-size: 140rpx;
-  margin-bottom: 28rpx;
+  width: 120rpx;
+  height: 120rpx;
 }
 
 .empty-text {
-  font-size: 30rpx;
-  color: #2c3e50;
-  font-weight: 600;
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  color: #6e6e73;
 }
 
 .empty-sub {
-  margin-top: 16rpx;
+  margin-top: 10rpx;
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #aeaeb2;
 }
 
 /* 记录卡片 */
 .record-card {
-  padding: 28rpx;
+  margin-bottom: 22rpx;
+}
+
+.record-head {
+  display: flex;
+  align-items: center;
+}
+
+.record-head.zero {
+  opacity: 0.55;
+}
+
+.record-icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+}
+
+.record-head-text {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
 }
 
 .record-main {
-  padding: 8rpx 0 16rpx;
+  margin-top: 18rpx;
+  background: #f2f2f7;
+  border-radius: 20rpx;
+  padding: 18rpx 22rpx;
 }
 
 .record-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 10rpx 0;
+  padding: 8rpx 0;
 }
 
 .record-label {
-  font-size: 26rpx;
-  color: #7f8c8d;
+  font-size: 24rpx;
+  color: #6e6e73;
 }
 
 .record-value {
-  font-size: 28rpx;
-  color: #2c3e50;
+  font-size: 24rpx;
+  color: #1d1d1f;
   font-weight: 600;
 }
 
 .record-actions {
   display: flex;
+  margin-top: 20rpx;
+}
+
+.again-btn,
+.del-btn {
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-  border-top: 2rpx solid #eef4fc;
-  padding-top: 20rpx;
+  justify-content: center;
+  flex: 1;
+  padding: 16rpx 0;
+  border-radius: 44rpx;
+  font-size: 26rpx;
+  font-weight: 600;
 }
 
 .again-btn {
-  padding: 12rpx 32rpx;
-  border-radius: 40rpx;
-  background: linear-gradient(135deg, #74b9ff, #a8e6cf);
+  background: #007aff;
   color: #ffffff;
-  font-size: 26rpx;
-  font-weight: 600;
-  margin-right: 20rpx;
-  box-shadow: 0 8rpx 18rpx rgba(116, 185, 255, 0.32);
-}
-
-.again-btn.hover {
-  opacity: 0.85;
-  transform: scale(0.96);
+  margin-right: 18rpx;
+  box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.24);
 }
 
 .del-btn {
-  padding: 12rpx 28rpx;
-  border-radius: 40rpx;
-  background: #f0f7ff;
-  color: #e05a6d;
-  font-size: 24rpx;
+  background: #f2f2f7;
+  color: #3a3a3c;
 }
-
-.del-btn.hover {
-  opacity: 0.8;
+/* Vant empty 组件适配 */
+.record-empty {
+  padding: 80rpx 0 20rpx;
 }
-/* 记录头部（结果图标） */
-.record-head {
+.record-empty-desc {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 4rpx 0 12rpx;
-  border-bottom: 2rpx solid #eef4fc;
-  margin-bottom: 12rpx;
 }
 
-.record-head.zero {
-  opacity: 0.6;
+
+
+/* 视觉升级覆盖：查询记录玻璃卡片 */
+.page {
+  background: transparent;
 }
 
-.record-icon {
-  font-size: 32rpx;
+.head-title {
+  color: #1d1d1f;
+}
+
+.clear-btn {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12rpx 34rpx rgba(47, 87, 150, 0.1);
+}
+
+.record-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 32rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14rpx 40rpx rgba(47, 87, 150, 0.1);
+  backdrop-filter: blur(16rpx);
+}
+
+.record-main {
+  background: rgba(244, 248, 255, 0.9);
+}
+
+.again-btn {
+  background: linear-gradient(135deg, #4facfe, #3478f6);
+  color: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(52, 120, 246, 0.28);
+}
+
+.del-btn {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+
+
+/* ============================================================
+   查询记录页结构重排：记录概览 + 玻璃卡片
+   ============================================================ */
+.record-summary {
+  display: flex;
+  align-items: baseline;
+  margin: -6rpx 0 22rpx;
+  padding: 22rpx 26rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(240, 248, 255, 0.94) 100%);
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12rpx 34rpx rgba(47, 87, 150, 0.08);
+}
+
+.summary-count {
+  font-size: 52rpx;
+  font-weight: 800;
+  color: #3478f6;
   margin-right: 12rpx;
 }
 
-.record-head-text {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #2c3e50;
+.summary-text {
+  font-size: 24rpx;
+  color: #6e6e73;
 }

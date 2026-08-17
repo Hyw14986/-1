@@ -1,7 +1,8 @@
-<!-- pages/detail/detail.wxml - 厕所详情页 -->
+<!-- pages/detail/detail.wxml - 厕所详情页（苹果白简约风格，SVG 图标） -->
 <view class="page" wx:if="{{toilet}}">
-  <!-- 基本信息卡 -->
-  <view class="card head-card">
+  <!-- 顶部封面 -->
+  <view class="cover">
+    <image class="cover-emoji" src="/images/icons/toilet.svg" />
     <view class="name">{{toilet.name}}</view>
     <view class="rating-row">
       <star-rating value="{{toilet.rating}}" size="32" disabled="{{true}}" />
@@ -10,44 +11,60 @@
       <text class="dist" wx:if="{{distanceText}}">距你 {{distanceText}}</text>
     </view>
     <view class="tags" wx:if="{{tags.length}}">
-      <text class="tag" wx:for="{{tags}}" wx:key="*this">{{item}}</text>
+      <text class="tag tag-white" wx:for="{{tags}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="bubble d1"></view>
+    <view class="bubble d2"></view>
+  </view>
+
+  <!-- 基本信息卡 -->
+  <view class="card head-card">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/doc.svg" />
+      <text>设施信息</text>
     </view>
     <view class="info-grid">
       <view class="info-item">
-        <text class="info-label">地址</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/pin.svg" /><text>地址</text></view>
         <text class="info-value">{{toilet.address || '暂无'}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">开放时间</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/clock.svg" /><text>开放时间</text></view>
         <text class="info-value">{{toilet.openTime || '全天开放'}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">收费情况</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/money.svg" /><text>收费情况</text></view>
         <text class="info-value">{{feeText}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">蹲位情况</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/toilet.svg" /><text>蹲位情况</text></view>
         <text class="info-value">{{seatText}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">无障碍</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/barrier.svg" /><text>无障碍</text></view>
         <text class="info-value">{{toilet.hasAccessible ? '有' : '无'}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">母婴室</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/baby.svg" /><text>母婴室</text></view>
         <text class="info-value">{{toilet.hasBabyCare ? '有' : '无'}}</text>
       </view>
       <view class="info-item">
-        <text class="info-label">卫生纸</text>
+        <view class="info-label"><image class="info-ico" src="/images/icons/paper.svg" /><text>卫生纸</text></view>
         <text class="info-value">{{toilet.hasToiletPaper ? '有' : '无'}}</text>
       </view>
     </view>
-    <view class="nav-btn btn-primary" bindtap="navToToilet">🧭 导航去这里</view>
+    <view class="nav-btn btn-primary" bindtap="navToToilet">
+      <image class="btn-ico" src="/images/icons/nav-white.svg" />
+      <text>导航去这里</text>
+    </view>
   </view>
 
   <!-- 现场照片 -->
-  <view class="card photo-card" wx:if="{{toilet.photos && toilet.photos.length}}">
-    <view class="section-title">现场照片</view>
+  <view class="card photo-card" wx:if="{{false}}">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/photo.svg" />
+      <text>现场照片</text>
+    </view>
     <view class="photo-list">
       <image
         wx:for="{{toilet.photos}}"
@@ -62,10 +79,13 @@
   </view>
 
   <!-- 评价列表 -->
-  <view class="card comment-card">
-    <view class="section-title">用户评价</view>
+  <view class="card comment-card" wx:if="{{false}}">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/note.svg" />
+      <text>用户评价</text>
+    </view>
     <view class="empty" wx:if="{{!comments.length}}">
-      <view class="empty-icon">💬</view>
+      <image class="empty-icon" src="/images/icons/note.svg" />
       <view>还没有评价，来抢沙发吧~</view>
     </view>
     <view class="comment-item" wx:for="{{comments}}" wx:key="_id">
@@ -82,8 +102,11 @@
   </view>
 
   <!-- 我的评价表单（未评价时显示） -->
-  <view class="card form-card" wx:if="{{!hasCommented}}">
-    <view class="section-title">我要评价</view>
+  <view class="card form-card" wx:if="{{false}}">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/write.svg" />
+      <text>我要评价</text>
+    </view>
     <view class="form-rating">
       <text class="form-label">打分</text>
       <star-rating value="{{commentRating}}" size="46" disabled="{{false}}" bind:change="onStarChange" />
@@ -102,8 +125,11 @@
   </view>
 
   <!-- 已评价提示 -->
-  <view class="card my-comment-card" wx:if="{{hasCommented && myComment}}">
-    <view class="section-title">我的评价</view>
+  <view class="card my-comment-card" wx:if="{{false}}">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/heart-on.svg" />
+      <text>我的评价</text>
+    </view>
     <star-rating value="{{myComment.rating}}" size="28" disabled="{{true}}" />
     <view class="comment-content" wx:if="{{myComment.content}}">{{myComment.content}}</view>
     <view class="done-tip">你已评价过该厕所，感谢分享~</view>

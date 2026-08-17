@@ -1,13 +1,26 @@
-<!-- pages/report/report.wxml - 上报公厕页 -->
+<!-- pages/report/report.wxml - 上报公厕页（苹果白简约风格，SVG 图标，业务绑定零改动） -->
 <view class="page">
   <!-- 返回主页 -->
   <view class="back-home" bindtap="goHome" hover-class="hover">
-    <text class="back-home-icon">🏠</text>
+    <image class="back-home-icon" src="/images/icons/home.svg" />
     <text>返回主页</text>
   </view>
 
-  <view class="card cute-card">
-    <!-- 厕所名称 -->
+  <!-- 寄语横幅 -->
+  <view class="report-banner">
+    <image class="report-banner-icon" src="/images/icons/write.svg" />
+    <text class="report-banner-text">上报一座公厕，帮助更多需要的人！</text>
+    <view class="rbubble r1"></view>
+    <view class="rbubble r2"></view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="card cute-card form-group">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/pin.svg" />
+      <text>基本信息</text>
+    </view>
+
     <view class="field">
       <view class="field-label">厕所名称 <text class="required">*</text></view>
       <input
@@ -20,14 +33,20 @@
       />
     </view>
 
-    <!-- 位置选择 -->
     <view class="field">
       <view class="field-label">位置 <text class="required">*</text></view>
-      <view class="locate-btn btn-outline" hover-class="hover" bindtap="chooseLocation">📍 在地图上选择位置</view>
-      <view class="locate-result" wx:if="{{location}}">已选择：{{location.address}}</view>
+      <view class="locate-btn" hover-class="hover" bindtap="chooseLocation">
+        <image class="locate-btn-ico" src="/images/icons/locate.svg" />
+        <text>在地图上选择位置</text>
+      </view>
+      <view class="locate-result" wx:if="{{location}}">
+        <text wx:if="{{location.address}}">已选择：{{location.address}}</text>
+        <text wx:elif="{{locText}}">{{locText}}</text>
+        <text wx:else>已自动定位（{{location.latitude}}, {{location.longitude}}），可点上方按钮微调</text>
+      </view>
       <input
         class="field-input"
-        placeholder="补充详细地址（必填）"
+        placeholder="补充详细地址（选填，可留空）"
         placeholder-class="ph"
         value="{{address}}"
         bindinput="onAddressInput"
@@ -35,20 +54,65 @@
       />
     </view>
 
-    <!-- 开放时间 -->
     <view class="field">
-      <view class="field-label">开放时间</view>
+      <view class="field-label">是否对外开放</view>
+      <view class="tag-picker">
+        <view
+          class="tag-option {{isPublic ? 'active' : ''}}"
+          data-public="1"
+          bindtap="selectIsPublic" hover-class="hover"
+        ><text>对外开放</text></view>
+        <view
+          class="tag-option {{!isPublic ? 'active' : ''}}"
+          data-public="0"
+          bindtap="selectIsPublic" hover-class="hover"
+        ><text>不对公众开放</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 坑位与设施 -->
+  <view class="card cute-card form-group">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/toilet.svg" />
+      <text>坑位与设施</text>
+    </view>
+
+    <view class="field">
+      <view class="field-label">坑位类型</view>
+      <view class="tag-picker">
+        <view
+          class="tag-option seat-option {{seatType === 'squat' ? 'active' : ''}}"
+          data-seat="squat"
+          bindtap="selectSeat" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/toilet.svg" /><text>蹲便</text></view>
+        <view
+          class="tag-option seat-option {{seatType === 'sitting' ? 'active' : ''}}"
+          data-seat="sitting"
+          bindtap="selectSeat" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/sit.svg" /><text>坐便</text></view>
+        <view
+          class="tag-option seat-option {{seatType === 'both' ? 'active' : ''}}"
+          data-seat="both"
+          bindtap="selectSeat" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/check-gray.svg" /><text>蹲坐都有</text></view>
+        <view
+          class="tag-option seat-option {{seatType === 'other' ? 'active' : ''}}"
+          data-seat="other"
+          bindtap="selectSeat" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/dots.svg" /><text>其他</text></view>
+      </view>
       <input
         class="field-input"
-        placeholder="例如：06:00-22:00，留空默认全天开放"
+        wx:if="{{seatType === 'other'}}"
+        placeholder="例如：无障碍坑位、儿童坑位等"
         placeholder-class="ph"
-        value="{{openTime}}"
-        bindinput="onOpenTimeInput"
-        maxlength="30"
+        value="{{seatTypeOther}}"
+        bindinput="onSeatTypeOtherInput"
+        maxlength="20"
       />
     </view>
 
-    <!-- 设施标签 -->
     <view class="field">
       <view class="field-label">设施标签（多选）</view>
       <view class="tag-picker">
@@ -56,26 +120,54 @@
           class="tag-option {{tags.isBarrierFree ? 'active' : ''}}"
           data-key="isBarrierFree"
           bindtap="toggleTag" hover-class="hover"
-        >♿ 无障碍</view>
+        ><image class="tag-ico" src="/images/icons/barrier.svg" /><text>无障碍</text></view>
         <view
           class="tag-option {{tags.hasBabyRoom ? 'active' : ''}}"
           data-key="hasBabyRoom"
           bindtap="toggleTag" hover-class="hover"
-        >🍼 母婴室</view>
+        ><image class="tag-ico" src="/images/icons/baby.svg" /><text>母婴室</text></view>
         <view
           class="tag-option {{tags.hasPaper ? 'active' : ''}}"
           data-key="hasPaper"
           bindtap="toggleTag" hover-class="hover"
-        >🧻 有纸巾</view>
+        ><image class="tag-ico" src="/images/icons/paper.svg" /><text>有纸巾</text></view>
         <view
           class="tag-option {{tags.isOpen24h ? 'active' : ''}}"
           data-key="isOpen24h"
           bindtap="toggleTag" hover-class="hover"
-        >🌙 24小时开放</view>
+        ><image class="tag-ico" src="/images/icons/moon.svg" /><text>24小时开放</text></view>
+        <view
+          class="tag-option {{facilities.hasSoap ? 'active' : ''}}"
+          data-key="hasSoap"
+          bindtap="toggleFacility" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/soap.svg" /><text>洗手液</text></view>
+        <view
+          class="tag-option {{facilities.hasDryer ? 'active' : ''}}"
+          data-key="hasDryer"
+          bindtap="toggleFacility" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/dryer.svg" /><text>烘手器</text></view>
+        <view
+          class="tag-option {{facilities.hasAC ? 'active' : ''}}"
+          data-key="hasAC"
+          bindtap="toggleFacility" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/ac.svg" /><text>空调</text></view>
+        <view
+          class="tag-option {{tags.other ? 'active' : ''}}"
+          data-key="other"
+          bindtap="toggleTag" hover-class="hover"
+        ><image class="tag-ico" src="/images/icons/dots.svg" /><text>其他</text></view>
       </view>
+      <input
+        class="field-input"
+        wx:if="{{tags.other}}"
+        placeholder="例如：有镜子、有挂钩、有插座等"
+        placeholder-class="ph"
+        value="{{otherTagText}}"
+        bindinput="onOtherTagInput"
+        maxlength="30"
+      />
     </view>
 
-    <!-- 收费情况单选 -->
     <view class="field">
       <view class="field-label">收费情况</view>
       <view class="tag-picker">
@@ -83,17 +175,17 @@
           class="tag-option fee-option {{feeType === 'free' ? 'active' : ''}}"
           data-fee="free"
           bindtap="selectFee" hover-class="hover"
-        >💰 免费</view>
+        ><image class="tag-ico" src="/images/icons/check-gray.svg" /><text>免费</text></view>
         <view
           class="tag-option fee-option {{feeType === 'paid' ? 'active' : ''}}"
           data-fee="paid"
           bindtap="selectFee" hover-class="hover"
-        >💴 收费</view>
+        ><image class="tag-ico" src="/images/icons/money.svg" /><text>收费</text></view>
         <view
           class="tag-option fee-option {{feeType === 'other' ? 'active' : ''}}"
           data-fee="other"
           bindtap="selectFee" hover-class="hover"
-        >🤔 其他</view>
+        ><image class="tag-ico" src="/images/icons/dots.svg" /><text>其他</text></view>
       </view>
       <input
         class="field-input fee-input"
@@ -105,24 +197,105 @@
         maxlength="30"
       />
     </view>
+  </view>
 
-    <!-- 现场照片 -->
-    <view class="field">
-      <view class="field-label">现场照片（最多 3 张）</view>
-      <view class="photo-picker">
-        <view class="photo-item" wx:for="{{photos}}" wx:key="*this">
-          <image src="{{item}}" mode="aspectFill" class="photo-img" />
-          <view class="photo-del" hover-class="hover" data-index="{{index}}" bindtap="removePhoto">×</view>
-        </view>
-        <view class="photo-add" hover-class="hover" wx:if="{{photos.length < 3}}" bindtap="choosePhotos">＋</view>
+  <!-- 体验评分 -->
+  <view class="card cute-card form-group">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/star-on.svg" />
+      <text>体验评分（选填）</text>
+    </view>
+
+    <view class="score-row">
+      <view class="score-name"><image class="score-ico" src="/images/icons/soap.svg" /><text>卫生环境</text></view>
+      <view class="star-picker">
+        <image
+          class="star {{scores.hygiene >= item ? 'on' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-key="hygiene"
+          data-score="{{item}}"
+          bindtap="onScoreTap"
+          src="{{item <= scores.hygiene ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+        />
       </view>
     </view>
 
-    <!-- 提交 -->
-    <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" hover-class="hover" bindtap="submit">
-      {{submitting ? '提交中...' : '提交上报'}}
+    <view class="score-row">
+      <view class="score-name"><image class="score-ico" src="/images/icons/toilet.svg" /><text>如厕体验</text></view>
+      <view class="star-picker">
+        <image
+          class="star {{scores.comfort >= item ? 'on' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-key="comfort"
+          data-score="{{item}}"
+          bindtap="onScoreTap"
+          src="{{item <= scores.comfort ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+        />
+      </view>
+    </view>
+
+    <view class="score-row">
+      <view class="score-name"><image class="score-ico" src="/images/icons/ac.svg" /><text>空气质量</text></view>
+      <view class="star-picker">
+        <image
+          class="star {{scores.air >= item ? 'on' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-key="air"
+          data-score="{{item}}"
+          bindtap="onScoreTap"
+          src="{{item <= scores.air ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+        />
+      </view>
+    </view>
+
+    <view class="total-score-row" wx:if="{{totalScore > 0}}">
+      <text class="total-score-label">综合评分（自动计算）</text>
+      <text class="total-score-num">{{totalScore}}</text>
+      <text class="total-score-unit">分</text>
     </view>
   </view>
 
-  <view class="tips">提交后将进入审核，审核通过即可在地图展示（上报不消耗查询次数）</view>
+  <!-- 现场照片（仅 1 张） -->
+  <view class="card cute-card form-group">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/photo.svg" />
+      <text>现场照片（1 张）</text>
+    </view>
+    <view class="photo-picker">
+      <view class="photo-item" wx:if="{{photos.length}}">
+        <image src="{{photos[0]}}" mode="aspectFill" class="photo-img" />
+        <view class="photo-del" hover-class="hover" data-index="0" bindtap="removePhoto"><image class="photo-del-ico" src="/images/icons/close.svg" /></view>
+      </view>
+      <view class="photo-add" hover-class="hover" wx:if="{{photos.length < 1}}" bindtap="choosePhotos">
+        <image class="photo-add-ico" src="/images/icons/plus.svg" />
+        <text>上传照片</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 想对大家说的话 -->
+  <view class="card cute-card form-group">
+    <view class="section-title">
+      <image class="section-ico" src="/images/icons/note.svg" />
+      <text>想对大家说的话（选填）</text>
+    </view>
+    <textarea
+      class="note-input"
+      placeholder="例如：周末人多要排队、晚上灯光有点暗、门口有只猫很可爱～"
+      placeholder-class="ph"
+      value="{{note}}"
+      bindinput="onNoteInput"
+      maxlength="100"
+    />
+  </view>
+
+  <!-- 提交 -->
+  <view class="submit-btn btn-primary {{submitting ? 'btn-disabled' : ''}}" hover-class="hover" bindtap="submit">
+    {{submitting ? '提交中...' : '提交上报'}}
+  </view>
+
+  <view class="tips">提交后将进入审核，审核通过即可在地图展示</view>
 </view>

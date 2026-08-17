@@ -1,6 +1,7 @@
 /**
  * 云函数 submitComment 提交厕所评价
- * 集合：toilet_comment（openid、toiletId、score、content、createTime）
+ * 集合：toilet_comment（openid、toiletId、score、hygiene、comfort、air、content、likes、replies、createTime）
+ * 评分维度与上报页对应：hygiene 卫生环境 / comfort 如厕体验 / air 空气质量 / total 综合（兼容旧字段 score/rating）
  * 限制：同一 openid 对同一 toiletId 仅允许一条评价（防刷分）
  * 提交成功后重新聚合 toiletAll 的平均评分并回写
  */
@@ -16,10 +17,17 @@ exports.main = async (event) => {
   if (!OPENID) return { code: 1, msg: '获取用户身份失败' }
   if (!toiletId) return { code: 1, msg: '参数不完整' }
 
-  const scoreNum = Number(score)
-  if (!Number.isInteger(scoreNum) || scoreNum < 1 || scoreNum > 5) {
-    return { code: 1, msg: '评分需为 1-5 的整数' }
+  // 评分维度与上报页对应（卫生/体验/空气/综合），兼容旧字段 score/rating（作为综合分）
+  const parseScore = (v) => {
+    const n = Math.round(Number(v))
+    return Number.isInteger(n) && n >= 1 && n <= 5 ? n : 0
   }
+  const hygiene = parseScore(event.hygiene)
+  const comfort = parseScore(event.comfort)
+  const air = parseScore(event.air)
+  let total = parseScore(event.total)
+  if (!total) total = parseScore(score) || parseScore(event.rating)
+  if (!total) return { code: 1, msg: '评分需为 1-5 的整数' }
   const text = String(content || '').trim().slice(0, 300)
   if (!text) return { code: 1, msg: '评价内容不能为空' }
 
@@ -54,10 +62,17 @@ exports.main = async (event) => {
       toiletId,
       openid: OPENID,
       _openid: OPENID,
-      score: scoreNum,
+      score: total,
+      hygiene,
+      comfort,
+      air,
+      total,
       content: text,
       nickname,
       avatarUrl,
+      likes: [],
+      likeCount: 0,
+      replies: [],
       createTime: db.serverDate()
     }
   })

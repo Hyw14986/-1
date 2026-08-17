@@ -3,12 +3,57 @@
   "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.17.1",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "value": "tools",
+        "type": "folder"
+      },
+      {
+        "value": "cloudfunctions",
+        "type": "folder"
+      },
+      {
+        "value": ".git",
+        "type": "folder"
+      },
+      {
+        "value": "colorui",
+        "type": "folder"
+      },
+      {
+        "value": ".tmp-vant",
+        "type": "folder"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "project.private.config.json",
+        "type": "file"
+      },
+      {
+        "value": ".ps1",
+        "type": "suffix"
+      },
+      {
+        "value": ".bat",
+        "type": "suffix"
+      },
+      {
+        "value": ".sh",
+        "type": "suffix"
+      },
+      {
+        "value": ".md",
+        "type": "suffix"
+      }
+    ],
     "include": []
   },
   "setting": {
     "coverView": true,
-    "es6": true,
+    "es6": false,
     "postcss": true,
     "minified": true,
     "enhance": true,

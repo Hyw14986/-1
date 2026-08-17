@@ -1,0 +1,17 @@
+<!-- custom-tab-bar/index.wxml - 底部导航：找厕所 / 中间上报加号 / 我的（苹果白简约风格，无 emoji） -->
+<view class="tab-bar">
+  <view class="tab-item {{selected === 0 ? 'active' : ''}}" hover-class="item-hover" bindtap="switchToIndex">
+    <image class="tab-icon" src="/images/icons/toilet.svg" />
+    <text class="tab-text">找厕所</text>
+  </view>
+
+  <!-- 中间上报加号：UGC 上报功能已按个人主体审核要求停用（保留代码，隐藏入口） -->
+  <view class="tab-center" hover-class="center-hover" bindtap="goReport" wx:if="{{false}}">
+    <image class="center-plus" src="/images/icons/plus-white.svg" />
+  </view>
+
+  <view class="tab-item {{selected === 1 ? 'active' : ''}}" hover-class="item-hover" bindtap="switchToProfile">
+    <image class="tab-icon tab-icon-avatar" src="/images/default-avatar.png" />
+    <text class="tab-text">我的</text>
+  </view>
+</view>

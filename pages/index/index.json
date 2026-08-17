@@ -2,6 +2,6 @@
   "usingComponents": {
     "star-rating": "/components/star/star"
   },
-  "navigationBarTitleText": "附近厕所",
+  "navigationBarTitleText": "找厕所不迷路",
   "backgroundColor": "#f7faff"
 }

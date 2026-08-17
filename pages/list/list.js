@@ -4,6 +4,7 @@ const db = wx.cloud.database()
 // 数据库查询指令（用于兼容手动导入时缺少 status 字段的数据）
 const _ = db.command
 const util = require('../../utils/util.js')
+const { ensurePrivacyAuthorize } = require('../../utils/privacy.js')
 
 const DEFAULT_CENTER = { latitude: 23.12908, longitude: 113.3245 }
 
@@ -32,6 +33,7 @@ Page({
 
   /**
    * 获取定位（优先使用缓存）
+   * 隐私兼容：未同意隐私协议前不调用 getLocation，直接以默认坐标兜底
    */
   ensureLocation() {
     return new Promise((resolve) => {
@@ -39,18 +41,26 @@ Page({
         resolve(true)
         return
       }
-      wx.getLocation({
-        type: 'gcj02',
-        success: (res) => {
-          app.globalData.userLocation = { latitude: res.latitude, longitude: res.longitude }
-          resolve(true)
-        },
-        fail: () => {
-          // 定位失败：以演示数据城市中心兜底，仅影响距离展示
+      ensurePrivacyAuthorize()
+        .then(() => {
+          wx.getLocation({
+            type: 'gcj02',
+            success: (res) => {
+              app.globalData.userLocation = { latitude: res.latitude, longitude: res.longitude }
+              resolve(true)
+            },
+            fail: () => {
+              // 定位失败：以演示数据城市中心兜底，仅影响距离展示
+              app.globalData.userLocation = DEFAULT_CENTER
+              resolve(false)
+            }
+          })
+        })
+        .catch(() => {
+          // 未同意隐私协议：以默认坐标兜底，仅影响距离展示
           app.globalData.userLocation = DEFAULT_CENTER
           resolve(false)
-        }
-      })
+        })
     })
   },
 

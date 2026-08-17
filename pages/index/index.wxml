@@ -1,49 +1,78 @@
-<!-- pages/index/index.wxml - 附近厕所主页面：半径选择(实时预览红圈) + 开始寻找 + 圈内 marker + 气泡卡片 + 底部统计/列表 + 详情弹窗 + 空状态弹窗 -->
 <view class="page">
-
-  <!-- 顶部：标题 + 半径下拉 + 开始寻找 -->
-  <view class="top-bar">
-    <view class="page-title">附近厕所</view>
-    <view class="radius-row">
-      <picker class="radius-picker" mode="selector" range="{{radiusOptions}}" value="{{radiusIndex}}" bindchange="onRadiusChange">
-        <view class="radius-select">半径: {{selectedRadius}}米 ▾</view>
-      </picker>
-      <text class="radius-text">查询范围:{{selectedRadius}}米</text>
-      <view class="start-btn {{loading ? 'loading' : ''}}" hover-class="hover" bindtap="startSearch">{{loading ? '寻找中…' : '开始寻找'}}</view>
-    </view>
-    <!-- 剩余次数：≤5 橙色，0 红色，点击弹说明 -->
-    <view class="quota-text quota-{{remaining === 0 ? 'zero' : (remaining <= 5 ? 'warn' : 'normal')}}" bindtap="onQuotaTap">
-      今日剩余查询次数：{{remaining}} /{{dailyLimit}}
-    </view>
-    <!-- 一键显示全部厕所 + 数据库已收录总量 -->
-    <view class="showall-row">
-      <view class="showall-btn {{showAllMode ? 'active' : ''}}" hover-class="hover" bindtap="toggleShowAll">{{showAllMode ? '✕ 退出全部模式' : '🗺️ 一键显示全部厕所'}}</view>
-      <text class="db-count">🗄️ 已收录 {{dbTotal}} 座公厕</text>
+  <view class="home-header">
+    <view class="brand-block">
+      <view class="hero-title">
+        <image class="hero-title-icon" src="/images/icons/toilet.svg" />
+        <text>找厕所不迷路</text>
+      </view>
+      <view class="hero-sub">三急来袭？一键直达最近公厕</view>
     </view>
   </view>
 
-  <!-- 定位失败提示条（可关闭，不遮挡地图） -->
+  <view class="search-card wx-wow animated fadeInUp">
+    <view class="search-panel">
+      <view class="radius-block">
+        <view class="radius-label">查询范围</view>
+        <picker class="radius-picker" hover-class="hover" mode="selector" range="{{radiusOptions}}" value="{{radiusIndex}}" bindchange="onRadiusChange">
+          <view class="radius-select">半径 {{selectedRadius}}米 <image class="chevron-sm" src="/images/icons/chevron-down.svg" /></view>
+        </picker>
+      </view>
+
+      <view class="start-btn shine-btn {{loading ? 'loading' : ''}}" hover-class="hover" bindtap="startSearch">
+        <image class="start-btn-ico {{loading ? 'spin' : ''}}" src="/images/icons/toilet.svg" />
+        <text>{{loading ? '寻找中…' : '开始寻找'}}</text>
+      </view>
+
+      <view class="quick-row">
+        <view class="showall-btn {{showAllMode ? 'active' : ''}}" hover-class="hover" bindtap="toggleShowAll">
+          <image class="showall-ico" src="/images/icons/locate.svg" />
+          <text>{{showAllMode ? '退出查询' : '最近查询记录'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="bubble b1"></view>
+    <view class="bubble b2"></view>
+    <view class="bubble b3"></view>
+  </view>
+
+  <view class="filter-bar wx-wow animated fadeInUp">
+    <view class="filter-chip chip-blue {{filters.hasPaper ? 'active' : ''}}" data-key="hasPaper" catchtap="toggleFilter">
+      <image class="chip-ico" src="{{filters.hasPaper ? '/images/icons/paper-on.svg' : '/images/icons/paper.svg'}}" />
+      <text>有纸</text>
+    </view>
+    <view class="filter-chip chip-purple {{filters.barrierFree ? 'active' : ''}}" data-key="barrierFree" catchtap="toggleFilter">
+      <image class="chip-ico" src="{{filters.barrierFree ? '/images/icons/barrier-on.svg' : '/images/icons/barrier.svg'}}" />
+      <text>无障碍</text>
+    </view>
+    <view class="filter-chip chip-pink {{filters.babyRoom ? 'active' : ''}}" data-key="babyRoom" catchtap="toggleFilter">
+      <image class="chip-ico" src="{{filters.babyRoom ? '/images/icons/baby-on.svg' : '/images/icons/baby.svg'}}" />
+      <text>母婴室</text>
+    </view>
+    <view class="filter-chip chip-mint {{filters.open24h ? 'active' : ''}}" data-key="open24h" catchtap="toggleFilter">
+      <image class="chip-ico" src="/images/icons/clock.svg" />
+      <text>24小时</text>
+    </view>
+    <view class="filter-chip filter-reset" hover-class="hover" wx:if="{{filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h}}" catchtap="clearFilter">
+      <image class="chip-ico" src="/images/icons/refresh.svg" />
+      <text>重置</text>
+    </view>
+  </view>
+<!-- 定位失败提示条（可关闭，不遮挡地图） -->
   <view class="locate-banner" wx:if="{{loadingDone && !locationReady && !locateTipHidden}}">
     <view class="banner-head">
-      <text class="banner-text">📍 定位失败，已切换到默认位置</text>
-      <view class="banner-close" hover-class="hover" bindtap="closeLocateTip">✕</view>
+      <image class="banner-pin" src="/images/icons/pin.svg" />
+      <text class="banner-text">定位失败，已切换到默认位置</text>
+      <view class="banner-close" hover-class="hover" bindtap="closeLocateTip"><image class="banner-close-ico" src="/images/icons/close.svg" /></view>
     </view>
     <view class="banner-actions">
       <view class="banner-btn" hover-class="hover" bindtap="retryLocation">重新定位</view>
     </view>
   </view>
 
-  <!-- 顶部筛选栏（仅对已获取圈内数据生效，不消耗查询次数）+ 一键重置 -->
-  <view class="filter-bar">
-    <view class="filter-chip {{filters.hasPaper ? 'active' : ''}}" data-key="hasPaper" bindtap="toggleFilter">🧻 有纸</view>
-    <view class="filter-chip {{filters.barrierFree ? 'active' : ''}}" data-key="barrierFree" bindtap="toggleFilter">♿ 无障碍</view>
-    <view class="filter-chip {{filters.babyRoom ? 'active' : ''}}" data-key="babyRoom" bindtap="toggleFilter">🍼 母婴室</view>
-    <view class="filter-chip {{filters.open24h ? 'active' : ''}}" data-key="open24h" bindtap="toggleFilter">🌙 24小时</view>
-    <view class="filter-chip filter-reset" wx:if="{{filters.hasPaper || filters.barrierFree || filters.babyRoom || filters.open24h}}" bindtap="clearFilter">✕ 重置</view>
-  </view>
 
   <!-- 地图卡片 -->
-  <view class="map-card">
+  <view class="map-shell wx-wow animated fadeInUp" id="toilet-map">
     <map
       id="map"
       class="map"
@@ -57,21 +86,31 @@
       bindtap="onMapTap"
     ></map>
 
+    <!-- 憋住啦·深呼吸急救（纯本地趣味功能） -->
+    <view class="breath-btn" hover-class="hover" catchtap="openBreath">
+      <image class="breath-btn-ico" src="/images/icons/moon.svg" />
+      <text>憋住啦</text>
+    </view>
     <!-- 未查询提示 -->
-    <view class="map-tip" wx:if="{{!searched}}">请选择范围并点击开始寻找</view>
+    <view class="map-tip map-tip-guide" wx:if="{{!searched}}"><image class="tip-ico" src="/images/icons/locate.svg" /><text>请选择范围并点击开始寻找</text></view>
     <!-- 加载中 -->
-    <view class="map-tip" wx:if="{{loading}}">正在寻找附近的厕所…</view>
+    <view class="map-tip loading-tip" wx:if="{{loading}}">
+      <van-loading type="spinner" size="32rpx" color="#007AFF" custom-class="tip-loading"></van-loading>
+      <text>正在寻找附近的厕所…</text>
+    </view>
     <!-- 查询结果为空 -->
-    <view class="map-tip map-tip-warn" wx:if="{{searched && !loading && !totalCount}}">附近暂未找到公厕，试试扩大半径或上报新点位</view>
+    <view class="map-tip map-tip-warn" wx:if="{{searched && !loading && !totalCount}}">附近暂未找到公厕，试试扩大半径</view>
 
     <!-- 地图右下角定位按钮 -->
-    <view class="locate-fab" hover-class="hover" bindtap="relocate">📍</view>
+    <view class="locate-fab {{searched ? 'up' : ''}}" hover-class="hover" bindtap="relocate">
+      <image class="locate-fab-ico" src="/images/icons/locate.svg" />
+    </view>
 
     <!-- marker 简易气泡卡片 -->
     <view class="bubble-card" wx:if="{{markerBubble && selectedMarker}}" catchtap="noop">
       <view class="bubble-head">
         <view class="bubble-name">{{selectedMarker.name}}</view>
-        <view class="bubble-close" hover-class="hover" catchtap="onMapTap">✕</view>
+        <view class="bubble-close" hover-class="hover" catchtap="onMapTap"><image class="bubble-close-ico" src="/images/icons/close.svg" /></view>
       </view>
       <view class="bubble-tags">
         <text class="tag tag-source" wx:if="{{selectedMarker.source === 'gov'}}">政府导入</text>
@@ -84,74 +123,160 @@
         <text class="tag" wx:if="{{selectedMarker.hasPaper}}">有纸</text>
         <text class="tag" wx:if="{{selectedMarker.isBarrierFree}}">无障碍</text>
       </view>
-      <view class="bubble-meta">⭐ {{selectedMarker.rating || '暂无'}} · 距您{{selectedMarker.distanceText}}</view>
+      <view class="bubble-meta">
+        <image class="meta-star" src="/images/icons/star-on.svg" />
+        <text>{{selectedMarker.rating || '暂无'}} · 距您{{selectedMarker.distanceText}}</text>
+      </view>
       <view class="bubble-actions">
         <view class="bubble-btn bubble-primary" hover-class="hover" catchtap="viewDetailFromBubble">查看详情</view>
-        <view class="bubble-btn" hover-class="hover" catchtap="navFromBubble">🧭 导航</view>
+        <view class="bubble-btn" hover-class="hover" catchtap="navFromBubble">
+          <image class="btn-ico" src="/images/icons/nav.svg" />
+          <text>导航</text>
+        </view>
+        <view class="bubble-btn" hover-class="hover" catchtap="feedbackFromBubble" wx:if="{{false}}">
+          <image class="btn-ico" src="/images/icons/note.svg" />
+          <text>反馈</text>
+        </view>
       </view>
+    </view>
+
+    <!-- 底部托盘：统计 + 展开（悬浮在地图下半部分） -->
+    <view class="tray" wx:if="{{searched}}">
+      <!-- 查询中：Vant 骨架屏占位（业务绑定零改动） -->
+      <view class="tray-skeleton" wx:if="{{loading}}">
+        <van-skeleton title avatar row="3" animate custom-class="tray-skeleton-card"></van-skeleton>
+        <view class="tray-loading">
+          <van-loading type="spinner" size="30rpx" color="#007AFF"></van-loading>
+          <text class="tray-loading-text">正在查找附近公厕…</text>
+        </view>
+      </view>
+      <block wx:else>
+      <view class="tray-head">
+        <text class="tray-count" wx:if="{{showAllMode}}">最近查询记录 · 展示 {{markers.length}} 个点位</text>
+        <text class="tray-count" wx:else>在您附近找到 {{totalCount}} 个厕所</text>
+        <view class="expand-btn {{totalCount === 0 ? 'disabled' : ''}}" hover-class="hover" bindtap="toggleList">
+          <image class="expand-ico" src="{{showList ? '/images/icons/chevron-up.svg' : '/images/icons/chevron-down.svg'}}" />
+          <text>{{showList ? '收起' : '展开'}}</text>
+        </view>
+      </view>
+
+      <!-- 最近点位速览 -->
+      <view class="nearest-line" wx:if="{{totalCount > 0}}">
+        <image class="nearest-ico" src="/images/icons/bolt.svg" />
+        <text class="nearest-text">{{showAllMode ? '最新入库：' : '最近：'}}{{toilets[0].name}} · {{toilets[0].distanceText}}</text>
+      </view>
+      <!-- 趣味提示条 -->
+      <view class="bottom-tip" wx:if="{{totalCount > 0}}">憋不住啦？点「导航」火速直达，不用排队！</view>
+
+      <!-- 筛选无匹配提示 -->
+      <view class="filter-empty-tip" wx:if="{{filterEmpty}}">没有符合条件的公厕，试试重置筛选</view>
+
+      <!-- 展开列表：普通模式按距离由近到远，最近100模式按最新入库 -->
+      <scroll-view class="toilet-list" scroll-y wx:if="{{showList}}">
+        <view class="list-item" wx:for="{{toilets}}" wx:key="index" data-index="{{index}}" bindtap="onListItemTap" hover-class="hover">
+          <view class="item-main">
+            <view class="item-name-row">
+              <image class="item-emoji" src="/images/icons/toilet.svg" />
+              <text class="item-name">{{item.name}}</text>
+              <view class="nearest-badge" wx:if="{{index === 0}}">
+                <image class="badge-ico" src="/images/icons/bolt.svg" />
+                <text>{{showAllMode ? '最新' : '最近'}}</text>
+              </view>
+            </view>
+            <view class="item-tags">
+              <text class="tag" wx:if="{{item.source === 'gov'}}">政府导入</text>
+              <text class="tag" wx:elif="{{item.source === 'user'}}">用户上报</text>
+              <text class="tag" wx:elif="{{item.source === 'tencent'}}">腾讯POI</text>
+              <text class="tag" wx:elif="{{item.source === 'amap'}}">高德POI</text>
+              <text class="tag" wx:elif="{{item.source === 'baidu'}}">百度POI</text>
+              <text class="tag" wx:elif="{{item.source === 'osm'}}">开放地图</text>
+              <text class="tag tag-source" wx:elif="{{item.source === 'chain'}}">连锁洗手间</text>
+              <text class="tag" wx:if="{{item.hasPaper}}">有纸</text>
+              <text class="tag" wx:if="{{item.isBarrierFree}}">无障碍</text>
+              <text class="tag" wx:if="{{item.hasBabyRoom}}">母婴室</text>
+              <text class="tag" wx:if="{{item.hasSoap}}">洗手液</text>
+              <text class="tag" wx:if="{{item.hasDryer}}">烘手器</text>
+              <text class="tag" wx:if="{{item.hasAC}}">空调</text>
+              <text class="tag" wx:if="{{item.seatType === 'both'}}">蹲坐都有</text>
+              <text class="tag" wx:elif="{{item.seatType === 'squat'}}">蹲便</text>
+              <text class="tag" wx:elif="{{item.seatType === 'sitting'}}">坐便</text>
+              <text class="tag" wx:if="{{item.seatType === 'other' && item.seatTypeOther}}">{{item.seatTypeOther}}</text>
+              <text class="tag" wx:if="{{item.otherTagText}}">{{item.otherTagText}}</text>
+            </view>
+            <view class="item-meta">
+              <image class="meta-star" src="/images/icons/star-on.svg" />
+              <text>{{item.rating || '暂无'}} · {{item.ratingCount || 0}}人评<text wx:if="{{item.openTime}}"> · {{item.openTime}}</text></text>
+            </view>
+          </view>
+          <view class="item-side">
+            <view class="item-dist">
+              <image class="dist-ico" src="/images/icons/pin.svg" />
+              <text>{{item.distanceText || item.distance + 'm'}}</text>
+            </view>
+            <view class="item-nav" hover-class="hover" catchtap="navFromList" data-index="{{index}}">
+              <image class="btn-ico" src="/images/icons/nav.svg" />
+              <text>导航</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      </block>
     </view>
   </view>
 
-  <!-- 底部卡片：统计 + 展开（0 个厕所时展开按钮置灰） -->
-  <view class="bottom-card cute-card" wx:if="{{searched}}">
-    <view class="bottom-head">
-      <text class="bottom-count" wx:if="{{showAllMode}}">🗄️ 数据库共收录 {{dbTotal}} 座公厕 · 展示 {{markers.length}} 个点位</text>
-      <text class="bottom-count" wx:else>在您附近找到 {{totalCount}} 个厕所</text>
-      <view class="expand-btn {{totalCount === 0 ? 'disabled' : ''}}" hover-class="hover" bindtap="toggleList">{{showList ? '收起 ▴' : '展开 ▾'}}</view>
+  <view class="info-grid wx-wow animated fadeInUp">
+    <view class="info-card fortune-card" hover-class="hover" bindtap="rerollFortune">
+      <view class="info-card-head">
+        <image class="info-card-ico" src="/images/icons/star.svg" />
+        <text>今日如厕运势</text>
+        <image class="info-card-refresh" src="/images/icons/refresh.svg" />
+      </view>
+      <view class="fortune-text">{{fortune.text}}</view>
+      <view class="fortune-tip">{{fortune.tip}}</view>
     </view>
 
-    <!-- 筛选无匹配提示 -->
-    <view class="filter-empty-tip" wx:if="{{filterEmpty}}">没有符合条件的公厕，试试重置筛选</view>
-
-    <!-- 展开列表：按距离由近到远排序 -->
-    <scroll-view class="toilet-list" scroll-y wx:if="{{showList}}">
-      <view class="list-item" wx:for="{{toilets}}" wx:key="index" data-index="{{index}}" bindtap="onListItemTap" hover-class="hover">
-        <view class="item-main">
-          <view class="item-name">{{item.name}}</view>
-          <view class="item-tags">
-            <text class="tag" wx:if="{{item.source === 'gov'}}">政府导入</text>
-            <text class="tag" wx:elif="{{item.source === 'user'}}">用户上报</text>
-            <text class="tag" wx:elif="{{item.source === 'tencent'}}">腾讯POI</text>
-            <text class="tag" wx:elif="{{item.source === 'amap'}}">高德POI</text>
-            <text class="tag" wx:elif="{{item.source === 'baidu'}}">百度POI</text>
-            <text class="tag" wx:elif="{{item.source === 'osm'}}">开放地图</text>
-        <text class="tag tag-source" wx:elif="{{item.source === 'chain'}}">连锁洗手间</text>
-            <text class="tag" wx:if="{{item.hasPaper}}">有纸</text>
-            <text class="tag" wx:if="{{item.isBarrierFree}}">无障碍</text>
-            <text class="tag" wx:if="{{item.hasBabyRoom}}">母婴室</text>
-          </view>
-          <view class="item-meta">⭐ {{item.rating || '暂无'}} · {{item.ratingCount || 0}}人评</view>
-        </view>
-        <view class="item-dist">{{item.distanceText || item.distance + 'm'}}</view>
+    <view class="info-card fun-card" hover-class="hover" bindtap="nextFunFact">
+      <view class="info-card-head">
+        <image class="info-card-ico" src="/images/icons/bulb.svg" />
+        <text>如厕冷知识</text>
+        <image class="info-card-refresh" src="/images/icons/refresh.svg" />
       </view>
-    </scroll-view>
+      <view class="fun-text">{{funFact}}</view>
+    </view>
   </view>
 
   <!-- 空状态（未查询/无数据） -->
   <view class="empty-state" wx:if="{{!searched}}">
-    <text class="empty-icon">🚻</text>
+    <image class="empty-icon" src="/images/icons/empty.svg" />
     <text class="empty-text">选择查询范围，点击「开始寻找」查看附近公厕</text>
   </view>
 
   <!-- 0 结果空状态弹窗 -->
   <view class="empty-modal-mask" wx:if="{{emptyModal}}" catchtap="closeEmptyModal">
     <view class="empty-modal" catchtap="noop">
-      <view class="empty-modal-icon">🚻</view>
+      <image class="empty-modal-icon" src="/images/icons/empty.svg" />
       <view class="empty-modal-title">附近暂未找到公厕</view>
-      <view class="empty-modal-sub">试试扩大半径或上报新点位</view>
+      <view class="empty-modal-sub">试试扩大半径</view>
       <view class="empty-modal-actions">
-        <view class="empty-modal-btn empty-primary" hover-class="hover" bindtap="expandRadius">🔍 扩大查询半径</view>
-        <view class="empty-modal-btn" hover-class="hover" bindtap="goReportFromEmpty">📮 上报厕所</view>
+        <view class="empty-modal-btn empty-primary" hover-class="hover" bindtap="expandRadius">
+          <image class="btn-ico" src="/images/icons/search-white.svg" />
+          <text>扩大查询半径</text>
+        </view>
+        <view class="empty-modal-btn" hover-class="hover" bindtap="goReportFromEmpty" wx:if="{{false}}">
+          <image class="btn-ico" src="/images/icons/write.svg" />
+          <text>上报厕所</text>
+        </view>
       </view>
     </view>
   </view>
 
   <!-- 详情弹窗 -->
   <view class="detail-mask" wx:if="{{selectedToilet}}" catchtap="closeDetail">
-    <view class="detail-card" catchtap="noop">
+    <scroll-view class="detail-card" scroll-y scroll-top="{{detailCardScrollTop}}" catchtap="noop">
+      <view class="detail-card-pad">
       <view class="detail-head">
         <view class="detail-name">{{selectedToilet.name}}</view>
-        <view class="detail-close" hover-class="hover" bindtap="closeDetail">✕</view>
+        <view class="detail-close" hover-class="hover" bindtap="closeDetail"><image class="detail-close-ico" src="/images/icons/close.svg" /></view>
       </view>
       <view class="detail-tags">
         <text class="tag tag-source" wx:if="{{selectedToilet.source === 'gov'}}">政府导入</text>
@@ -161,42 +286,195 @@
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'baidu'}}">百度POI</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'osm'}}">开放地图</text>
         <text class="tag tag-source" wx:elif="{{selectedToilet.source === 'chain'}}">连锁洗手间</text>
-        <text class="tag" wx:if="{{selectedToilet.hasPaper}}">🧻 有纸</text>
-        <text class="tag" wx:if="{{selectedToilet.isBarrierFree}}">♿ 无障碍</text>
-        <text class="tag" wx:if="{{selectedToilet.hasBabyRoom}}">🍼 母婴室</text>
-        <text class="tag" wx:if="{{selectedToilet.isCharge}}">💰 收费</text>
+        <text class="tag" wx:if="{{selectedToilet.hasPaper}}">有纸</text>
+        <text class="tag" wx:if="{{selectedToilet.isBarrierFree}}">无障碍</text>
+        <text class="tag" wx:if="{{selectedToilet.hasBabyRoom}}">母婴室</text>
+        <text class="tag" wx:if="{{selectedToilet.hasSoap}}">洗手液</text>
+        <text class="tag" wx:if="{{selectedToilet.hasDryer}}">烘手器</text>
+        <text class="tag" wx:if="{{selectedToilet.hasAC}}">空调</text>
+        <text class="tag" wx:if="{{selectedToilet.seatType === 'both'}}">蹲坐都有</text>
+        <text class="tag" wx:elif="{{selectedToilet.seatType === 'squat'}}">蹲便</text>
+        <text class="tag" wx:elif="{{selectedToilet.seatType === 'sitting'}}">坐便</text>
+        <text class="tag" wx:if="{{selectedToilet.seatType === 'other' && selectedToilet.seatTypeOther}}">{{selectedToilet.seatTypeOther}}</text>
+        <text class="tag" wx:if="{{selectedToilet.otherTagText}}">{{selectedToilet.otherTagText}}</text>
+        <text class="tag" wx:if="{{selectedToilet.isCharge}}">收费</text>
       </view>
-      <view class="detail-rating">⭐ {{selectedToilet.rating || '暂无评分'}} · {{selectedToilet.ratingCount || 0}}条评价 · 距您{{selectedToilet.distanceText}}</view>
+      <view class="detail-scores" wx:if="{{selectedToilet.totalScore > 0}}">上报评分：卫生 {{selectedToilet.hygieneScore || '-'}} · 体验 {{selectedToilet.comfortScore || '-'}} · 空气 {{selectedToilet.airScore || '-'}} · 综合 {{selectedToilet.totalScore}}</view>
+      <view class="detail-rating">
+        <image class="meta-star" src="/images/icons/star-on.svg" />
+        <text>{{selectedToilet.rating || '暂无评分'}} · {{selectedToilet.ratingCount || 0}}条评价 · 距您{{selectedToilet.distanceText}}</text>
+      </view>
+
+      <view class="detail-note" wx:if="{{false}}">上报者说：{{selectedToilet.note}}</view>
+
+      <!-- 现场照片（用户上报照片，审核通过后所有用户可见） -->
+      <view class="detail-photos" wx:if="{{false}}">
+        <image
+          class="detail-photo"
+          wx:for="{{selectedToilet.photoUrls}}"
+          wx:key="*this"
+          src="{{item}}"
+          mode="aspectFill"
+          data-src="{{item}}"
+          bindtap="previewPhoto"
+        />
+      </view>
 
       <view class="detail-actions">
-        <view class="detail-btn detail-primary" hover-class="hover" bindtap="navToToilet">🧭 导航</view>
-        <view class="detail-btn" hover-class="hover" bindtap="toggleFavorite">{{favorited ? '❤️ 已收藏' : '🤍 收藏'}}</view>
-        <view class="detail-btn" hover-class="hover" bindtap="reportToilet">⚠️ 举报</view>
+        <view class="detail-btn detail-primary" hover-class="hover" bindtap="navToToilet">
+          <image class="btn-ico" src="/images/icons/nav-white.svg" />
+          <text>导航</text>
+        </view>
+        <view class="detail-btn" hover-class="hover" bindtap="toggleFavorite">
+          <image class="btn-ico" src="{{favorited ? '/images/icons/heart-on.svg' : '/images/icons/heart.svg'}}" />
+          <text>{{favorited ? '已收藏' : '收藏'}}</text>
+        </view>
+        <view class="detail-btn detail-checkin-btn" hover-class="hover" bindtap="checkinToilet">
+          <image class="btn-ico" src="/images/icons/check-gray.svg" />
+          <text>打卡到此一游</text>
+        </view>
+        <view class="detail-btn" hover-class="hover" bindtap="toggleToiletLike">
+          <image class="btn-ico" src="{{toiletLiked ? '/images/icons/like-on.svg' : '/images/icons/like.svg'}}" />
+          <text>{{toiletLiked ? '已点赞' : '点赞'}} {{toiletLikeCount || 0}}</text>
+        </view>
+        <view class="detail-btn" hover-class="hover" bindtap="reportOrFeedback" wx:if="{{false}}">
+          <image class="btn-ico" src="/images/icons/flag.svg" />
+          <text>反馈/举报</text>
+        </view>
       </view>
 
-      <!-- 写评价 -->
-      <view class="comment-form" wx:if="{{selectedToilet._id}}">
-        <view class="star-row">
-          <text class="star" wx:for="{{[1,2,3,4,5]}}" wx:key="*this" data-score="{{item}}" bindtap="onScoreTap">{{item <= commentScore ? '⭐' : '☆'}}</text>
+      <!-- 历史评价（个人主体审核：不再展示其他用户评价） -->
+      <view class="comment-list" wx:if="{{false}}">
+        <view class="comment-item" wx:for="{{comments}}" wx:key="_id">
+          <image class="comment-avatar" src="{{item.avatarUrl || defaultAvatar}}" mode="aspectFill" />
+          <view class="comment-body">
+            <view class="comment-head">
+              <text class="comment-user">{{item.nickname || '微信用户'}}</text>
+              <view class="comment-score">
+                <image class="meta-star" src="/images/icons/star-on.svg" />
+                <text>{{item.score}}</text>
+              </view>
+            </view>
+            <text class="comment-time">{{item.timeText}}</text>
+            <!-- 多维评分（与上报页维度对应） -->
+            <view class="comment-subscore" wx:if="{{item.total || item.hygiene || item.comfort || item.air}}">卫生 {{item.hygiene || '-'}} · 体验 {{item.comfort || '-'}} · 空气 {{item.air || '-'}} · 综合 {{item.total || item.score || '-'}}</view>
+            <view class="comment-content">{{item.content}}</view>
+            <!-- 互动栏：点赞 / 回复 / 删除（我的评论可删除） -->
+            <view class="comment-actions">
+              <view class="caction {{item.liked ? 'liked' : ''}}" hover-class="hover" data-index="{{index}}" bindtap="toggleCommentLike">
+                <image class="caction-ico" src="{{item.liked ? '/images/icons/heart-on.svg' : '/images/icons/heart.svg'}}" />
+                <text>{{item.likeCount || 0}}</text>
+                <text>赞</text>
+              </view>
+              <view class="caction" hover-class="hover" data-index="{{index}}" bindtap="toggleReplyInput">
+                <image class="caction-ico" src="/images/icons/write.svg" />
+                <text>回复</text>
+              </view>
+              <view class="caction caction-del" wx:if="{{item.isMine}}" hover-class="hover" data-index="{{index}}" bindtap="deleteMyComment">
+                <image class="caction-ico" src="/images/icons/trash.svg" />
+                <text>删除</text>
+              </view>
+            </view>
+            <!-- 回复列表 -->
+            <view class="reply-list" wx:if="{{item.replies.length}}">
+              <view class="reply-item" wx:for="{{item.replies}}" wx:for-item="rep" wx:key="rid">
+                <text class="reply-user">{{rep.nickname || '微信用户'}}：</text>
+                <text class="reply-text">{{rep.content}}</text>
+              </view>
+            </view>
+            <!-- 回复输入框 -->
+            <view class="reply-box" wx:if="{{item.replyOpen}}">
+              <input class="reply-input" placeholder="回复 {{item.nickname || 'TA'}}…" value="{{item.replyContent}}" data-index="{{index}}" bindinput="onReplyInput" confirm-type="send" bindconfirm="submitReply" maxlength="200" />
+              <view class="reply-send" hover-class="hover" data-index="{{index}}" bindtap="submitReply">发送</view>
+            </view>
+          </view>
         </view>
+        <view class="comment-empty" wx:if="{{!comments.length}}">暂无评价，快来抢沙发～</view>
+      </view>
+
+      <!-- 写评价（评分维度与上报页一致：卫生环境 / 如厕体验 / 空气质量，综合自动计算） -->
+      <view class="comment-form" wx:if="{{false}}">
+        <view class="comment-form-title">您的评分</view>
+        <view class="cscore-row">
+          <text class="cscore-name">卫生环境</text>
+          <view class="star-row">
+            <image
+              class="star"
+              wx:for="{{[1,2,3,4,5]}}"
+              wx:key="*this"
+              data-key="hygiene"
+              data-score="{{item}}"
+              bindtap="onCommentScoreTap"
+              src="{{item <= commentScores.hygiene ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+            />
+          </view>
+        </view>
+        <view class="cscore-row">
+          <text class="cscore-name">如厕体验</text>
+          <view class="star-row">
+            <image
+              class="star"
+              wx:for="{{[1,2,3,4,5]}}"
+              wx:key="*this"
+              data-key="comfort"
+              data-score="{{item}}"
+              bindtap="onCommentScoreTap"
+              src="{{item <= commentScores.comfort ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+            />
+          </view>
+        </view>
+        <view class="cscore-row">
+          <text class="cscore-name">空气质量</text>
+          <view class="star-row">
+            <image
+              class="star"
+              wx:for="{{[1,2,3,4,5]}}"
+              wx:key="*this"
+              data-key="air"
+              data-score="{{item}}"
+              bindtap="onCommentScoreTap"
+              src="{{item <= commentScores.air ? '/images/icons/star-on.svg' : '/images/icons/star.svg'}}"
+            />
+          </view>
+        </view>
+        <view class="comment-total" wx:if="{{commentTotalScore > 0}}">综合评分：{{commentTotalScore}} 分</view>
         <textarea class="comment-input" placeholder="写下您的评价…" value="{{commentContent}}" bindinput="onCommentInput" maxlength="200"></textarea>
         <view class="submit-comment-btn {{submittingComment ? 'disabled' : ''}}" hover-class="hover" bindtap="submitComment">提交评价</view>
       </view>
 
-      <!-- 历史评价 -->
-      <view class="comment-list">
-        <view class="comment-item" wx:for="{{comments}}" wx:key="_id">
-          <view class="comment-head">
-            <text class="comment-user">{{item.nickname || '微信用户'}}</text>
-            <text class="comment-score">⭐ {{item.score}}</text>
-          </view>
-          <view class="comment-content">{{item.content}}</view>
-        </view>
-        <view class="comment-empty" wx:if="{{!comments.length}}">暂无评价，快来抢沙发～</view>
       </view>
+    </scroll-view>
+
+    <!-- 评价页全屏可滑动悬浮按钮：查看评价时显示，可全屏拖动，点击滚动到写评价 -->
+    <view
+      class="comment-fab"
+      wx:if="{{false}}"
+      style="left:{{commentFabLeft}}px;top:{{commentFabTop}}px;"
+      catchtap="noop"
+      bindtouchstart="cfabTouchStart"
+      bindtouchmove="cfabTouchMove"
+      bindtouchend="cfabTouchEnd"
+    >
+      <image class="comment-fab-ico" src="/images/icons/write.svg" />
     </view>
   </view>
 
-  <!-- 上报入口（悬浮） -->
-  <view class="report-fab" hover-class="hover" bindtap="goReport">➕</view>
-</view>
+  <!-- 上报入口已移至底部导航栏中间（custom-tab-bar），点击中间加号即可前往上报页 -->
+
+  <!-- 憋住啦·深呼吸急救弹层（纯本地趣味功能） -->
+  <view class="breath-mask" wx:if="{{breathOpen}}" catchtap="closeBreath">
+    <view class="breath-card" catchtap="noop">
+      <view class="breath-close" hover-class="hover" catchtap="closeBreath">
+        <image class="breath-close-ico" src="/images/icons/close.svg" />
+      </view>
+      <view class="breath-title">憋住啦？跟我深呼吸</view>
+      <view class="breath-stage">
+        <view class="breath-circle breath-{{breathPhase}}" style="transform: scale({{breathScale}});">
+          <text class="breath-circle-text">{{breathText}}</text>
+          <text class="breath-circle-sec" wx:if="{{breathPhase && breathPhase !== 'done'}}">{{breathSec}}</text>
+        </view>
+      </view>
+      <view class="breath-round" wx:if="{{breathRound}}">第 {{breathRound}} / 3 轮</view>
+      <view class="breath-desc">跟我一吸一呼，稳住心态，冲去最近的厕所</view>
+    </view>
+  </view></view>

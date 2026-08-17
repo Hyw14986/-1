@@ -1,0 +1,137 @@
+/* pages/feedback/feedback.wxss - 我要反馈「苹果白」简约版（无渐变） */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 0 0 60rpx;
+  background: #f5f5f7;
+}
+
+.head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 28rpx 28rpx 0;
+}
+
+.head-title {
+  display: flex;
+  align-items: center;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+}
+
+.head-ico {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+}
+
+.head-sub {
+  font-size: 22rpx;
+  color: #aeaeb2;
+}
+
+/* 厕所信息卡 */
+.toilet-card {
+  margin-top: 24rpx;
+}
+
+.toilet-name {
+  display: flex;
+  align-items: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.toilet-ico {
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 12rpx;
+}
+
+.toilet-addr {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.addr-ico {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 8rpx;
+}
+
+/* 表单分组 */
+.form-group {
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  margin-top: 26rpx;
+}
+
+.field-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 18rpx;
+}
+
+.required {
+  color: #ff3b30;
+  margin-left: 4rpx;
+}
+
+/* 标签选择 */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tag-option {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 26rpx;
+  border-radius: 40rpx;
+  background: #f2f2f7;
+  color: #3a3a3c;
+  font-size: 26rpx;
+  font-weight: 600;
+  border: 2rpx solid transparent;
+  transition: background 0.22s cubic-bezier(0.22, 1, 0.36, 1), color 0.22s ease-out, border-color 0.22s ease-out, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tag-option.active {
+  background: #ffffff;
+  color: #007aff;
+  border-color: #007aff;
+  box-shadow: 0 4rpx 14rpx rgba(0, 122, 255, 0.18);
+}
+
+/* 描述输入 */
+.note-input {
+  width: 100%;
+  height: 200rpx;
+  background: #f2f2f7;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: #1d1d1f;
+  box-sizing: border-box;
+}
+
+/* 提交按钮 */
+.submit-btn {
+  margin: 40rpx 28rpx 0;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out;
+}
+
+.tips {
+  margin: 20rpx 28rpx 0;
+  text-align: center;
+  font-size: 22rpx;
+  color: #aeaeb2;
+}

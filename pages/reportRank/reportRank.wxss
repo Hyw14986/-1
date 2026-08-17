@@ -1,0 +1,287 @@
+/* pages/reportRank/reportRank.wxss - 憋神功德无量榜「苹果白」简约版（业务绑定零改动，无渐变） */
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx 80rpx;
+  background: #f5f5f7;
+}
+
+/* 顶部横幅 */
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 32rpx;
+  padding: 30rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.hero-title {
+  display: flex;
+  align-items: center;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.hero-title-icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-right: 14rpx;
+}
+
+.hero-sub {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.hero-bubble {
+  position: absolute;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.08);
+  animation: floatY 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  pointer-events: none;
+}
+
+.hero-bubble.b1 { top: 20rpx; right: 140rpx; }
+.hero-bubble.b2 { top: 88rpx; right: 36rpx; width: 28rpx; height: 28rpx; animation-delay: 0.7s; }
+.hero-bubble.b3 { bottom: 20rpx; right: 200rpx; width: 30rpx; height: 30rpx; animation-delay: 1.4s; }
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+/* 规则说明 */
+.rule-card {
+  margin-top: 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 28rpx;
+  padding: 24rpx 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.rule-item {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  color: #3a3a3c;
+  line-height: 2;
+}
+
+.rule-ico {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+/* 状态 */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.state-icon {
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.state-text {
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  color: #aeaeb2;
+  text-align: center;
+}
+
+.retry-btn {
+  margin-top: 32rpx;
+  padding: 16rpx 56rpx;
+  border-radius: 50rpx;
+  background: #007aff;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 20rpx rgba(0, 122, 255, 0.26);
+}
+
+/* 领奖台 */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 30rpx;
+}
+
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33.33%;
+  padding: 0 10rpx;
+}
+
+.podium-medal {
+  width: 72rpx;
+  height: 72rpx;
+  margin-bottom: 8rpx;
+}
+
+.podium-crown {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 4rpx;
+}
+
+.podium-name {
+  width: 100%;
+  text-align: center;
+  font-size: 24rpx;
+  color: #3a3a3c;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-name.champion {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+}
+
+.podium-title {
+  width: 100%;
+  margin-top: 4rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #6e6e73;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.podium-block {
+  width: 100%;
+  margin-top: 12rpx;
+  text-align: center;
+  padding: 18rpx 0;
+  border-radius: 20rpx 20rpx 0 0;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.08);
+}
+
+.podium-block.first {
+  background: #f5c518;
+}
+
+.podium-block.second {
+  background: #b8b8bc;
+}
+
+.podium-block.third {
+  background: #cd7f32;
+}
+
+/* 榜单列表 */
+.rank-list {
+  margin-top: 24rpx;
+}
+
+.rank-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 28rpx;
+  padding: 26rpx 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.rank-no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  margin-right: 20rpx;
+  border-radius: 50%;
+  background: #f2f2f7;
+  color: #6e6e73;
+  font-size: 32rpx;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rank-no.top3 {
+  background: transparent;
+}
+
+.rank-medal {
+  width: 68rpx;
+  height: 68rpx;
+}
+
+.rank-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.rank-title {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.rank-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.rank-count,
+.rank-points {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #3a3a3c;
+}
+
+.rank-points {
+  margin-top: 8rpx;
+  color: #b8860b;
+}
+
+.side-ico {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 8rpx;
+}
+
+.list-end {
+  padding: 30rpx 0 10rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #aeaeb2;
+}
+/* Vant empty 组件适配 */
+.rank-empty {
+  padding: 80rpx 0 20rpx;
+}

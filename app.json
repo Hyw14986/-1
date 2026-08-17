@@ -1,22 +1,22 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/list/list",
-    "pages/detail/detail",
-    "pages/report/report",
     "pages/profile/profile",
-    "pages/searchRecord/searchRecord"
+    "pages/checkin/checkin",
+    "pages/searchRecord/searchRecord",
+    "pages/rank/rank"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "附近厕所",
-    "navigationBarBackgroundColor": "#f7faff",
-    "backgroundColor": "#f7faff"
+    "navigationBarTitleText": "找厕所不迷路",
+    "navigationBarBackgroundColor": "#F4F8FF",
+    "backgroundColor": "#F4F8FF"
   },
   "tabBar": {
-    "color": "#b8bfcc",
-    "selectedColor": "#74b9ff",
-    "backgroundColor": "#fffcf8",
+    "custom": true,
+    "color": "#8E8E93",
+    "selectedColor": "#3478F6",
+    "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
       {
@@ -43,7 +43,13 @@
     "chooseLocation"
   ],
   "style": "v2",
+  "__usePrivacyCheck__": false,
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+    "van-skeleton": "/miniprogram_npm/@vant/weapp/skeleton/index",
+    "van-loading": "/miniprogram_npm/@vant/weapp/loading/index",
+    "van-empty": "/miniprogram_npm/@vant/weapp/empty/index"
+  }
 }

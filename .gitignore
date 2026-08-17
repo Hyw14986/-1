@@ -1,8 +1,11 @@
-﻿# 依赖
+# 依赖
 node_modules/
 
 # 小程序构建产物
-miniprogram_npm/
+miniprogram_npm/*
+!miniprogram_npm/@vant/
+miniprogram_npm/@vant/*
+!miniprogram_npm/@vant/weapp/
 dist/
 
 # 开发者本地个人配置
@@ -17,3 +20,23 @@ Thumbs.db
 
 tools/output/
 
+
+# 开发调试脚本与临时工具（不进入小程序包，也不提交 git）
+tools/
+
+# 城市导入数据大文件（仅云端导入用，不进主包）
+cloudfunctions/importCityToilets/data.js
+cloudfunctions/importCityToilets2/data.js
+
+# 备份文件
+*.bak
+# ?????? Key??????????
+config/keys.js
+cloudfunctions/searchTiandituPoi/key.js
+# ????/????
+_hot_summary.json
+_imgtest/
+_preview*.jpg
+_tab*.jpg
+_wm_test.js
+images/reward-qr.jpg

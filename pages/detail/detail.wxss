@@ -1,19 +1,33 @@
-/* pages/detail/detail.wxss - 厕所详情页样式（温馨可爱扁平插画风，与首页同款） */
+/* pages/detail/detail.wxss - 厕所详情页「苹果白」简约版（业务绑定零改动，无渐变） */
 .page {
-  padding: 24rpx;
-  padding-bottom: 60rpx;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx 80rpx;
+  background: #f5f5f7;
 }
 
-/* 基本信息卡 */
-.head-card {
+/* 顶部封面 */
+.cover {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
   border-radius: 32rpx;
-  box-shadow: 0 12rpx 32rpx rgba(255, 169, 77, 0.2);
+  padding: 40rpx 32rpx 34rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.cover-emoji {
+  width: 88rpx;
+  height: 88rpx;
 }
 
 .name {
-  font-size: 38rpx;
-  font-weight: 700;
-  color: #2c3e50;
+  margin-top: 12rpx;
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+  line-height: 1.3;
 }
 
 .rating-row {
@@ -23,42 +37,70 @@
 }
 
 .score {
-  font-size: 30rpx;
-  color: #ffb400;
-  font-weight: 600;
-  margin-left: 12rpx;
+  margin-left: 14rpx;
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #1d1d1f;
 }
 
-.count {
-  font-size: 24rpx;
-  color: #7f8c8d;
-  margin-left: 16rpx;
-}
-
+.count,
 .dist {
+  margin-left: 16rpx;
   font-size: 24rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.16);
-  border-radius: 24rpx;
-  padding: 4rpx 14rpx;
-  margin-left: 20rpx;
+  color: #6e6e73;
 }
 
 .tags {
-  margin-top: 20rpx;
+  margin-top: 18rpx;
+}
+
+.bubble {
+  position: absolute;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.08);
+  animation: floatY 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  pointer-events: none;
+}
+
+.bubble.d1 { top: 20rpx; right: 130rpx; }
+.bubble.d2 { bottom: 24rpx; right: 36rpx; width: 28rpx; height: 28rpx; animation-delay: 0.7s; }
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
+/* 卡片 */
+.card {
+  margin-top: 24rpx;
+}
+
+.head-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 30rpx;
+  border: 1rpx solid #efeff4;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+
+.section-ico {
+  width: 32rpx;
+  height: 32rpx;
+  margin-right: 12rpx;
 }
 
 .info-grid {
-  margin-top: 24rpx;
-  border-top: 2rpx solid #f7ead6;
-  padding-top: 8rpx;
+  margin-top: 8rpx;
 }
 
 .info-item {
   display: flex;
-  align-items: flex-start;
-  padding: 16rpx 0;
-  border-bottom: 2rpx solid #fbf1de;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f2f2f7;
 }
 
 .info-item:last-child {
@@ -66,38 +108,56 @@
 }
 
 .info-label {
-  width: 150rpx;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   font-size: 26rpx;
-  color: #7f8c8d;
+  color: #6e6e73;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.info-ico {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
 }
 
 .info-value {
-  flex: 1;
   font-size: 26rpx;
-  color: #2c3e50;
+  color: #1d1d1f;
+  font-weight: 600;
+  text-align: right;
 }
 
 .nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 28rpx;
-  border-radius: 50rpx;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out;
 }
 
-/* 照片 */
-.photo-card {
-  margin-top: 24rpx;
+.btn-ico {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
 }
 
-.section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 20rpx;
+.photo-card,
+.comment-card,
+.form-card,
+.my-comment-card {
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 30rpx;
+  border: 1rpx solid #efeff4;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
 .photo-list {
   display: flex;
   flex-wrap: wrap;
+  margin-top: 8rpx;
 }
 
 .photo {
@@ -105,20 +165,13 @@
   height: 200rpx;
   border-radius: 20rpx;
   margin: 0 16rpx 16rpx 0;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.2);
-}
-
-/* 评价列表 */
-.comment-card,
-.form-card,
-.my-comment-card {
-  margin-top: 24rpx;
+  background: #f2f2f7;
 }
 
 .comment-item {
   display: flex;
-  padding: 20rpx 0;
-  border-bottom: 2rpx solid #f7ead6;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f2f2f7;
 }
 
 .comment-item:last-child {
@@ -129,15 +182,14 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 50%;
-  background: #fdf3e3;
-  border: 4rpx solid #ffffff;
-  box-shadow: 0 4rpx 10rpx rgba(255, 169, 77, 0.25);
+  margin-right: 18rpx;
   flex-shrink: 0;
+  background: #f2f2f7;
 }
 
 .comment-body {
   flex: 1;
-  margin-left: 20rpx;
+  min-width: 0;
 }
 
 .comment-head {
@@ -148,20 +200,35 @@
 
 .nickname {
   font-size: 26rpx;
-  color: #2c3e50;
   font-weight: 600;
+  color: #1d1d1f;
 }
 
 .time {
   font-size: 22rpx;
-  color: #aab6c3;
+  color: #aeaeb2;
 }
 
 .comment-content {
-  margin-top: 10rpx;
+  margin-top: 8rpx;
   font-size: 26rpx;
-  color: #5b6b79;
+  color: #3a3a3c;
   line-height: 1.6;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 0;
+  color: #aeaeb2;
+  font-size: 26rpx;
+}
+
+.empty-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 20rpx;
 }
 
 /* 评价表单 */
@@ -173,39 +240,38 @@
 
 .form-label {
   font-size: 28rpx;
-  color: #2c3e50;
-  margin-right: 24rpx;
+  color: #3a3a3c;
+  margin-right: 20rpx;
 }
 
 .form-score {
-  font-size: 26rpx;
-  color: #ffb400;
   margin-left: 20rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
 }
 
 .form-textarea {
   width: 100%;
-  height: 180rpx;
-  background: #fff4e0;
+  height: 160rpx;
+  background: #f2f2f7;
   border-radius: 16rpx;
-  padding: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  color: #1d1d1f;
   box-sizing: border-box;
-  font-size: 26rpx;
-  color: #2c3e50;
 }
 
 .submit-btn {
   margin-top: 24rpx;
-  border-radius: 50rpx;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out;
 }
 
-/* 已评价 */
 .my-comment-card .comment-content {
-  margin: 12rpx 0;
+  margin-top: 16rpx;
 }
 
 .done-tip {
   margin-top: 16rpx;
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #34c759;
 }

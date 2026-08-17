@@ -1,0 +1,192 @@
+/* pages/washTimer/washTimer.wxss - 20 秒科学洗手计时器 */
+.wash-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24rpx 24rpx 80rpx;
+  background: transparent;
+}
+
+.wash-hero {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 30rpx;
+  border-radius: 36rpx;
+  background: linear-gradient(135deg, #34c759 0%, #28a9b8 100%);
+  color: #ffffff;
+  box-shadow: 0 18rpx 48rpx rgba(52, 199, 89, 0.24);
+}
+
+.wash-hero-icon-wrap {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 22rpx;
+  flex-shrink: 0;
+}
+
+.wash-hero-icon {
+  width: 48rpx;
+  height: 48rpx;
+  filter: brightness(0) invert(1);
+}
+
+.wash-hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.wash-hero-title {
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.wash-hero-sub {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.timer-card {
+  margin-top: 24rpx;
+  padding: 44rpx 32rpx 36rpx;
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18rpx 54rpx rgba(47, 87, 150, 0.12);
+  backdrop-filter: blur(18rpx);
+  text-align: center;
+}
+
+.timer-ring-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.timer-ring {
+  width: 340rpx;
+  height: 340rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16rpx 42rpx rgba(52, 199, 89, 0.2);
+}
+
+.timer-inner {
+  width: 286rpx;
+  height: 286rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1rpx rgba(52, 199, 89, 0.08);
+}
+
+.timer-num {
+  font-size: 104rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+  line-height: 1;
+}
+
+.timer-unit {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #6e6e73;
+}
+
+.timer-stage {
+  margin-top: 30rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #34a853;
+}
+
+.timer-btns {
+  display: flex;
+  margin-top: 30rpx;
+}
+
+.wash-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+  border-radius: 50rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.wash-btn-primary {
+  margin-left: 18rpx;
+  background: linear-gradient(135deg, #34c759 0%, #28a9b8 100%);
+  color: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(52, 199, 89, 0.28);
+}
+
+.wash-btn-ghost {
+  background: #f2f2f7;
+  color: #3a3a3c;
+}
+
+.timer-finished {
+  margin-top: 22rpx;
+  font-size: 26rpx;
+  color: #34c759;
+  font-weight: 700;
+}
+
+.tips-card {
+  margin-top: 24rpx;
+  padding: 30rpx 30rpx 24rpx;
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1rpx solid rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16rpx 46rpx rgba(47, 87, 150, 0.1);
+}
+
+.tips-title {
+  display: flex;
+  align-items: center;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1d1d1f;
+  margin-bottom: 18rpx;
+}
+
+.tips-ico {
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 12rpx;
+}
+
+.tip-line {
+  display: flex;
+  align-items: flex-start;
+  padding: 12rpx 0;
+  font-size: 24rpx;
+  color: #3a3a3c;
+  line-height: 1.5;
+}
+
+.tip-dot {
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #34c759, #28a9b8);
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}

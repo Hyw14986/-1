@@ -1,0 +1,42 @@
+<!-- pages/washTimer/washTimer.wxml - 20 秒科学洗手计时器（纯本地工具） -->
+<view class="wash-page">
+  <view class="wash-hero wx-wow animated fadeInUp">
+    <view class="wash-hero-icon-wrap">
+      <image class="wash-hero-icon" src="/images/icons/clock.svg" />
+    </view>
+    <view class="wash-hero-body">
+      <view class="wash-hero-title">20 秒科学洗手</view>
+      <view class="wash-hero-sub">认真洗手，健康第一</view>
+    </view>
+  </view>
+
+  <view class="timer-card wx-wow animated fadeInUp">
+    <view class="timer-ring-wrap">
+      <view class="timer-ring" style="background: conic-gradient(#34c759 {{progress}}%, rgba(52, 199, 89, 0.14) {{progress}}%);">
+        <view class="timer-inner">
+          <view class="timer-num">{{remaining}}</view>
+          <view class="timer-unit">秒</view>
+        </view>
+      </view>
+    </view>
+    <view class="timer-stage">{{stageText}}</view>
+    <view class="timer-btns">
+      <view class="wash-btn wash-btn-ghost" hover-class="hover" bindtap="resetTimer">重置</view>
+      <view class="wash-btn wash-btn-primary" hover-class="hover" bindtap="onTimerMainTap">
+        {{running ? '暂停' : (finished ? '再洗一次' : '开始洗手')}}
+      </view>
+    </view>
+    <view class="timer-finished" wx:if="{{finished}}">完成啦，双手干净又安心！</view>
+  </view>
+
+  <view class="tips-card wx-wow animated fadeInUp">
+    <view class="tips-title">
+      <image class="tips-ico" src="/images/icons/bulb.svg" />
+      <text>洗手小贴士</text>
+    </view>
+    <view class="tip-line" wx:for="{{tips}}" wx:key="*this">
+      <view class="tip-dot">{{index + 1}}</view>
+      <text>{{item}}</text>
+    </view>
+  </view>
+</view>

@@ -17,9 +17,9 @@ const cloud = require('wx-server-sdk')
 const https = require('https')
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const { TIANDITU_KEY } = require('./key')
 
 // 天地图「服务端」Key（在 https://console.tianditu.gov.cn/ 申请；更换 Key 直接替换此处）
-const TIANDITU_KEY = 'efac1d7241be6075e3b3a653e0acdc69'
 const TIANDITU_SEARCH_URL = 'https://api.tianditu.gov.cn/v2/search'
 const REQUEST_TIMEOUT = 8000
 // 公厕多关键词：逐词查询合并，提升召回率（天地图对部分关键词命中偏少，多词互补）

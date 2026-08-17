@@ -1,58 +1,99 @@
-/* pages/list/list.wxss - 厕所列表页样式（温馨可爱扁平插画风，与首页同款） */
+/* pages/list/list.wxss - 厕所列表页「苹果白」简约版（业务绑定零改动，无渐变） */
 .page {
+  min-height: 100vh;
+  box-sizing: border-box;
   padding: 24rpx 24rpx 200rpx;
-  background: #fff9ef;
+  background: #f5f5f7;
 }
 
-/* ---------- 顶部标题区（与首页品牌区同款） ---------- */
-.header {
+/* 顶部 Hero */
+.hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  padding: 8rpx 8rpx 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 32rpx;
+  padding: 30rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
 .logo {
-  width: 88rpx;
-  height: 88rpx;
-  margin-right: 20rpx;
+  width: 96rpx;
+  height: 96rpx;
+  margin-right: 24rpx;
   flex-shrink: 0;
+}
+
+.welcome {
+  flex: 1;
+  min-width: 0;
 }
 
 .welcome-title {
-  font-size: 38rpx;
-  font-weight: 700;
-  color: #2c3e50;
-  letter-spacing: 2rpx;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1d1d1f;
 }
 
 .welcome-sub {
+  margin-top: 8rpx;
   font-size: 24rpx;
-  color: #7f8c8d;
-  margin-top: 6rpx;
+  color: #6e6e73;
 }
 
-/* 统计提示：暖橙小胶囊 */
+.bubble {
+  position: absolute;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.08);
+  animation: floatY 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  pointer-events: none;
+}
+
+.bubble.l1 { top: 18rpx; right: 120rpx; }
+.bubble.l2 { bottom: 18rpx; right: 40rpx; width: 26rpx; height: 26rpx; animation-delay: 0.7s; }
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12rpx); }
+}
+
 .toast-tip {
-  display: inline-block;
-  font-size: 24rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.14);
-  border-radius: 24rpx;
-  padding: 10rpx 22rpx;
-  margin: 0 8rpx 24rpx;
+  margin-top: 22rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #6e6e73;
 }
 
-/* 卡片主体：左侧图标 + 右侧信息 */
+.list {
+  margin-top: 16rpx;
+}
+
+.list-card {
+  background: #ffffff;
+  border: 1rpx solid #efeff4;
+  border-radius: 28rpx;
+  padding: 28rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
 .card-main {
   display: flex;
-  align-items: flex-start;
 }
 
 .toilet-ico {
-  width: 64rpx;
-  height: 64rpx;
+  width: 72rpx;
+  height: 72rpx;
   margin-right: 20rpx;
   flex-shrink: 0;
+  background: #f2f2f7;
+  border-radius: 20rpx;
+  padding: 12rpx;
+  box-sizing: border-box;
 }
 
 .card-body {
@@ -67,10 +108,11 @@
 }
 
 .toilet-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2c3e50;
   flex: 1;
+  min-width: 0;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -78,82 +120,50 @@
 
 .distance {
   flex-shrink: 0;
-  font-size: 24rpx;
-  color: #e8833a;
-  background: rgba(255, 169, 77, 0.16);
-  border-radius: 24rpx;
-  padding: 6rpx 16rpx;
-  margin-left: 20rpx;
+  margin-left: 16rpx;
+  font-size: 22rpx;
+  color: #007aff;
+  font-weight: 600;
 }
 
 .card-rating {
   display: flex;
   align-items: center;
-  margin-top: 16rpx;
+  margin-top: 12rpx;
 }
 
 .rating-num {
-  font-size: 24rpx;
-  color: #ffb400;
-  margin-left: 8rpx;
+  margin-left: 12rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1d1d1f;
 }
 
 .rating-count {
+  margin-left: 8rpx;
   font-size: 22rpx;
-  color: #7f8c8d;
-  margin-left: 12rpx;
+  color: #aeaeb2;
 }
 
 .card-tags {
-  margin-top: 16rpx;
+  margin-top: 12rpx;
 }
 
 .card-address {
   display: flex;
   align-items: center;
-  margin-top: 16rpx;
+  margin-top: 12rpx;
   font-size: 24rpx;
-  color: #7f8c8d;
+  color: #6e6e73;
 }
 
 .addr-icon {
+  width: 26rpx;
+  height: 26rpx;
   margin-right: 8rpx;
+  flex-shrink: 0;
 }
 
-.empty-btn {
-  width: 320rpx;
-  margin: 40rpx auto 0;
-}
-
-/* 悬浮加号按钮（暖橙渐变，呼应首页一键导航） */
-.fab-add {
-  position: fixed;
-  right: 32rpx;
-  bottom: 64rpx;
-  z-index: 100;
-  width: 108rpx;
-  height: 108rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10rpx 26rpx rgba(255, 169, 77, 0.5);
-}
-
-.fab-plus {
-  font-size: 60rpx;
-  line-height: 1;
-  margin-top: -4rpx;
-}
-
-.fab-hover {
-  opacity: 0.85;
-  transform: scale(0.95);
-}
-
-/* 卡片操作按钮 */
 .card-actions {
   display: flex;
   margin-top: 20rpx;
@@ -161,14 +171,16 @@
 
 .action-btn {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 0;
+  border-radius: 44rpx;
   font-size: 26rpx;
-  color: #ffa94d;
-  background: #ffffff;
-  border: 2rpx solid #ffa94d;
-  border-radius: 40rpx;
-  padding: 12rpx 0;
-  margin-right: 20rpx;
+  font-weight: 600;
+  color: #007aff;
+  background: #f2f2f7;
+  margin-right: 18rpx;
 }
 
 .action-btn:last-child {
@@ -176,8 +188,97 @@
 }
 
 .action-primary {
-  background: linear-gradient(135deg, #ffb85c, #ffa94d);
+  background: #007aff;
   color: #ffffff;
-  border: none;
-  box-shadow: 0 6rpx 16rpx rgba(255, 169, 77, 0.4);
+  box-shadow: 0 6rpx 16rpx rgba(0, 122, 255, 0.24);
+}
+
+.btn-ico {
+  width: 28rpx;
+  height: 28rpx;
+  margin-right: 8rpx;
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 0;
+  color: #aeaeb2;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 110rpx;
+  height: 110rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-btn {
+  margin-top: 32rpx;
+  padding: 16rpx 56rpx;
+  display: inline-block;
+}
+
+/* 悬浮加号 */
+.fab-add {
+  position: fixed;
+  right: 40rpx;
+  bottom: 200rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #007aff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12rpx 30rpx rgba(0, 122, 255, 0.4);
+  z-index: 100;
+}
+
+.fab-plus {
+  width: 52rpx;
+  height: 52rpx;
+}
+
+.fab-hover {
+  opacity: 0.85;
+  transform: scale(0.94);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease-out;
+}
+/* Vant 组件适配（骨架屏 / 加载动画 / 空状态） */
+.skeleton-list {
+  padding: 8rpx 0 24rpx;
+}
+.skeleton-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 122, 255, 0.08);
+  padding: 28rpx 24rpx;
+  margin-bottom: 22rpx;
+}
+.skeleton-inner {
+  padding: 0;
+}
+.loading-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 0 10rpx;
+}
+.loading-text {
+  margin-left: 12rpx;
+  font-size: 24rpx;
+  color: #aeaeb2;
+}
+.list-empty {
+  padding: 60rpx 0 20rpx;
+}
+.empty-desc {
+  color: #aeaeb2;
+  font-size: 26rpx;
+  line-height: 1.5;
 }

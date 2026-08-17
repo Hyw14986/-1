@@ -1,23 +1,38 @@
-<!-- pages/searchRecord/searchRecord.wxml - 查询记录页 -->
+<!-- pages/searchRecord/searchRecord.wxml - 查询记录页（苹果白简约风格，SVG 图标） -->
 <view class="page">
   <!-- 头部：标题 + 一键清空 -->
-  <view class="head-row">
-    <view class="head-title">📋 查询记录</view>
-    <view class="clear-btn" wx:if="{{records.length}}" hover-class="hover" bindtap="clearAll">🗑 一键清空</view>
+  <view class="head-row wx-wow animated fadeInDown">
+    <view class="head-title">
+      <image class="head-ico" src="/images/icons/doc.svg" />
+      <text>查询记录</text>
+    </view>
+    <view class="clear-btn" wx:if="{{records.length}}" hover-class="hover" bindtap="clearAll">
+      <image class="btn-sm-ico" src="/images/icons/trash.svg" />
+      <text>一键清空</text>
+    </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty" wx:if="{{!loading && !records.length}}">
-    <view class="empty-icon">🗒️</view>
-    <view class="empty-text">暂无查询历史记录</view>
-    <view class="empty-sub">去首页选择范围并点击「开始寻找」即可生成记录</view>
+  <view class="record-summary" wx:if="{{records.length}}">
+    <view class="summary-count">{{records.length}}</view>
+    <view class="summary-text">条历史查询</view>
   </view>
+
+  <!-- 空状态（Vant empty 组件，保留原图标与文案） -->
+  <van-empty wx:if="{{!loading && !records.length}}" image="" custom-class="record-empty">
+    <view slot="image">
+      <image class="empty-icon" src="/images/icons/doc.svg" />
+    </view>
+    <view slot="description" class="record-empty-desc">
+      <view class="empty-text">暂无查询历史记录</view>
+      <view class="empty-sub">去首页选择范围并点击「开始寻找」即可生成记录</view>
+    </view>
+  </van-empty>
 
   <!-- 记录列表 -->
-  <view class="record-card cute-card" wx:for="{{records}}" wx:key="_id">
+  <view class="record-card card wx-wow animated fadeInUp" wx:for="{{records}}" wx:key="_id">
     <!-- 0 结果记录：灰色图标标记 -->
     <view class="record-head {{item.searchCount === 0 ? 'zero' : ''}}">
-      <text class="record-icon">{{item.icon}}</text>
+      <image class="record-icon" src="{{item.icon}}" />
       <text class="record-head-text">{{item.searchCount === 0 ? '本次未找到公厕' : '查询完成'}}</text>
     </view>
     <view class="record-main">
@@ -35,8 +50,14 @@
       </view>
     </view>
     <view class="record-actions">
-      <view class="again-btn" hover-class="hover" data-radius="{{item.searchRadius}}" bindtap="againSearch">🔄 再次查询</view>
-      <view class="del-btn" hover-class="hover" data-id="{{item._id}}" bindtap="deleteRecord">删除</view>
+      <view class="again-btn" hover-class="hover" data-radius="{{item.searchRadius}}" bindtap="againSearch">
+        <image class="btn-sm-ico" src="/images/icons/refresh.svg" />
+        <text>再次查询</text>
+      </view>
+      <view class="del-btn" hover-class="hover" data-id="{{item._id}}" bindtap="deleteRecord">
+        <image class="btn-sm-ico" src="/images/icons/trash.svg" />
+        <text>删除</text>
+      </view>
     </view>
   </view>
 </view>

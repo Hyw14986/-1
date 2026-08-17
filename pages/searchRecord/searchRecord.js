@@ -31,7 +31,7 @@ Page({
           timeText: util.formatFriendlyTime(item.searchTime),
           radiusText: item.searchRadius + '米',
           // 0 结果记录使用不同图标标记
-          icon: Number(item.searchCount) > 0 ? '🔍' : '🚫'
+          icon: Number(item.searchCount) > 0 ? '/images/icons/search.svg' : '/images/icons/empty.svg'
         }))
         this.setData({ records, loading: false })
         console.log('[searchRecord] 查询记录条数=', records.length)
@@ -44,13 +44,13 @@ Page({
   },
 
   /**
-   * 再次查询：先弹确认弹窗（提示会消耗 1 次次数），确认后回填半径返回地图页
+   * 再次查询：先弹确认弹窗，确认后回填半径返回地图页
    */
   againSearch(e) {
     const radius = Number(e.currentTarget.dataset.radius)
     wx.showModal({
       title: '再次查询',
-      content: '将按 ' + radius + ' 米半径再次查询，会消耗 1 次今日查询次数，是否继续？',
+      content: '将按 ' + radius + ' 米半径再次查询，是否继续？',
       confirmText: '继续',
       cancelText: '取消',
       confirmColor: '#74b9ff',

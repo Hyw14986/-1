@@ -1,47 +1,60 @@
-/**
- * app.wxss - 全局样式（治愈马卡龙风）
- * 主色调：柔蓝 #7fb5f5（按钮、选中tab、强调元素）
- * 辅助色：薄荷绿 #a8e6cf、浅粉 #ffb8d1
- * 页面背景：#fff8f3 暖奶油白；正文 #3e4a5f；次要文字 #9aa5b8
- * 卡片大圆角 32rpx、按钮药丸圆角 50rpx、输入框圆角 24rpx、柔和蓝调阴影
- * 全部使用 rpx 移动端适配
- */
+/* ============================================================
+   全局设计体系：简约苹果白（Apple White）
+   - 页面背景 #F5F5F7（浅灰，接近 iOS 系统灰）
+   - 卡片纯白 #FFFFFF + 大圆角 28rpx + 轻投影
+   - 主色 #007AFF（iOS 蓝）；正文 #1D1D1F；次要 #6E6E73
+   - 全部 rpx；不使用 emoji、不使用渐变色；图标统一使用 images/icons 下的 SVG
+   - 交互动画统一 cubic-bezier(0.22, 1, 0.36, 1) 非线性过渡
+   ============================================================ */
+@import "utils/motion.wxss";
 
 page {
-  background-color: #fff8f3;
-  color: #3e4a5f;
+  background-color: #f5f5f7;
+  color: #1d1d1f;
   font-size: 28rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 通用按压反馈（非线性缩放） ---------- */
+.hover {
+  opacity: 0.85;
+  transform: scale(0.96);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease-out;
 }
 
 /* ---------- 通用卡片 ---------- */
 .card {
   background-color: #ffffff;
-  border-radius: 32rpx;
-  padding: 32rpx;
-  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
+  border-radius: 28rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #efeff4;
+  box-sizing: border-box;
 }
 
-/* ---------- 可爱卡片：白色、大圆角、柔和蓝调阴影、四周留白 ---------- */
 .cute-card {
   background-color: #ffffff;
-  border-radius: 32rpx;
-  padding: 32rpx;
-  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
-  margin: 28rpx 28rpx 0;
+  border-radius: 28rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #efeff4;
+  margin: 24rpx 24rpx 0;
+  box-sizing: border-box;
 }
 
-/* ---------- 药丸主按钮（柔蓝渐变，治愈系主操作） ---------- */
+/* ---------- 药丸主按钮（苹果蓝） ---------- */
 .btn-primary {
-  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
+  background-color: #007aff;
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
   border-radius: 50rpx;
-  padding: 20rpx 0;
+  padding: 22rpx 0;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 10rpx 24rpx rgba(127, 181, 245, 0.35);
+  box-shadow: 0 8rpx 22rpx rgba(0, 122, 255, 0.28);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out;
 }
 
 .btn-primary::after {
@@ -53,9 +66,8 @@ page {
   box-shadow: none;
 }
 
-/* ---------- 可爱药丸按钮（柔蓝渐变） ---------- */
 .cute-btn {
-  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
+  background-color: #007aff;
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
@@ -63,18 +75,18 @@ page {
   padding: 20rpx 48rpx;
   text-align: center;
   line-height: 1.4;
-  box-shadow: 0 10rpx 24rpx rgba(127, 181, 245, 0.35);
+  box-shadow: 0 8rpx 22rpx rgba(0, 122, 255, 0.28);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out;
 }
 
 .cute-btn::after {
   border: none;
 }
 
-/* ---------- 药丸描边按钮（柔蓝描边） ---------- */
 .btn-outline {
   background: #ffffff;
-  color: #5b9be8;
-  border: 2rpx solid #7fb5f5;
+  color: #007aff;
+  border: 2rpx solid #007aff;
   font-size: 28rpx;
   border-radius: 50rpx;
   padding: 16rpx 0;
@@ -86,74 +98,448 @@ page {
   border: none;
 }
 
-/* ---------- 输入框统一可爱风格（浅蓝底） ---------- */
+/* ---------- 输入框统一苹果风格 ---------- */
 input,
 textarea {
-  background: #eff6ff;
-  border-radius: 24rpx;
+  background: #f2f2f7;
+  border-radius: 16rpx;
+  border: 1rpx solid transparent;
 }
 
-/* 占位符文字（配合 placeholder-class="ph" 使用，降低透明度） */
 .ph {
-  color: #a5bdd9;
-  opacity: 0.8;
+  color: #aeaeb2;
+  opacity: 0.9;
 }
 
-/* ---------- 设施标签（柔蓝） ---------- */
+/* ---------- 设施/来源标签 ---------- */
 .tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   font-size: 22rpx;
-  color: #5b9be8;
-  background: rgba(127, 181, 245, 0.16);
+  color: #3a3a3c;
+  background: #f2f2f7;
   border-radius: 26rpx;
   padding: 8rpx 18rpx;
   margin-right: 12rpx;
   margin-bottom: 8rpx;
 }
 
-.tag-tip {
-  display: inline-block;
-  font-size: 22rpx;
+.tag-source {
+  color: #007aff;
+  background: rgba(0, 122, 255, 0.1);
+}
+
+.tag-white {
   color: #ffffff;
-  background: linear-gradient(135deg, #8fc4ff, #a8e6cf);
-  border-radius: 26rpx;
-  padding: 8rpx 18rpx;
-  margin-right: 12rpx;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* ---------- 星级文字 ---------- */
 .star-text {
-  color: #ffc94d;
+  color: #ffb400;
   font-size: 26rpx;
   letter-spacing: 2rpx;
 }
 
 .star-text.empty {
-  color: #eef0f4;
+  color: #e5e5ea;
 }
 
 /* ---------- 空状态 ---------- */
 .empty {
-  padding: 120rpx 0;
+  padding: 100rpx 0;
   text-align: center;
-  color: #9aa5b8;
+  color: #aeaeb2;
   font-size: 28rpx;
 }
 
 .empty-icon {
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
+  width: 120rpx;
+  height: 120rpx;
+  margin: 0 auto 24rpx;
 }
 
-/* ---------- 列表卡片通用 ---------- */
+/* ---------- 通用列表卡 ---------- */
 .list-card {
   background: #ffffff;
-  border-radius: 32rpx;
+  border-radius: 28rpx;
   padding: 28rpx 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 12rpx 32rpx rgba(127, 181, 245, 0.16);
+  margin-bottom: 22rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #efeff4;
 }
 
-.list-card:active {
+/* ---------- 区块标题（左侧苹果蓝竖条） ---------- */
+.section-title {
+  display: flex;
+  align-items: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1d1d1f;
+  padding-left: 22rpx;
+  position: relative;
+  margin-bottom: 20rpx;
+}
+
+.section-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6rpx;
+  width: 8rpx;
+  height: 26rpx;
+  border-radius: 8rpx;
+  background-color: #007aff;
+}
+
+/* ---------- SVG 图标通用尺寸 ---------- */
+.icon {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+}
+
+.icon-sm {
+  width: 26rpx;
+  height: 26rpx;
+  flex-shrink: 0;
+}
+
+.icon-lg {
+  width: 48rpx;
+  height: 48rpx;
+  flex-shrink: 0;
+}
+
+/* ---------- 非线性动画 ---------- */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes springPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes softPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.fade-up {
+  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.spring-pop {
+  animation: springPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.soft-pulse {
+  animation: softPulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+
+
+/* ============================================================
+   视觉升级：清爽渐变 + 玻璃拟态 + 微动效
+   说明：不整包引入重型 UI 库，动效关键帧使用 wx-wow 裁剪版
+   ============================================================ */
+:root {
+  --brand-blue: #3478f6;
+  --brand-cyan: #36c5f0;
+  --brand-violet: #7b6cf6;
+  --brand-green: #34c759;
+  --brand-orange: #ff9f0a;
+  --ink: #1d1d1f;
+  --muted: #6e6e73;
+  --line: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --gradient-hero: linear-gradient(135deg, #4facfe 0%, #3478f6 52%, #7b6cf6 100%);
+  --gradient-mint: linear-gradient(135deg, #34c759 0%, #28a9b8 100%);
+  --gradient-warm: linear-gradient(135deg, #ff9f0a 0%, #ff6b6b 100%);
+}
+
+page {
+  background-color: #f4f8ff;
+  background-image:
+    radial-gradient(circle at 8% 2%, rgba(54, 197, 240, 0.18), transparent 32%),
+    radial-gradient(circle at 96% 6%, rgba(123, 108, 246, 0.16), transparent 30%),
+    linear-gradient(180deg, #f8fcff 0%, #eef6ff 46%, #f5f7fb 100%);
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 32rpx;
+  box-shadow: 0 14rpx 44rpx rgba(47, 87, 150, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.86);
+}
+
+.cute-card {
+  background-color: rgba(255, 255, 255, 0.88);
+  border-radius: 32rpx;
+  box-shadow: 0 14rpx 44rpx rgba(47, 87, 150, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.86);
+}
+
+.btn-primary {
+  background-image: linear-gradient(135deg, #4facfe 0%, #3478f6 100%);
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.88);
+  color: #3478f6;
+  border: 2rpx solid rgba(52, 120, 246, 0.5);
+}
+
+.tag-source {
+  color: #3478f6;
+  background: rgba(52, 120, 246, 0.12);
+}
+
+.list-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 32rpx;
+  box-shadow: 0 14rpx 44rpx rgba(47, 87, 150, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.86);
+}
+
+.section-title::before {
+  background-image: linear-gradient(180deg, #4facfe 0%, #7b6cf6 100%);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  border: 1rpx solid var(--line);
+  border-radius: 36rpx;
+  box-shadow: 0 18rpx 54rpx rgba(47, 87, 150, 0.12), inset 0 1rpx 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(22rpx);
+}
+
+.gradient-hero {
+  background-image: var(--gradient-hero);
+  color: #ffffff;
+}
+
+.gradient-mint {
+  background-image: var(--gradient-mint);
+  color: #ffffff;
+}
+
+.gradient-warm {
+  background-image: var(--gradient-warm);
+  color: #ffffff;
+}
+
+.shine-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-btn::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 60%;
+  height: 240%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+  transform: rotate(24deg);
+  animation: shineSweep 3.4s ease-in-out infinite;
+}
+
+@keyframes shineSweep {
+  0%, 55% { left: -80%; }
+  100% { left: 150%; }
+}
+
+
+
+/* ============================================================
+   最终设计规范：柔和浅蓝 / 低饱和 / 大留白
+   说明：仅覆盖视觉，不改变任何 JS、事件、数据绑定
+   ============================================================ */
+page {
+  background: #e8f4ff;
+  background-image: linear-gradient(180deg, #e8f4ff 0%, #f8fcff 100%);
+  color: #1f2937;
+}
+
+.card,
+.cute-card,
+.list-card {
+  background: #ffffff;
+  border: 1rpx solid #dceeff;
+  border-radius: 32rpx;
+  box-shadow: 0 10rpx 30rpx rgba(64, 150, 255, 0.08);
+}
+
+.btn-primary {
+  background: #4096ff;
+  color: #ffffff;
+  border-radius: 48rpx;
+  box-shadow: 0 8rpx 22rpx rgba(64, 150, 255, 0.22);
+}
+
+.btn-outline {
+  background: #ffffff;
+  color: #4096ff;
+  border: 2rpx solid #bcdcff;
+}
+
+.tag-source {
+  color: #4096ff;
+  background: #e8f4ff;
+}
+
+.section-title::before {
+  background: #4096ff;
+}
+
+.hover {
+  opacity: 0.88;
   transform: scale(0.98);
+}
+
+/* ============================================================
+   final global design system: soft light blue, unified cards
+   ============================================================ */
+page {
+  background: #eaf4ff;
+  background-image: linear-gradient(180deg, #e9f4ff 0%, #f8fcff 52%, #f2f7fd 100%);
+  color: #1f2937;
+}
+
+.card,
+.cute-card,
+.list-card,
+.grid-card,
+.section-card,
+.coming-card,
+.dev-msg-card {
+  background: #ffffff;
+  border: 1rpx solid #e3f0ff;
+  border-radius: 36rpx;
+  box-shadow: 0 16rpx 40rpx rgba(64, 150, 255, 0.08);
+  box-sizing: border-box;
+}
+
+.btn-primary,
+.cute-btn {
+  background: #4096ff;
+  color: #ffffff;
+  border-radius: 48rpx;
+  box-shadow: 0 10rpx 24rpx rgba(64, 150, 255, 0.22);
+}
+
+.btn-primary::after,
+.cute-btn::after {
+  border: none;
+}
+
+.btn-outline {
+  background: #ffffff;
+  color: #4096ff;
+  border: 2rpx solid #bcdcff;
+  border-radius: 48rpx;
+}
+
+input,
+textarea {
+  background: #f7fbff;
+  border: 1rpx solid #dceeff;
+  border-radius: 22rpx;
+  color: #1f2937;
+}
+
+.ph {
+  color: #9fb4cc;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: #f2f8ff;
+  color: #4b6077;
+  border-radius: 26rpx;
+  padding: 8rpx 18rpx;
+}
+
+.tag-source {
+  color: #4096ff;
+  background: #e8f4ff;
+}
+
+.list-card {
+  border-radius: 36rpx;
+}
+
+.section-title {
+  color: #1f2937;
+}
+
+.section-title::before {
+  width: 8rpx;
+  height: 26rpx;
+  border-radius: 8rpx;
+  background: #4096ff;
+}
+
+.hover {
+  opacity: 0.88;
+  transform: scale(0.98);
+}
+
+
+/* ============================================================
+   Color pass: low-saturation light blue system
+   ============================================================ */
+page {
+  --blue-50: #e8f4ff;
+  --blue-100: #d6eaff;
+  --blue-200: #b8dcff;
+  --blue-300: #8ec7ff;
+  --blue-400: #66adff;
+  --blue-500: #4096ff;
+  --blue-600: #2f7ff0;
+  --blue-700: #2569d6;
+  --ink-900: #1f2937;
+  --ink-700: #374151;
+  --ink-500: #6b7280;
+  --ink-400: #8aa5c4;
+  --line: #dceeff;
+  background: #eaf4ff;
+  background-image: linear-gradient(180deg, #eaf4ff 0%, #f8fcff 100%);
+  color: #1f2937;
+}
+
+.gradient-hero,
+.gradient-mint,
+.gradient-warm {
+  background: #e8f4ff;
+  background-image: none;
+  color: #1f2937;
+}
+
+.btn-primary {
+  background: #4096ff;
+  background-image: none;
+  color: #ffffff;
+  box-shadow: 0 8rpx 22rpx rgba(64, 150, 255, 0.22);
+}
+
+.btn-outline {
+  background: #ffffff;
+  color: #4096ff;
+  border: 2rpx solid #bcdcff;
 }
